@@ -1,0 +1,61 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          softcam
+# Required-Start:    
+# Required-Stop:     
+# Default-Start:     3 4
+# Default-Stop:      0 1 2 5 6
+# Short-Description: oscam
+# Description:       oscam SoftCAM, card reader and server.
+### END INIT INFO
+
+CAM=$(basename $0 | sed s#^softcam\.##)
+
+[ -n $CAM ] || exit 1
+
+case "$1" in
+start)
+	echo -n "Starting Softcam service $CAM: "
+	ulimit -s 1024
+	/usr/bin/$CAM --config-dir /etc/tuxbox/config/$CAM --daemon --pidfile /var/tmp/$CAM.pid --restart 2 --utf8 2| grep -v "UTF-8 mode"
+	sleep 0.5
+	RETVAL=1
+	[ -e /var/tmp/$CAM.pid ] && RETVAL=0
+	if [ "$RETVAL" -eq "0" ]; then
+		echo "OK"
+	else
+		echo "FAILED"
+	fi
+	exit $RETVAL
+	;;
+stop)
+	echo -n "Stopping Softcam service $CAM: "
+	kill `cat /var/tmp/$CAM.pid 2> /dev/null` 2> /dev/null
+	RETVAL=$?
+	if [ "$RETVAL" -eq "0" ]; then
+		echo "OK"
+	else
+		echo "FAILED"
+	fi
+	sleep 1
+	killall $CAM 2> /dev/null
+	exit $RETVAL
+	;;
+restart|reload)
+	$0 stop
+	sleep 1
+	$0 start
+	exit $?
+	;;
+version)
+	$CAM -V | grep 'Version\|IPv6' | sed 's/Version:[ ]*//' | sed 's/IPv6.*yes/with IPv6/g' | sed 's/IPv6.*no/IPv4-only/g' | sed ':a;N;$!ba;s/\n/ /g'
+	;;
+info)
+	$CAM -V | grep 'Version\|IPv6' | sed 's/Version:[ ]*//' | sed 's/IPv6.*yes/with IPv6/g' | sed 's/IPv6.*no/IPv4-only/g' | sed ':a;N;$!ba;s/\n/ /g'
+	;;
+*)
+	echo "Usage: $0 start|stop|restart"
+	exit 1
+	;;
+esac
+exit 0

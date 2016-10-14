@@ -1,0 +1,188 @@
+# oscam.server generated automatically by Streamboard OSCAM 1.20-modern_svn SVN r1282
+# Read more: http://www.streamboard.tv/svn/oscam/trunk/Distribution/doc/txt/oscam.server.txt
+
+[reader]
+label                         = HS-Server-1
+enable                        = 0
+protocol                      = cccam
+device                        = hs-server,12000
+user                          = User
+password                      = Password
+inactivitytimeout             = 30
+reconnecttimeout              = 10
+group                         = 2
+cccversion                    = 2.3.0
+ccckeepalive                  = 1
+cccreshare                    = 1
+audisabled                    = 1
+
+[reader]
+label                         = Internal_1_Redlight_Mega
+enable                        = 0
+protocol                      = internal
+device                        = /dev/sci1
+pincode                       = 0000
+detect                        = cd
+mhz                           = 450
+cardmhz                       = 2700
+ident                         = 0500:043800,050F00
+group                         = 1
+emmcache                      = 1,1,2,0
+
+[reader]
+label                         = Internal_1_Redlight_Premium
+enable                        = 0
+protocol                      = internal
+device                        = /dev/sci1
+pincode                       = 0000
+detect                        = cd
+mhz                           = 450
+cardmhz                       = 2700
+ident                         = 0500:043800
+group                         = 1
+emmcache                      = 1,1,2,0
+
+[reader]
+label                         = Internal_1_Redlight_Astra
+enable                        = 0
+protocol                      = internal
+device                        = /dev/sci1
+pincode                       = 0000
+detect                        = cd
+mhz                           = 450
+cardmhz                       = 2700
+ident                         = 0500:050F00
+group                         = 1
+emmcache                      = 1,1,2,0
+
+[reader]
+label                         = Internal_1_Brazzers
+enable                        = 0
+protocol                      = internal
+device                        = /dev/sci1
+detect                        = cd
+mhz                           = 450
+cardmhz                       = 2700
+ident                         = 0500:032500
+group                         = 1
+emmcache                      = 1,3,2,0
+
+[reader]
+label                         = Internal_1_hdplus01
+enable                        = 0
+protocol                      = internal
+device                        = /dev/sci1
+caid                          = 1830
+boxkey                        = A7642F57BC96D37C
+rsakey                        = BF358B5461863130686FC933FB541FFCED682F3680F09DBC1A23829FB3B2F766B9DD1BF3B3ECC9AD6661B753DCC3A9624156F9EB64E8168EF09E4D9C5CCA4DD5
+ecmwhitelist                  = 1830:92
+detect                        = cd
+cardmhz                       = 2700
+group                         = 1
+emmcache                      = 1,3,2,0
+auprovid                      = 003411
+
+[reader]
+label                         = Internal_1_hdplus02
+enable                        = 0
+protocol                      = internal
+device                        = /dev/sci1
+autospeed                     = 0
+caid                          = 1843
+boxkey                        = A7642F57BC96D37C
+rsakey                        = BF358B5461863130686FC933FB541FFCED682F3680F09DBC1A23829FB3B2F766B9DD1BF3B3ECC9AD6661B753DCC3A9624156F9EB64E8168EF09E4D9C5CCA4DD5
+ecmwhitelist                  = 1843:89
+detect                        = cd
+mhz                           = 450
+cardmhz                       = 2700
+ident                         = 1843:000000,003411,008011
+group                         = 1
+emmcache                      = 1,3,2,0
+auprovid                      = 003411
+
+[reader]
+label                         = Internal_1_ORF_0D95
+enable                        = 0
+protocol                      = internal
+device                        = /dev/sci1
+caid                          = 0D95
+detect                        = cd
+mhz                           = 368
+cardmhz                       = 368
+group                         = 1
+emmcache                      = 1,1,2,0
+
+[reader]
+label                         = Internal_1_ORF_0648
+enable                        = 0
+protocol                      = internal
+device                        = /dev/sci1
+caid                          = 0648
+boxkey                        = 1122334455667788
+rsakey                        = DF57B08C0F13E67BD17AD37EAAF4EAA25393F8A0EFE8ACE6708AAF97C985CBA8A6C13826963BD3092EB9FC72F773A430724706AA5E1D14E1747842D32069A12D
+force_irdeto                  = 1
+detect                        = cd
+mhz                           = 600
+cardmhz                       = 600
+group                         = 1
+emmcache                      = 1,1,2,0
+
+[reader]
+label                         = Internal_0_skyV13
+enable                        = 0
+protocol                      = internal
+device                        = /dev/sci0
+caid                          = 09C4
+boxid                         = 12345678
+detect                        = cd
+cardmhz                       = 2700
+group                         = 1
+emmcache                      = 1,3,2,0
+blockemm-unknown              = 1
+blockemm-u                    = 1
+blockemm-s                    = 1
+blockemm-g                    = 1
+saveemm-u                     = 1
+
+[reader]
+label                         = Internal_0_skyV14
+enable                        = 0
+protocol                      = internal
+device                        = /dev/sci0
+caid                          = 098C
+boxid                         = 12345678
+detect                        = cd
+cardmhz                       = 2700
+group                         = 1
+emmcache                      = 1,3,2,0
+blockemm-unknown              = 1
+blockemm-u                    = 1
+blockemm-s                    = 1
+blockemm-g                    = 1
+saveemm-u                     = 1
+
+[reader]
+label                         = Internal_1_SkyUK
+enable                        = 0
+protocol                      = internal
+device                        = /dev/sci1
+caid                          = 0963
+detect                        = cd
+mhz                           = 450
+cardmhz                       = 2700
+group                         = 1
+emmcache                      = 1,3,2,0
+blockemm-unknown              = 1
+blockemm-u                    = 1
+blockemm-s                    = 1
+blockemm-g                    = 1
+
+[reader]
+label                         = ConstCW
+description                   = ConstCW for BBC and others
+protocol                      = constcw
+device                        = /etc/tuxbox/config/oscam/oscam.constcw
+key                           = 0102030405060708091011121314
+reconnecttimeout              = 0
+group                         = 3
+
