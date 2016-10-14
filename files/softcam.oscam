@@ -9,9 +9,20 @@
 # Description:       oscam SoftCAM, card reader and server.
 ### END INIT INFO
 
-CAM=$(basename $0 | sed s#^softcam\.##)
+readlink $0 > /dev/null 2>&1 && CAM=$(basename $(readlink $0) | sed s#^softcam\.##)
 
-[ -n $CAM ] || exit 1
+[ -z "$CAM" ] && CAM=$(basename $0 | sed s#^softcam\.##)
+
+if [ -z "$CAM" -o "$CAM" == "softcam" ]; then
+	unset CAM
+	for TESTCAM in oscam oscam-schimmelreiter oscam-schimmelreiter-ipv4 oscam-atv
+	do
+		[ -x /usr/bin/$TESTCAM ] && CAM=$TESTCAM && break
+	done
+fi
+
+[ -n "$CAM" ] || exit 1
+[ -x /usr/bin/$CAM ] || exit 1
 
 case "$1" in
 start)
