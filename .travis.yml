@@ -1,2 +1,2 @@
 language: cpp
-script: cd src ; ./configure && make
+script: cd src && ./config.sh -E all && make
