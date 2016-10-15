@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/Schimmelreiter/oscam-schimmelreiter.svg?branch=master)](https://travis-ci.org/Schimmelreiter/oscam-schimmelreiter)
+[![Coverity Status](https://scan.coverity.com/projects/10531/badge.svg)](https://scan.coverity.com/projects/schimmelreiter-oscam-schimmelreiter)
 
 oscam-schimmelreiter
 ====================
