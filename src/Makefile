@@ -6,7 +6,8 @@ SHELL = /bin/sh
 
 VER     := $(shell ./config.sh --oscam-version)
 SVN_REV := $(shell ./config.sh --oscam-revision)
-GIT_REV := $(shell ./config.sh --git-revision)
+#GIT_REV := $(shell ./config.sh --git-revision)
+GIT_REV := "blabla"
 
 uname_S := $(shell sh -c 'uname -s 2>/dev/null || echo not')
 
