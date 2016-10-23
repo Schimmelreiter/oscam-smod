@@ -695,13 +695,7 @@ do
 		break
 	;;
 	'-g'|'--git-revision')
-		if [ -e .git ]; then
-			git rev-list --all --max-count=1 | cut -c1-7
-		else
-			pushd ..
-			git rev-list --all --max-count=1 | cut -c1-7
-			popd
-		fi
+		git rev-list --all --max-count=1 | cut -c1-7 || echo shitquake-build
 		break
 	;;
 	'-r'|'--oscam-revision')
