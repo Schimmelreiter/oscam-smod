@@ -786,7 +786,7 @@ div.info {
 /* debugmenu	- status_sdebug.html 
  * logmenu		- file.html
 */
-div.debugmenu, div.logmenu {
+div.debugmenu, div.logmenu, div.logsizemenu {
 	font-size:12px;
 	line-height:16px;
 	margin-bottom:8px
@@ -1977,4 +1977,3 @@ div.colorPicker-swatch {
 	line-height:12px
 }
 #regex{margin-bottom: 20px; padding-bottom: 10px; margin-top: -10px;}
-#logsizemenu{margin-top: -25px; margin-bottom: 5px;}
