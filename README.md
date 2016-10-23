@@ -3,7 +3,7 @@
 
 oscam-schimmelreiter
 ====================
-
+ 
 This variant of oscam combines the benefits of
 - the original oscam-trunk (http://www.streamboard.tv/oscam/changeset)
 - Gorgone's modern interface (http://www.streamboard.tv/oscam-addons/changeset/1500/modern)
