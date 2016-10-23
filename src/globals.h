@@ -360,6 +360,9 @@ typedef unsigned char uchar;
  *         constants
  * =========================== */
 #define CS_VERSION    "Schimmelreiter"
+#ifndef CS_GIT_VERSION
+#   define CS_GIT_VERSION "test"
+#endif
 #ifndef CS_SVN_VERSION
 #   define CS_SVN_VERSION "test"
 #endif
