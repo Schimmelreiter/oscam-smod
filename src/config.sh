@@ -698,7 +698,7 @@ do
 		if [ -e .git ]; then
 			git rev-list --all --max-count=1 | cut -c1-7
 		else
-			pushd src
+			pushd ..
 			git rev-list --all --max-count=1 | cut -c1-7
 			popd
 		fi
