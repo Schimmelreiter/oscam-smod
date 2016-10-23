@@ -6,6 +6,7 @@ SHELL = /bin/sh
 
 VER     := $(shell ./config.sh --oscam-version)
 SVN_REV := $(shell ./config.sh --oscam-revision)
+GIT_REV := $(shell ./config.sh --git-revision)
 
 uname_S := $(shell sh -c 'uname -s 2>/dev/null || echo not')
 
@@ -52,6 +53,7 @@ endif
 
 override STD_LIBS := $(LIB_PTHREAD) $(LIB_DL) $(LIB_RT)
 override STD_DEFS := -D'CS_SVN_VERSION="$(SVN_REV)"'
+override STD_DEFS += -D'CS_GIT_VERSION="$(GIT_REV)"'
 override STD_DEFS += -D'CS_CONFDIR="$(CONF_DIR)"'
 
 # Compiler warnings

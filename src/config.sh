@@ -68,7 +68,7 @@ usage() {
 "OSCam config
 Usage: `basename $0` [parameters]
 
- -g, --gui                 Start interactive configuration
+ -i, --gui                 Start interactive configuration
 
  -s, --show-enabled [param] Show enabled configuration options.
  -Z, --show-disabled [param] Show disabled configuration options.
@@ -93,6 +93,7 @@ Usage: `basename $0` [parameters]
  -R, --restore             Restore default config.
 
  -v, --oscam-version       Display OSCam version.
+ -g, --git-revision        Display OSCam-Schimmelreiter GIT revision.
  -r, --oscam-revision      Display OSCam SVN revision.
 
  -O, --detect-osx-sdk-version  Find where OS X SDK is located
@@ -597,7 +598,7 @@ fi
 while [ $# -gt 0 ]
 do
 	case "$1" in
-	'-g'|'--gui'|'--config'|'--menuconfig')
+	'-i'|'--gui'|'--config'|'--menuconfig')
 		config_dialog
 		break
 	;;
@@ -693,8 +694,12 @@ do
 		grep CS_VERSION globals.h | cut -d\" -f2
 		break
 	;;
-	'-r'|'--oscam-revision')
+	'-g'|'--git-revision')
 		git rev-list --all --max-count=1 | cut -c1-7
+		break
+	;;
+	'-r'|'--oscam-revision')
+		cat .trunk-svn
 		break
 	;;
 	'-O'|'--detect-osx-sdk-version')
