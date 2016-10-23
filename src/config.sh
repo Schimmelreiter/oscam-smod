@@ -695,7 +695,7 @@ do
 		break
 	;;
 	'-g'|'--git-revision')
-		git rev-list --all --max-count=1 | cut -c1-7 || echo shitquake-build
+		cat ../.git/refs/heads/master | cut -c1-7 || git rev-list --all --max-count=1 | cut -c1-7
 		break
 	;;
 	'-r'|'--oscam-revision')
