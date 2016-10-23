@@ -695,7 +695,13 @@ do
 		break
 	;;
 	'-g'|'--git-revision')
-		git rev-list --all --max-count=1 | cut -c1-7
+		if [ -e .git ]; then
+			git rev-list --all --max-count=1 | cut -c1-7
+		else
+			pushd src
+			git rev-list --all --max-count=1 | cut -c1-7
+			popd
+		fi
 		break
 	;;
 	'-r'|'--oscam-revision')
