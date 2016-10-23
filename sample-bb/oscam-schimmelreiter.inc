@@ -27,7 +27,6 @@ PACKAGE_ARCH = "${DEFAULTTUNE}"
 DEPENDS = "libusb openssl"
 
 EXTRA_OECMAKE += "\
-	-DGIT_REV=${SRCREV} \
 	-DWEBIF=1 \
 	-DWEBIF_LIVELOG=1 \
 	-DWEBIF_JQUERY=1 \
@@ -38,6 +37,12 @@ EXTRA_OECMAKE += "\
 	-DSTATIC_LIBUSB=0 \
 	-DHAVE_PCSC=0 \
 	"
+
+do_compile_prepend() {
+    # Shitquake fucks up git revision detection, patch it in
+    export GITREV=$(echo ${GITPKGV} | perl -pe"s#\d+\+##") ; sed -i s#GIT_VERSION\ \"test\"#GIT_VERSION\ \"${GITREV}\"# ${S}/globals.h
+
+}
 
 do_install() {
     install -d ${D}/${bindir}
