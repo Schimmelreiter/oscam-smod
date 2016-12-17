@@ -364,10 +364,10 @@ typedef unsigned char uchar;
 #   define CS_GIT_VERSION "test"
 #endif
 #ifndef CS_SVN_VERSION
-#   define CS_SVN_VERSION "test"
+#   define CS_SVN_VERSION "stable"
 #endif
 #ifndef CS_TARGET
-#   define CS_TARGET "unknown"
+#   define CS_TARGET "Schimmelreiter"
 #endif
 #ifndef CS_CONFDIR
 #define CS_CONFDIR    "/usr/local/etc"
