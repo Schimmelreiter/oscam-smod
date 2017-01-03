@@ -703,6 +703,10 @@ uint8_t chk_if_ignore_checksum(ECM_REQUEST *er, int8_t disablecrc, FTAB *disable
 {
 	if(!disablecrc && !disablecrc_only_for->nfilts) { return 0; }
 
+		if(!disablecrc_only_for->nfilts)
+			if(disablecrc)
+				{ return 1; }
+
 		int32_t i, k;
 		for(i = 0; i < disablecrc_only_for->nfilts; i++)
 		{
