@@ -150,23 +150,6 @@ void check_caidtab_fn(const char *token, char *value, void *setting, FILE *f)
 	}
 }
 
-void chk_ftab_fn(const char *token, char *value, void *setting, FILE *f)
-{
-	FTAB *ftab = setting;
-	if(value)
-	{
-		if(strlen(value))
-			chk_ftab(value, ftab);
-		else
-			ftab_clear(ftab);
-		return;
-	}
-	value = mk_t_ftab(ftab);
-	if(strlen(value) > 0 || cfg.http_full_cfg)
-		{ fprintf_conf(f, token, "%s\n", value); }
-	free_mk_t(value);
-}
-
 
 void caidvaluetab_fn(const char *token, char *value, void *setting, FILE *f)
 {
@@ -392,8 +375,6 @@ static const struct config_list global_opts[] =
 	DEF_OPT_INT8("suppresscmd08"            , OFS(c35_suppresscmd08),   0),
 	DEF_OPT_INT8("getblockemmauprovid"      , OFS(getblockemmauprovid), 0),
 	DEF_OPT_INT8("double_check"             , OFS(double_check),        0),
-	DEF_OPT_INT8("disablecrccws"                 , OFS(disablecrccws),            0),
-	DEF_OPT_FUNC("disablecrccws_only_for"	, OFS(disablecrccws_only_for),     chk_ftab_fn),
 	DEF_LAST_OPT
 };
 
@@ -573,7 +554,7 @@ static const struct config_list webif_opts[] =
 	DEF_OPT_INT8("http_status_log"		 , OFS(http_status_log)			, 1),
 #endif
 #ifndef WEBIF_JQUERY
-	DEF_OPT_STR("http_extern_jquery"	 , OFS(http_extern_jquery)		, "//code.jquery.com/jquery-1.12.4.min.js"),
+	DEF_OPT_STR("http_extern_jquery"	 , OFS(http_extern_jquery)		, "//code.jquery.com/jquery-1.11.0.min.js"),
 #endif
 	DEF_LAST_OPT
 };
@@ -1261,7 +1242,6 @@ void config_free(void)
 	config_sections_free(oscam_conf, &cfg);
 	caidvaluetab_clear(&cfg.ftimeouttab);
 	caidtab_clear(&cfg.double_check_caid);
-	ftab_clear(&cfg.disablecrccws_only_for);
 #ifdef WITH_LB
 	caidvaluetab_clear(&cfg.lb_retrylimittab);
 	caidvaluetab_clear(&cfg.lb_nbest_readers_tab);
