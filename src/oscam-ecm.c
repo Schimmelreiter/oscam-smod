@@ -1629,6 +1629,11 @@ int32_t write_ecm_answer(struct s_reader *reader, ECM_REQUEST *er, int8_t rc, ui
 					}
 				}
 			}}
+		}
+		else
+		{
+			cs_log_dbg(D_TRACE, "notice: CW checksum check disabled");
+		}
 	}
 
 #ifdef CW_CYCLE_CHECK
@@ -1762,11 +1767,6 @@ int32_t write_ecm_answer(struct s_reader *reader, ECM_REQUEST *er, int8_t rc, ui
 				reader->card_status = CARD_NEED_INIT;
 				cardreader_reset(cl);
 			}
-		}
-		}
-		else
-		{
-			cs_log_dbg(D_TRACE, "notice: CW checksum check disabled");
 		}
 	}
 
