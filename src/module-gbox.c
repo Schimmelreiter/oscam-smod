@@ -1220,12 +1220,10 @@ static int8_t gbox_check_header_recvd(struct s_client *cli, struct s_client *pro
 			}
 		}
 	}
-	/*
 	else if (gbox_decode_cmd(data) == MSG_GSMS_1 || gbox_decode_cmd(data) == MSG_GSMS_ACK_1 ) 
 	{
 		// MSG_GSMS_1 dont have passw and would fail. Just let them pass through for processing later
 	}
-	*/
 	else // error my passw
 	{
 		cs_log("-> ATTACK ALERT from IP %s", cs_inet_ntoa(cli->ip));
@@ -1707,12 +1705,12 @@ static int32_t gbox_client_init(struct s_client *cli)
 	if(!cli->reader->gbox_maxdist)
 		{ cli->reader->gbox_maxdist = DEFAULT_GBOX_MAX_DIST; }
 
-	//value > DEFAULT_GBOX_RESHARE not allowed in gbox network
-	if(!cli->reader->gbox_reshare || cli->reader->gbox_reshare > DEFAULT_GBOX_RESHARE)
-		{ cli->reader->gbox_reshare = DEFAULT_GBOX_RESHARE; }
+	//value > GBOX_MAXHOPS not allowed in gbox network
+	if(!cli->reader->gbox_reshare || cli->reader->gbox_reshare > GBOX_MAXHOPS)
+		{ cli->reader->gbox_reshare = GBOX_MAXHOPS; }
 
-	if(!cli->reader->gbox_cccam_reshare || cli->reader->gbox_cccam_reshare > DEFAULT_GBOX_RESHARE)
-		{ cli->reader->gbox_cccam_reshare = DEFAULT_GBOX_RESHARE; }
+	if(!cli->reader->gbox_cccam_reshare || cli->reader->gbox_cccam_reshare > GBOX_MAXHOPS)
+		{ cli->reader->gbox_cccam_reshare = GBOX_MAXHOPS; }
 
 	start_sms_sender();
 	
