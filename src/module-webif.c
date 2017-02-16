@@ -628,7 +628,10 @@ static char *send_oscam_config_global(struct templatevars *vars, struct uriparam
 		{ tpl_addVar(vars, TPLADD, "SERVERIP", cs_inet_ntoa(cfg.srvip)); }
 	tpl_printf(vars, TPLADD, "NICE", "%d", cfg.nice);
 	tpl_printf(vars, TPLADD, "BINDWAIT", "%d", cfg.bindwait);
-	tpl_printf(vars, TPLADD, "NETPRIO", "%d", cfg.netprio);
+
+	tpl_printf(vars, TPLADD, "TMP", "NETPRIO%d", cfg.netprio);
+	tpl_addVar(vars, TPLADD, tpl_getVar(vars, "TMP"), "selected");
+
 	tpl_printf(vars, TPLADD, "PIDFILE", "%s", ESTR(cfg.pidfile));
 
 
@@ -3197,16 +3200,11 @@ static char *send_oscam_user_config_edit(struct templatevars *vars, struct uripa
 	char buf [80];
 	strftime(buf, 80, "%Y-%m-%d", &timeinfo);
 	if(strcmp(buf, "1970-01-01")) { tpl_addVar(vars, TPLADD, "EXPDATE", buf); }
-
+	
 	//Allowed TimeFrame
-	if(account->allowedtimeframe[0] && account->allowedtimeframe[1])
-	{
-		tpl_printf(vars, TPLADD, "ALLOWEDTIMEFRAME", "%02d:%02d-%02d:%02d",
-				   account->allowedtimeframe[0] / 60,
-				   account->allowedtimeframe[0] % 60,
-				   account->allowedtimeframe[1] / 60,
-				   account->allowedtimeframe[1] % 60);
-	}
+	char *allowedtf = mk_t_allowedtimeframe(account);
+	tpl_printf(vars, TPLADD, "ALLOWEDTIMEFRAME", "%s", allowedtf);
+	free_mk_t(allowedtf);
 
 	//Group
 	char *value = mk_t_group(account->grp);
