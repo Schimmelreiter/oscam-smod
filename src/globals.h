@@ -434,7 +434,7 @@ typedef unsigned char uchar;
 #define R_SMART     0x7 // Smartreader+
 #define R_PCSC      0x8 // PCSC
 #define R_DRECAS    0x9 // Reader DRECAS
-#define R_EMU       0x17  // Reader emu
+#define R_EMU       0x17 // Reader EMU
 /////////////////// proxy readers after R_CS378X
 #define R_CAMD35    0x20  // Reader cascading camd 3.5x
 #define R_CAMD33    0x21  // Reader cascading camd 3.3x

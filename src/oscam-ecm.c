@@ -1584,11 +1584,11 @@ int32_t write_ecm_answer(struct s_reader *reader, ECM_REQUEST *er, int8_t rc, ui
 
 	if(reader && cw && rc < E_NOTFOUND)
 	{
-		if(cfg.disablecrccws == 0 && reader->disablecrccws == 0)
+		if(cfg.disablecrccws == 0 && reader->disablecrccws == 0 && ((er->caid >> 8) != 0x0E))
 		{
 			uint8_t selectedForIgnChecksum = chk_if_ignore_checksum(er, cfg.disablecrccws, &cfg.disablecrccws_only_for)
 					+ chk_if_ignore_checksum(er, reader->disablecrccws, &reader->disablecrccws_only_for);
-			if((er->caid>>8)!=0x0E){
+
 			for(i = 0; i < 16; i += 4)
 			{
 				c = ((cw[i] + cw[i + 1] + cw[i + 2]) & 0xff);
@@ -1634,7 +1634,7 @@ int32_t write_ecm_answer(struct s_reader *reader, ECM_REQUEST *er, int8_t rc, ui
 						}
 					}
 				}
-			}}
+			}
 		}
 		else
 		{

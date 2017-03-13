@@ -67,7 +67,7 @@ STRIP = $(CROSS_DIR)$(CROSS)strip
 
 LDFLAGS = -Wl,--gc-sections
 
-TARGETHELP := $(shell $(CC) --target-help)
+TARGETHELP := $(shell $(CC) --target-help 2>&1)
 ifneq (,$(findstring sse2,$(TARGETHELP)))
 override CFLAGS += -fexpensive-optimizations -mmmx -msse -msse2 -msse3
 else

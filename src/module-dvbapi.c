@@ -3412,10 +3412,17 @@ int32_t dvbapi_parse_capmt(unsigned char *buffer, uint32_t length, int32_t connf
 		}
 	}
 	
-	if(!is_real_pmt)
+	if(is_real_pmt)
 	{
-		cs_log("Demuxer %d found %d ECMpids and %d STREAMpids in caPMT", demux_id, demux[demux_id].ECMpidcount, demux[demux_id].STREAMpidcount);
-			
+		cs_log_dbg(D_DVBAPI,"Demuxer %d found %d ECMpids and %d STREAMpids in PMT", demux_id, demux[demux_id].ECMpidcount, demux[demux_id].STREAMpidcount);
+		ca_mask = demux[demux_id].ca_mask;
+		demux_index = demux[demux_id].demux_index;
+		adapter_index = demux[demux_id].adapter_index;
+		connfd = demux[demux_id].socket_fd;
+	}
+	else
+	{
+		cs_log_dbg(D_DVBAPI,"Demuxer %d found %d ECMpids and %d STREAMpids in caPMT", demux_id, demux[demux_id].ECMpidcount, demux[demux_id].STREAMpidcount);
 		getDemuxOptions(demux_id, buffer, &ca_mask, &demux_index, &adapter_index, &pmtpid);
 		demux[demux_id].adapter_index = adapter_index;
 		demux[demux_id].ca_mask = ca_mask;
@@ -3423,7 +3430,6 @@ int32_t dvbapi_parse_capmt(unsigned char *buffer, uint32_t length, int32_t connf
 		demux[demux_id].demux_index = demux_index;
 		demux[demux_id].socket_fd = connfd;
 		demux[demux_id].client_proto_version = client_proto_version;
-		
 		if(demux[demux_id].STREAMpidcount == 0) // encrypted PMT
 		{
 			demux[demux_id].STREAMpids[demux[demux_id].STREAMpidcount] = pmtpid;
@@ -3431,15 +3437,6 @@ int32_t dvbapi_parse_capmt(unsigned char *buffer, uint32_t length, int32_t connf
 			demux[demux_id].STREAMpidcount++;
 			vpid = pmtpid;
 		}
-	}
-	else
-	{
-		cs_log("Demuxer %d found %d ECMpids and %d STREAMpids in PMT", demux_id, demux[demux_id].ECMpidcount, demux[demux_id].STREAMpidcount);
-		
-		ca_mask = demux[demux_id].ca_mask;
-		demux_index = demux[demux_id].demux_index;
-		adapter_index = demux[demux_id].adapter_index;
-		connfd = demux[demux_id].socket_fd;
 	}
 	
 	for(j = 0; j < demux[demux_id].ECMpidcount; j++)

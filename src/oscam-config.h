@@ -53,6 +53,7 @@ void cacheex_hitvaluetab_fn(const char *token, char *value, void *setting, FILE 
 void class_fn(const char *token, char *value, void *setting, FILE *f);
 void group_fn(const char *token, char *value, void *setting, FILE *f);
 void services_fn(const char *token, char *value, void *setting, FILE *f);
+void chk_ftab_fn(const char *token, char *value, void *setting, FILE *f);
 
 enum ftab_fn
 {
@@ -64,7 +65,7 @@ enum ftab_fn
 	FTAB_LOCALCARDS				= 0x20,
         FTAB_IGNCHKSMCAID                       = 0x40,
         FTAB_IGNCRCCEX4USERONLYFOR      = 0x80,
-	FTAB_EMUAU  = 0x40
+	FTAB_EMUAU									= 0x100
 };
 
 void ftab_fn(const char *token, char *value, void *setting, long ftab_type, FILE *f);

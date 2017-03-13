@@ -1,3 +1,5 @@
+#define MODULE_LOG_PREFIX "emu"
+
 #include "globals.h"
 #include "oscam-string.h"
 #include "oscam-config.h"
@@ -459,7 +461,7 @@ static int32_t emu_get_tan_emm_filter(struct s_reader *UNUSED(rdr), struct s_csy
 		const unsigned int max_filter_count = 2;
 		uint8_t buf[8];
 		
-		if(!FindKey('T', 0x40, 0, "MK", buf, 8, 0, 0, 0, NULL))
+		if(!FindKey('T', 0x40, 0, "MK", buf, 8, 0, 0, 0, NULL) && !FindKey('T', 0x40, 0, "MK01", buf, 8, 0, 0, 0, NULL))
 			{ return CS_ERROR; }
 		
 		if(!cs_malloc(emm_filters, max_filter_count * sizeof(struct s_csystem_emm_filter)))
@@ -840,5 +842,5 @@ void add_emu_reader(void)
 	}
 #endif
 
-	cs_log("[Emu] oscam-emu version %d", GetOSemuVersion());
+	cs_log("OSCam-Emu version %d", GetOSemuVersion());
 }
