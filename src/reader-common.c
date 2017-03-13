@@ -2,6 +2,7 @@
 
 #ifdef WITH_CARDREADER
 
+#include "module-gbox.h"
 #include "module-led.h"
 #include "oscam-chk.h"
 #include "oscam-client.h"
@@ -219,6 +220,7 @@ void cardreader_do_reset(struct s_reader *reader)
 		}
 			if (ret){
 				rdr_log(reader,"THIS WAS A SUCCESSFUL START ATTEMPT No  %u out of max alloted of %u", (i+1), j);
+				gbx_local_card_changed();
 				break;
 			}
 			else {
@@ -282,6 +284,7 @@ int32_t cardreader_do_checkhealth(struct s_reader *reader)
 				cl->lastecm = 0;
 			}
 			led_status_card_ejected();
+			gbx_local_card_changed();
 		}
 		reader->card_status = NO_CARD;
 	}
