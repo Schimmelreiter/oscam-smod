@@ -1,58 +1,3 @@
-/* 
- * Envi Template
- *
- * Author skyndas for Streamboard Team
- *
- *
- * Table of Content
-=====================================
-###### GENERAL SETTINGS FOR DESKTOPS AND MOBILE
-	# 1. RESET
-	# 2. BASIC DIVISION PAGES
-	# 3. BASIC SETTINGS
-	# 4. LINKS
-	# 5. MAIN MENU
-	# 6. SUBNAV
-	# 7. TABLE
-		- STATUS
-		- CONFIG
-		- READERS
-		- USERS
-		- SERVICES
-		- FAILBAN
-		- CACHEEX
-		- OTHER TABLES
-	# 8. TABLE TR
-	# 9. TABLE TH
-	# 10. TABLE TD
-	# 11. DIV
-	# 12. TEXTAREA,SELECT,INPUT
-	# 13. IMAGE
-	# 14. SPAN
-	# 15. GRAPH
-	# 16. SORTING IN TABLE
-	# 17. POLLING
-	# 18. ECM BAR HISTORY
-	# 19. FILE MENU
-	# 20. OTHER SETTINGS
-
-###### RESPONSIVE DESIGN FOR DESKTOPS AND MOBILE DEVICE
-# DESKTOPS min width 1024px
-	- for all monitors with resolution width=1024px and above
-
-# DESKTOPS min width 1024px - max width 1366px
-	-  for desktops with resolution 1152 x 864, 1280 x 1024, 1366 x 768 [ 15" Netbook ]
-
-# DESKTOPS max width 1024px
-	- for desktops with resolution 1024 x 768px [ 12" Netbook ], 1024 x 600 [ 10" Netbook ]
-
-# MOBILE PHONES 360x540px - pixel ratio 1.5
-	- for Samsung S4 mini
-
-# MOBILE PHONES 720x1280px - orientation: portrait
-	- for Samsung S3
-===================================== */
-
 /* ################################# GENERAL SETTINGS FOR DESKTOPS AND MOBILE ################################# */
 /* **************** 1. RESET  */
 * {margin:0;padding:0}
@@ -1366,35 +1311,14 @@ div.bar {
 			vertical-align:text-bottom;
 			_vertical-align:middle;
 			/* Hide the input, but have it still be clickable */
-		    /*opacity: 0;*/
-		    margin:0 0px 0 3px;
+		    opacity: 100;
+		    margin:0 0 0 3px;
 		}
 		input[type=checkbox] + label {
-			margin:0;
-			clear: none;
-			color: #000;
-			background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAABtlBMVEWIiIiFhYWHh4dqamqHh4dycnJ2dnZhYWEcHBxmZmZnZ2fw8PDp6+vs7e3Z29vm6OjZ29zs7e7b3d3k5ubw8fHv8PDx8vLq6+vj5OXw8PF9fX3u7++CgoL09fXd3+Dt7u/t7u7y8vPo6urp6uvr6+zq7Oz19fXq6uvo6ep+fn7t7+97e3vn6OmAgIDX2drn6Oh6enrY29zi4+Ti5OR4eHiBgYHl5ujg4eLa3NzV2Njd4OC5ubmFhYXy9PTr6+3n6ert7e7z9PTn6en09PXk5ufj5eXl5ufh4+Tj5ebi5OXq7O3l5+ft7e3e4eLf4ePe4eHZ3Nze4OHV2Nnp6urh4+Py8/Th4uTq6urc3d/b3d7v7/Da3d3k5efc4ODZ3N3x8fHX2tvl5ebb3t7b3N3c39/m5+jk5eXO0NLR1NXr7OzP0tPs7u7T1tfW2tvLzs/T1dbh5OTIycrN0NHT1dXU2NjX2NrIy8vw8fLO0tPW2dnIysvY2drS1NXDxseJiYmTlZW9vr69wMLLzc7GysvGyMq+wMLJy83KzM3Gysq6vb/Hycq2uryTk5Nra2vg4uPY29va3N3f4uJxYtzRAAAAC3RSTlPli+vqhuwHmxiTlenxjy0AAAD9SURBVHhePcBDYgMBFADQH6cdW6Fto7Zt27Zt37i7PNBr4boMtHpQFQfq7A12s9kz5KkaKapAHbVTPItYeSvPsjNeNZR4hMU4DuGkE5birSUwORVFEjiJW5MU28a4CdIudydmq6ltDzgCmBJKQ9jtQp0MhQpOlKlmfGHwd4gEEXIIGa8oJH31fpCTTXPRZqKVKWSWllsaZZDF78Qv89cmTvbsdiW6ZQj29vVns4OR4YhltGAZC0JsIjc1Tc/S8Xl6Ib5IxiC1Qq7i63juZxPfIrd3UqDb2z84PDrOn56dX+Qvr3RQcXN7d//w+PT88vr2/vFZCUaD5qtMYzD+A82PPJdSoSPeAAAAAElFTkSuQmCC);
-			background-repeat: no-repeat;
-
-			/* Left padding makes room for image */
-			padding: 2px 0 4px 20px;
-			margin-left: -15px
-		} 
-		input[type=checkbox]:checked + label {
-			color: #545454;
-			background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAACGVBMVEV2dnaHh4dycnKHh4eIiIhqamqFhYVhYWEcHBxmZmZnZ2fu7+/x8vLv8PDw8fF9fX3s7e7Z29zt7u/w8PB7e3t6enrMzc1+fn7Z29vw8PG5ubl4eHiFhYWCgoLY29z09fVSUlLy8vPr6+zi5ORUVFWAgID19fXo6enq7Ozs7u6BgYFra2vMzM3y9PTt7e709PXNz8/w8fLq6uvz9PTs7e3n6OlOTk5DRETy8/SztLTq6urLzMzv7/BPT09aWlpTVFXt7e3q6+vr7Ozl5+fS09RZW1tHR0dJSUm3uLhNTk7Gx8fp6utaW1vS1NTn6elKSkvp6+vT1NRlZWVWVlddXV1OUFBYWFjo6err7O3n6erh4+Tk5ufj5OXi5OXd3t5qa2tiZGVwcHFtbW1paWpbXF3l6Oje4eLi4+Tf4ePn6OjZ3Nze4OHCw8Pe39/x8fFpampsbG1iYmPHyMjc3d/d4ODd3+Db3d5gYGDa3d3a3Nzc4ODc3t/c3d3IyclbW1vFxcbh4+Pb3d3b3N3c399ub2/t7u7O0NLR1NXq7O3S1dbb3NzFxsbf4eHT1tfW2tvLzs/T1dZMTEzIycrN0NHT1dXU2NjX2NrMz8/c3t7O0tPW2dnIysvY2drV2NjS1NXDxseJiYmTlZW9vr69wMLLzc7GysvGyMq+wMLJy83KzM3Gysq6vb/Hycq2uryTk5Pp6uplZWZhYWLPz8+VBbe5AAAAC3RSTlMHhuzr5eqLmxiTldOMm1oAAAEJSURBVHhePcBDYgMBFADQH6cdIrZZ2rZt27Zt27Zxwu7yAFjcGxcuC4Cv+PbXe+u1WkuIxTNMwQdOq55EcYZGaRTHu/w4oEIZPADDGEzui5AorQJ1OoLIYzE5FueRPWmPUIPDYIuxLpZ6rfgEBaemBTrAbDNk7oaSOeG6yKjojmIzSOMTEpOSUyQ603CGpCRLCoQxNy+/oLDI9PP7Zy0rJ4CoqKyqrqmtq2+QNDY1txAgamvXdC509/T2GfsHBodEIB4ZHRufcE5Nz8zOaeYpMSiXqGXZ6tr6xqZsi9reUQJ7b//g8Oj45PTs/OLy6poNbrd39w+PT88vr2/vH59f7iAU8JwuPIHwH7KYSfsXQypZAAAAAElFTkSuQmCC);
-		}
-		.config tr:hover td input[type=checkbox] + label,
-		.subservicetable tr:hover td input[type=checkbox] + label,
-		.configreader tr:hover input[type=checkbox] + label,
-		.configuser tr:hover input[type=checkbox] + label {
-			color: #FFF;
-		}
-		.configreader tr:nth-child(30) input[type=checkbox] + label,
-		.configuser tr:nth-child(25) input[type=checkbox] + label {
-			color: #333;
+		background-repeat: no-repeat;
 		}
 }
+
 
 /* Tested monitor with resolution:
  * 1152 x 864, 1280 x 1024
