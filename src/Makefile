@@ -353,6 +353,7 @@ SRC-y += oscam-client.c
 SRC-y += oscam-conf.c
 SRC-y += oscam-conf-chk.c
 SRC-y += oscam-conf-mk.c
+SRC-y += oscam-config-null.c
 SRC-y += oscam-config-account.c
 SRC-y += oscam-config-global.c
 SRC-y += oscam-config-reader.c

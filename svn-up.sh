@@ -1,6 +1,6 @@
 #!/bin/bash
 
-git stash
+#git stash
 
 TRUNK=$(cat src/.trunk-svn)
 SUCCESS=true

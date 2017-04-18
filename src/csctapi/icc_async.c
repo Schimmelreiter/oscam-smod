@@ -31,6 +31,7 @@
 #include "io_serial.h"
 #include "ifd_phoenix.h"
 #include "../oscam-time.h"
+#include "cardlist.h"
 
 #define OK 0
 #define ERROR 1
@@ -155,9 +156,15 @@ int32_t ICC_Async_Activate(struct s_reader *reader, ATR *atr, uint16_t deprecate
 	uint32_t atr_size;
 	ATR_GetRaw(atr, atrarr, &atr_size);
 	char tmp[atr_size * 3 + 1];
-	rdr_log(reader, "ATR: %s", cs_hexdump(1, atrarr, atr_size, tmp, sizeof(tmp)));
+	memcpy(current.atr, cs_hexdump(1, atrarr, atr_size, tmp, sizeof(tmp)), atr_size * 3 - 1);
+	current.atr[atr_size * 3 - 1] = '\0';
+	rdr_log(reader, "ATR: %s", current.atr);
 	memcpy(reader->card_atr, atrarr, atr_size);
 	reader->card_atr_length = atr_size;
+	findatr(reader);
+	if ( current.found == 1 ) {
+		rdr_log(reader, "%s recognized", current.providername);
+	}
 
 	/* Get ICC reader->convention */
 	if(ATR_GetConvention(atr, &(reader->convention)) != ATR_OK)

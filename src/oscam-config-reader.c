@@ -13,6 +13,8 @@
 #include "oscam-lock.h"
 #include "oscam-reader.h"
 #include "oscam-string.h"
+#include "oscam-config-null.h"
+#include <unistd.h>
 
 #define cs_srvr "oscam.server"
 
@@ -246,7 +248,7 @@ static void rsakey_fn(const char *token, char *value, void *setting, FILE *f)
 			}
 			else
 			{
-				rdr->rsa_mod_length = len/2;	
+				rdr->rsa_mod_length = len/2;
 			}
 		}
 		return;
@@ -318,7 +320,7 @@ static void boxkey_fn(const char *token, char *value, void *setting, FILE *f)
 			}
 			else
 			{
-				rdr->boxkey_length = len/2;	
+				rdr->boxkey_length = len/2;
 			}
 		}
 		return;
@@ -1058,10 +1060,15 @@ void reader_set_defaults(struct s_reader *rdr)
 int32_t init_readerdb(void)
 {
 	configured_readers = ll_create("configured_readers");
-
+	tmp_conf=0;
 	FILE *fp = open_config_file(cs_srvr);
 	if(!fp)
-		{ return 1; }
+	{
+		fp = conf_file(cs_srvr);
+		if (!fp){
+			return 1;
+		}
+	}
 
 	int32_t tag = 0;
 	char *value, *token;
@@ -1113,7 +1120,11 @@ int32_t init_readerdb(void)
 		reader_fixups_fn(rdr);
 		module_reader_set(rdr);
 	}
-	fclose(fp);
+	if ( tmp_conf == 1 ){
+		fclose(fp);
+	} else {
+		fclose(fp);
+	}
 	return (0);
 }
 
@@ -1129,28 +1140,24 @@ void free_reader(struct s_reader *rdr)
 	ftab_clear(&rdr->fchid);
 	ftab_clear(&rdr->ftab);
 
-    NULLFREE(rdr->cltab.aclass);
- 	NULLFREE(rdr->cltab.bclass);
+	NULLFREE(rdr->cltab.aclass);
+	NULLFREE(rdr->cltab.bclass);
 
 	caidtab_clear(&rdr->ctab);
-#ifdef CS_CACHEEX	
+#ifdef CS_CACHEEX
 	cecspvaluetab_clear(&rdr->cacheex.filter_caidtab);
 #endif
 	lb_destroy_stats(rdr);
 
 	cs_clear_entitlement(rdr);
 	ll_destroy(&rdr->ll_entitlements);
-
-	if(rdr->csystem && rdr->csystem->card_done)
+	if(rdr->csystem && rdr->csystem->card_done){
 		rdr->csystem->card_done(rdr);
+	}
 	NULLFREE(rdr->csystem_data);
-
 	ll_destroy_data(&rdr->blockemmbylen);
-
 	ll_destroy_data(&rdr->emmstat);
-
 	aes_clear_entries(&rdr->aes_list);
-	
 	config_list_gc_values(reader_opts, rdr);
 	add_garbage(rdr);
 }

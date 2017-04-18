@@ -11,6 +11,7 @@
 #include "oscam-garbage.h"
 #include "oscam-lock.h"
 #include "oscam-string.h"
+#include "oscam-config-null.h"
 
 #define cs_user "oscam.user"
 
@@ -25,9 +26,6 @@ static void account_tosleep_fn(const char *token, char *value, void *setting, FI
 	if(*tosleep != cfg.tosleep || cfg.http_full_cfg)
 		{ fprintf_conf(f, token, "%d\n", *tosleep); }
 }
-
-
-
 
 static void account_c35_suppresscmd08_fn(const char *token, char *value, void *setting, FILE *f)
 {
@@ -494,9 +492,16 @@ void account_set_defaults(struct s_auth *account)
 
 struct s_auth *init_userdb(void)
 {
+	tmp_conf=0;
 	FILE *fp = open_config_file(cs_user);
 	if(!fp)
-		{ return NULL; }
+	{
+		fp = conf_file(cs_user);
+		if(!fp)
+		{
+			return NULL;
+		}
+	}
 
 	struct s_auth *authptr = NULL;
 	int32_t tag = 0, nr = 0, expired = 0, disabled = 0;

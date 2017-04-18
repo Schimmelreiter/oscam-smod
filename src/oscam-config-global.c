@@ -324,7 +324,7 @@ static const struct config_list global_opts[] =
 #endif
 	DEF_OPT_FUNC("serverip"                 , OFS(srvip),               serverip_fn),
 	DEF_OPT_FUNC("logfile"                  , OFS(logfile),             logfile_fn),
-	DEF_OPT_INT32("initial_debuglevel"      , OFS(initial_debuglevel),  0), 
+	DEF_OPT_INT32("initial_debuglevel"      , OFS(initial_debuglevel),  0),
 	DEF_OPT_STR("sysloghost"                , OFS(sysloghost),          NULL),
 	DEF_OPT_INT32("syslogport"              , OFS(syslogport),          514),
 	DEF_OPT_INT8("logduplicatelines"        , OFS(logduplicatelines),   0),
@@ -339,7 +339,7 @@ static const struct config_list global_opts[] =
 	DEF_OPT_INT32("bindwait"                , OFS(bindwait),            CS_BIND_TIMEOUT),
 	DEF_OPT_UINT32("netprio"                , OFS(netprio),             0),
 	DEF_OPT_INT32("sleep"                   , OFS(tosleep),             0),
-	DEF_OPT_INT32("unlockparental"          , OFS(ulparent),            0),
+	DEF_OPT_INT32("unlockparental"          , OFS(ulparent),            1),
 	DEF_OPT_INT32("nice"                    , OFS(nice),                99),
 	DEF_OPT_INT32("maxlogsize"              , OFS(max_log_size),        10),
 	DEF_OPT_INT8("waitforcards"             , OFS(waitforcards),        1),
@@ -347,16 +347,16 @@ static const struct config_list global_opts[] =
 	DEF_OPT_INT8("preferlocalcards"         , OFS(preferlocalcards),    0),
 	DEF_OPT_INT32("readerrestartseconds"    , OFS(reader_restart_seconds), 5),
 	DEF_OPT_INT8("dropdups"                 , OFS(dropdups),            0),
-	DEF_OPT_INT8("reload_useraccounts"      , OFS(reload_useraccounts), 0),
-	DEF_OPT_INT8("reload_readers"           , OFS(reload_readers),      0),
-	DEF_OPT_INT8("reload_provid"            , OFS(reload_provid),       0),
-	DEF_OPT_INT8("reload_services_ids"      , OFS(reload_services_ids), 0),
-	DEF_OPT_INT8("reload_tier_ids"          , OFS(reload_tier_ids),     0),
-	DEF_OPT_INT8("reload_fakecws"           , OFS(reload_fakecws),      0),
-	DEF_OPT_INT8("reload_ac_stat"           , OFS(reload_ac_stat),      0),
-	DEF_OPT_INT8("reload_log"               , OFS(reload_log),          0),
-	DEF_OPT_INT8("block_same_ip"            , OFS(block_same_ip),       1),
-	DEF_OPT_INT8("block_same_name"          , OFS(block_same_name),     1),
+	DEF_OPT_INT8("reload_useraccounts"      , OFS(reload_useraccounts), 1),
+	DEF_OPT_INT8("reload_readers"           , OFS(reload_readers),      1),
+	DEF_OPT_INT8("reload_provid"            , OFS(reload_provid),       1),
+	DEF_OPT_INT8("reload_services_ids"      , OFS(reload_services_ids), 1),
+	DEF_OPT_INT8("reload_tier_ids"          , OFS(reload_tier_ids),     1),
+	DEF_OPT_INT8("reload_fakecws"           , OFS(reload_fakecws),      1),
+	DEF_OPT_INT8("reload_ac_stat"           , OFS(reload_ac_stat),      1),
+	DEF_OPT_INT8("reload_log"               , OFS(reload_log),          1),
+	DEF_OPT_INT8("block_same_ip"            , OFS(block_same_ip),       0),
+	DEF_OPT_INT8("block_same_name"          , OFS(block_same_name),     0),
 	DEF_OPT_STR("usrfile"                   , OFS(usrfile),             NULL),
 	DEF_OPT_STR("mailfile"                  , OFS(mailfile),            NULL),
 	DEF_OPT_STR("cwlogdir"                  , OFS(cwlogdir),            NULL),
@@ -544,14 +544,14 @@ static const struct config_list webif_opts[] =
 	DEF_OPT_STR("httplocale"		 , OFS(http_locale)			, NULL),
 	DEF_OPT_INT8("http_prepend_embedded_css" , OFS(http_prepend_embedded_css)	, 0),
 	DEF_OPT_INT32("httprefresh"		 , OFS(http_refresh)			, 0),
-	DEF_OPT_INT32("httppollrefresh"		 , OFS(poll_refresh)			, 60),
-	DEF_OPT_INT8("httphideidleclients"	 , OFS(http_hide_idle_clients)		, 1),
-	DEF_OPT_STR("httphidetype"		 , OFS(http_hide_type)			, NULL),
+	DEF_OPT_INT32("httppollrefresh"		 , OFS(poll_refresh)			, 5),
+	DEF_OPT_INT8("httphideidleclients"	 , OFS(http_hide_idle_clients)		, 0),
+	DEF_OPT_STR("httphidetype"		 , OFS(http_hide_type)			, "sh"),
 	DEF_OPT_INT8("httpshowpicons"		 , OFS(http_showpicons)			, 0),
 	DEF_OPT_INT8("httppiconsize"		 , OFS(http_picon_size)			, 0),
-	DEF_OPT_INT8("httpshowmeminfo"		 , OFS(http_showmeminfo)		, 0),
-	DEF_OPT_INT8("httpshowuserinfo"		 , OFS(http_showuserinfo)		, 0),
-	DEF_OPT_INT8("httpshowreaderinfo"	 , OFS(http_showreaderinfo)		, 0),
+	DEF_OPT_INT8("httpshowmeminfo"		 , OFS(http_showmeminfo)		, 1),
+	DEF_OPT_INT8("httpshowuserinfo"		 , OFS(http_showuserinfo)		, 1),
+	DEF_OPT_INT8("httpshowreaderinfo"	 , OFS(http_showreaderinfo)		, 1),
 	DEF_OPT_INT8("httpshowcacheexinfo"	 , OFS(http_showcacheexinfo)		, 0),
 	DEF_OPT_INT8("httpshowecminfo"		 , OFS(http_showecminfo)		, 0),
 	DEF_OPT_INT8("httpshowloadinfo"		 , OFS(http_showloadinfo)		, 0),
@@ -738,9 +738,9 @@ static bool cs378x_should_save_fn(void *UNUSED(var))
 static const struct config_list cs378x_opts[] =
 {
 	DEF_OPT_SAVE_FUNC(cs378x_should_save_fn),
-	DEF_OPT_FUNC("port"				, OFS(c35_tcp_ptab)			, porttab_camd35_fn	, .free_value = porttab_free_fn),
-	DEF_OPT_FUNC("serverip"			, OFS(c35_tcp_srvip)		, serverip_fn),
-	DEF_OPT_INT8("suppresscmd08"	, OFS(c35_tcp_suppresscmd08), 0),
+	DEF_OPT_FUNC("port"		, OFS(c35_tcp_ptab)		, porttab_camd35_fn, .free_value = porttab_free_fn),
+	DEF_OPT_FUNC("serverip"		, OFS(c35_tcp_srvip)		, serverip_fn),
+	DEF_OPT_INT8("suppresscmd08"	, OFS(c35_tcp_suppresscmd08)	, 0),
 	DEF_LAST_OPT
 };
 #else
@@ -756,11 +756,11 @@ static bool newcamd_should_save_fn(void *UNUSED(var))
 static const struct config_list newcamd_opts[] =
 {
 	DEF_OPT_SAVE_FUNC(newcamd_should_save_fn),
-	DEF_OPT_FUNC("port"			, OFS(ncd_ptab)		, porttab_fn, .free_value = porttab_free_fn),
+	DEF_OPT_FUNC("port"		, OFS(ncd_ptab)		, porttab_fn, .free_value = porttab_free_fn),
 	DEF_OPT_FUNC("serverip"		, OFS(ncd_srvip)	, serverip_fn),
 	DEF_OPT_FUNC("allowed"		, OFS(ncd_allowed)	, iprange_fn, .free_value = iprange_free_fn),
-	DEF_OPT_HEX("key"			, OFS(ncd_key)		, SIZEOF(ncd_key)),
-	DEF_OPT_INT8("keepalive"	, OFS(ncd_keepalive), DEFAULT_NCD_KEEPALIVE),
+	DEF_OPT_HEX("key"		, OFS(ncd_key)		, SIZEOF(ncd_key)),
+	DEF_OPT_INT8("keepalive"	, OFS(ncd_keepalive)	, DEFAULT_NCD_KEEPALIVE),
 	DEF_OPT_INT8("mgclient"		, OFS(ncd_mgclient)	, 0),
 	DEF_LAST_OPT
 };
@@ -975,7 +975,7 @@ static void gbox_ignored_peer_fn(const char *token, char *value, void *UNUSED(se
 		{
 			s=ptr1;
 			if ((n < GBOX_MAX_IGNORED_PEERS) && (s[strspn(s, "0123456789abcdefABCDEF")] == 0))
-			{ cfg.gbox_ignored_peer[n++] = a2i(ptr1, 4); }	
+			{ cfg.gbox_ignored_peer[n++] = a2i(ptr1, 4); }
 		}
 		cfg.gbox_ignored_peer_num = n;
 		return;
@@ -1079,7 +1079,7 @@ static void gbox_my_cpu_api_fn(const char *token, char *value, void *UNUSED(sett
 			return;
 		}
 	}
-	
+
 	if(cfg.gbox_my_cpu_api != GBOX_MY_CPU_API_DEF)
 	{
 		fprintf_conf(f, token, "%02X\n", cfg.gbox_my_cpu_api);
@@ -1151,10 +1151,10 @@ static const struct config_list gbox_opts[] =
 	DEF_OPT_FUNC("ignore_peer"	, OFS(gbox_ignored_peer), gbox_ignored_peer_fn ),
 	DEF_OPT_FUNC("block_ecm"	, OFS(gbox_block_ecm)	, gbox_block_ecm_fn ),
 	DEF_OPT_FUNC("proxy_card"	, OFS(gbox_proxy_card)	, gbox_proxy_card_fn ),
-	DEF_OPT_UINT8("gbox_save_gsms"	, OFS(gbox_save_gsms)		, 0),
- 	DEF_OPT_UINT8("gbox_msg_type"	, OFS(gbox_msg_type)		, 0),
- 	DEF_OPT_FUNC("gbox_dest_peers"	, OFS(gbox_dest_peers)		, gbox_dest_peers_fn ),
- 	DEF_OPT_FUNC("gbox_msg_txt"		, OFS(gbox_msg_txt)			, gbox_msg_txt_fn ),
+	DEF_OPT_UINT8("gbox_save_gsms"	, OFS(gbox_save_gsms)	, 0),
+ 	DEF_OPT_UINT8("gbox_msg_type"	, OFS(gbox_msg_type)	, 0),
+ 	DEF_OPT_FUNC("gbox_dest_peers"	, OFS(gbox_dest_peers)	, gbox_dest_peers_fn ),
+ 	DEF_OPT_FUNC("gbox_msg_txt"	, OFS(gbox_msg_txt)	, gbox_msg_txt_fn ),
 	DEF_LAST_OPT
 };
 #else
@@ -1249,17 +1249,17 @@ static bool dvbapi_should_save_fn(void *UNUSED(var))
 static const struct config_list dvbapi_opts[] =
 {
 	DEF_OPT_SAVE_FUNC(dvbapi_should_save_fn),
-	DEF_OPT_INT8("enabled"		, OFS(dvbapi_enabled),		0),
-	DEF_OPT_INT8("au"		, OFS(dvbapi_au),		0),
+	DEF_OPT_INT8("enabled"		, OFS(dvbapi_enabled),		1),
+	DEF_OPT_INT8("au"		, OFS(dvbapi_au),		1),
 	DEF_OPT_INT8("pmt_mode"		, OFS(dvbapi_pmtmode),		0),
 	DEF_OPT_INT8("request_mode"	, OFS(dvbapi_requestmode),	0),
 	DEF_OPT_INT32("listen_port"	, OFS(dvbapi_listenport),	0),
 	DEF_OPT_INT32("delayer"		, OFS(dvbapi_delayer),		0),
-	DEF_OPT_INT8("ecminfo_type"		, OFS(dvbapi_ecminfo_type),	0),
-	DEF_OPT_STR("user"		, OFS(dvbapi_usr),		NULL),
-	DEF_OPT_INT8("read_sdt"		, OFS(dvbapi_read_sdt),	0),
-	DEF_OPT_INT8("write_sdt_prov", OFS(dvbapi_write_sdt_prov),	0),
-	DEF_OPT_INT8("extended_cw_api", OFS(dvbapi_extended_cw_api),	0),
+	DEF_OPT_INT8("ecminfo_type"	, OFS(dvbapi_ecminfo_type),	0),
+	DEF_OPT_STR("user"		, OFS(dvbapi_usr),		"dvbapi_local"),
+	DEF_OPT_INT8("read_sdt"		, OFS(dvbapi_read_sdt),		0),
+	DEF_OPT_INT8("write_sdt_prov"	, OFS(dvbapi_write_sdt_prov),	0),
+	DEF_OPT_INT8("extended_cw_api"	, OFS(dvbapi_extended_cw_api),	0),
 	DEF_OPT_FUNC("boxtype"		, OFS(dvbapi_boxtype),		dvbapi_boxtype_fn),
 	DEF_OPT_FUNC("services"		, OFS(dvbapi_sidtabs.ok),	dvbapi_services_fn),
 	// OBSOLETE OPTIONS
@@ -1360,7 +1360,6 @@ int32_t init_config(void)
 
 	const struct config_sections *cur_section = oscam_conf; // Global
 	char *token;
-	
 	config_sections_set_defaults(oscam_conf, &cfg);
 
 	if(!fp)
@@ -1376,10 +1375,7 @@ int32_t init_config(void)
 		}
 #endif
 		NULLFREE(cfg.logfile);
-		cfg.logtostdout = 1;
-#ifdef HAVE_DVBAPI
-		cfg.dvbapi_enabled = 1;
-#endif
+		cfg.logtostdout = 0;
 		return 0;
 	}
 
@@ -1388,6 +1384,7 @@ int32_t init_config(void)
 
 	int line = 0;
 	int valid_section = 1;
+
 	while(fgets(token, MAXLINESIZE, fp))
 	{
 		++line;
