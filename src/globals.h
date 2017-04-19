@@ -146,7 +146,6 @@ typedef unsigned char uchar;
  * =========================== */
 // Prevent use of unsafe functions (doesn't work for MacOSX)
 #if !defined(__APPLE__)
-#define strcpy(a,b) UNSAFE_STRCPY_USE_CS_STRNCPY_INSTEAD()
 #define sprintf(a,...) UNSAFE_SPRINTF_USE_SNPRINTF_INSTEAD()
 #define strtok(a,b,c) UNSAFE_STRTOK_USE_STRTOK_R_INSTEAD()
 #define gmtime(a) UNSAFE_GMTIME_NOT_THREADSAFE_USE_CS_GMTIME_R()
