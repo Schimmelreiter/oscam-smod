@@ -61,7 +61,7 @@ void findatr(struct s_reader *reader)
 		reader->blockemm = unity_01.blockemm;
 		current.found = 1;
 	} else if ( strncmp(current.atr, unity_02.atr, unity_02.atrsize) == 0 ) {
-		memcpy(current.providername, unity_02.providername, strlen(unity02.providername));
+		memcpy(current.providername, unity_02.providername, strlen(unity_02.providername));
 		memcpy(reader->boxkey, unity_02.boxkey, 9);
 		memcpy(reader->rsa_mod, unity_02.rsakey, 129);
 		reader->saveemm = unity_02.saveemm;
