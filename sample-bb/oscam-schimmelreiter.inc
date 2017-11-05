@@ -41,7 +41,8 @@ EXTRA_OECMAKE += "\
 do_compile_prepend() {
     # Shitquake fucks up git revision detection, patch it in
     export GITREV=$(echo ${GITPKGV} | perl -pe"s#\d+\+##") ; sed -i s#GIT_VERSION\ \"test\"#GIT_VERSION\ \"${GITREV}\"# ${S}/globals.h
-
+    # As we build for a STB, set default for dvbapi to 1
+    perl -i -pe 's:(OFS\(dvbapi_enabled\),[ \t]*?)0\),:${1}1\),:g' ${S}/oscam-config-global.c
 }
 
 do_install() {
