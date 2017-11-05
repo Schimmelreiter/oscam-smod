@@ -29,7 +29,6 @@ FILE* conf_file(char fileName[]){
 		if ( strncmp(fileName, cs_user, strlen(fileName)) == 0 ){
 			char *user_str;
 			char tempuser[] = "/tmp/oscam.user-XXXXXX"; fd=mkstemp(tempuser);
-			strncpy(tmp_filename, tempuser, strlen(tempuser));
 			user_str = (char *) malloc(48);
 			snprintf(user_str, 48, "[account]\nuser = dvbapi\nau = 1\ngroup = 1\n\n");
 			buffer = (char *) malloc(strlen(user_str));
@@ -44,7 +43,6 @@ FILE* conf_file(char fileName[]){
 
 		else if ( strncmp(fileName, cs_server, strlen(fileName)) == 0 ){
 			char tempserver[] = "/tmp/oscam.server-XXXXXX"; fd=mkstemp(tempserver);
-			strncpy(tmp_filename, tempserver, strlen(tempserver));
 
 			struct dirent **namelist;
 			const char scandir1[] = "/dev";
