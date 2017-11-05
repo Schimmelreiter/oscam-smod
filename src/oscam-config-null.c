@@ -21,27 +21,28 @@
 FILE* conf_file(char fileName[]){
 
 	FILE* file = fopen(fileName, "r");
-	char *buffer;
-	char *server_str;
-
 	if(file == NULL) {
 		int fd;
-		if ( strncmp(fileName, cs_user, strlen(fileName)) == 0 ){
+		int tmp_conf;
+		tmp_conf = 0;
+
+		buffer = (char *) malloc(256);
+
+		if ( strncmp(fileName, cs_user, strlen(fileName)) == 0 ) {
 			char *user_str;
 			char tempuser[] = "/tmp/oscam.user-XXXXXX"; fd=mkstemp(tempuser);
+
 			user_str = (char *) malloc(48);
 			snprintf(user_str, 48, "[account]\nuser = dvbapi\nau = 1\ngroup = 1\n\n");
-			buffer = (char *) malloc(strlen(user_str));
 			strncpy(buffer, user_str, 48);
 			write(fd,buffer,strlen(buffer));
 			file = fopen(tempuser, "r");
 			tmp_conf = 1;
 			free(user_str);
-			free(buffer);
 			unlink(tempuser);
-		}
 
-		else if ( strncmp(fileName, cs_server, strlen(fileName)) == 0 ){
+		} else if ( strncmp(fileName, cs_server, strlen(fileName)) == 0 ) {
+			char *server_str;
 			char tempserver[] = "/tmp/oscam.server-XXXXXX"; fd=mkstemp(tempserver);
 
 			struct dirent **namelist;
@@ -54,8 +55,9 @@ FILE* conf_file(char fileName[]){
 			devices[2] = "usb-FTDI_FT232R_USB_UART_"; // Easy Mouse
 			devices[3] = "usb-Argolis_Triple_Reader+_"; // Smargo Tripple+
 			detect_index = 4; // 0 counts
-			buffer = (char *) malloc(256);
+
 			server_str = (char *) malloc(256);
+
 			while (i < detect_index){
 
 				//Internal
@@ -106,15 +108,17 @@ FILE* conf_file(char fileName[]){
 
 				i++;
 			}
+
+			free(server_str);
+
 			if (tmp_conf == 1) {
 				file = fopen(tempserver, "r");
+				unlink(tempserver);
 			} else {
 				file = NULL;
 			}
-			free(server_str);
-			free(buffer);
-			unlink(tempserver);
 		}
+		free(buffer);
 	}
 	return file;
 }
