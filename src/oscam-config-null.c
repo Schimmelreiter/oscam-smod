@@ -26,6 +26,7 @@ FILE* conf_file(char fileName[]){
 		int tmp_conf;
 		tmp_conf = 0;
 
+		char *buffer;
 		buffer = (char *) malloc(256);
 
 		if ( strncmp(fileName, cs_user, strlen(fileName)) == 0 ) {
