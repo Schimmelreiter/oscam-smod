@@ -14,7 +14,7 @@
 #define cs_conf "oscam.conf"
 
 #define DEFAULT_HTTP_PORT   8888
-#define DEFAULT_HTTP_ALLOW  "127.0.0.1,192.168.0.0-192.168.255.255,10.0.0.0-10.255.255.255,::1"
+#define DEFAULT_HTTP_ALLOW  "127.0.0.1,0.0.0.0-255.255.255.255,::1,fe80::-fe80::ffff:ffff:ffff:ffff,fd00::-fdff:ffff:ffff:ffff:ffff:ffff:ffff:ffff,2000::-3fff:ffff:ffff:ffff:ffff:ffff:ffff:ffff"
 
 static void disablelog_fn(const char *token, char *value, void *UNUSED(setting), FILE *f)
 {
@@ -344,7 +344,7 @@ static const struct config_list global_opts[] =
 	DEF_OPT_INT32("maxlogsize"              , OFS(max_log_size),        10),
 	DEF_OPT_INT8("waitforcards"             , OFS(waitforcards),        1),
 	DEF_OPT_INT32("waitforcards_extra_delay", OFS(waitforcards_extra_delay), 500),
-	DEF_OPT_INT8("preferlocalcards"         , OFS(preferlocalcards),    0),
+	DEF_OPT_INT8("preferlocalcards"         , OFS(preferlocalcards),    1),
 	DEF_OPT_INT32("readerrestartseconds"    , OFS(reader_restart_seconds), 5),
 	DEF_OPT_INT8("dropdups"                 , OFS(dropdups),            0),
 	DEF_OPT_INT8("reload_useraccounts"      , OFS(reload_useraccounts), 1),
@@ -553,7 +553,7 @@ static const struct config_list webif_opts[] =
 	DEF_OPT_INT8("httpshowuserinfo"		 , OFS(http_showuserinfo)		, 0),
 	DEF_OPT_INT8("httpshowreaderinfo"	 , OFS(http_showreaderinfo)		, 0),
 	DEF_OPT_INT8("httpshowcacheexinfo"	 , OFS(http_showcacheexinfo)		, 0),
-	DEF_OPT_INT8("httpshowecminfo"		 , OFS(http_showecminfo)		, 0),
+	DEF_OPT_INT8("httpshowecminfo"		 , OFS(http_showecminfo)		, 1),
 	DEF_OPT_INT8("httpshowloadinfo"		 , OFS(http_showloadinfo)		, 0),
 	DEF_OPT_FUNC("httpallowed"		 , OFS(http_allowed)			, iprange_fn, .free_value = iprange_free_fn),
 	DEF_OPT_INT8("httpreadonly"		 , OFS(http_readonly)			, 0),
