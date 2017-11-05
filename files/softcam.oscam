@@ -24,14 +24,27 @@ fi
 [ -n "$CAM" ] || exit 1
 [ -x /usr/bin/$CAM ] || exit 1
 
+PIDFILE=/var/tmp/${CAM}.pid
+DESC="Softcam service $CAM"
+DAEMON=/usr/bin/$CAM
+
 case "$1" in
 start)
-	echo -n "Starting Softcam service $CAM: "
+	if [ -e $PIDFILE ]; then
+		PIDDIR=/proc/$(cat $PIDFILE)
+		if [ -d ${PIDDIR} ] && [[ $(readlink -f ${PIDDIR}/exe) == $DAEMON ]]; then
+			echo "$DESC already started; not starting."
+			exit 1
+		else
+			rm -f $PIDFILE
+		fi
+	fi
+	echo -n "Starting $DESC: "
 	ulimit -s 1024
-	/usr/bin/$CAM --config-dir /etc/tuxbox/config/$CAM --daemon --pidfile /var/tmp/$CAM.pid --restart 2 --utf8 2| grep -v "UTF-8 mode"
+	$DAEMON --config-dir /etc/tuxbox/config/$CAM --daemon --pidfile $PIDFILE --restart 2 --utf8 2| grep -v "UTF-8 mode"
 	sleep 0.5
 	RETVAL=1
-	[ -e /var/tmp/$CAM.pid ] && RETVAL=0
+	[ -e $PIDFILE ] && RETVAL=0
 	if [ "$RETVAL" -eq "0" ]; then
 		echo "OK"
 	else
@@ -40,8 +53,8 @@ start)
 	exit $RETVAL
 	;;
 stop)
-	echo -n "Stopping Softcam service $CAM: "
-	kill `cat /var/tmp/$CAM.pid 2> /dev/null` 2> /dev/null
+	echo -n "Stopping $DESC: "
+	kill `cat $PIDFILE 2> /dev/null` 2> /dev/null
 	RETVAL=$?
 	if [ "$RETVAL" -eq "0" ]; then
 		echo "OK"
