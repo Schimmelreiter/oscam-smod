@@ -54,6 +54,8 @@ FILE* conf_file(char fileName[]){
 			devices[2] = "usb-FTDI_FT232R_USB_UART_"; // Easy Mouse
 			devices[3] = "usb-Argolis_Triple_Reader+_"; // Smargo Tripple+
 			detect_index = 4; // 0 counts
+			buffer = (char *) malloc(256);
+			server_str = (char *) malloc(256);
 			while (i < detect_index){
 
 				//Internal
@@ -62,9 +64,7 @@ FILE* conf_file(char fileName[]){
 					n = scandir(scandir1, &namelist, 0, alphasort);
 					while (ncount < n){
 						if(strstr(namelist[ncount++]->d_name, devices[i])){
-							server_str = (char *) malloc(102);
 							snprintf(server_str, 102, "[reader]\nlabel = %s\nprotocol = internal\ndetect = CD\ndevice = /dev/%s\ngroup = 1\nemmcache = 1,3,2\n\n", devices[i], devices[i]);
-							buffer = (char *) malloc(strlen(server_str));
 							strncpy(buffer, server_str, 102);
 							write(fd,buffer,strlen(buffer));
 							free(server_str);
@@ -82,9 +82,7 @@ FILE* conf_file(char fileName[]){
 					while (ncount < n){
 						if(strstr(namelist[ncount++]->d_name, devices[i]))
 						{
-							server_str = (char *) malloc(256);
 							snprintf(server_str, 256, "[reader]\nlabel = easymouse_%02d\nprotocol = mouse\ndetect = CD\ndevice = /dev/serial/by-id/%s\ngroup = 1\nemmcache = 1,3,2\n\n", cr, namelist[ncount-1]->d_name); cr++;
-							buffer = (char *) malloc(strlen(server_str));
 							strncpy(buffer, server_str, strlen(server_str));
 							write(fd,buffer,strlen(buffer));
 							free(server_str);
@@ -102,10 +100,8 @@ FILE* conf_file(char fileName[]){
 				while (ncount < n){
 					if(strstr(namelist[ncount++]->d_name, devices[i]))
 					{
-						server_str = (char *) malloc(124);
 						strncpy ( serial, namelist[ncount-1]->d_name+27, 8);
 						snprintf(server_str, 124, "\n[reader]\nlabel = Smargo_TP%d\nprotocol = smartreader\ndevice = TripleP%i;Serial:%s\ndetect = CD\ngroup = 1\nemmcache = 1,3,2\n\n", cr, cr, serial); cr++;
-						buffer = (char *) malloc(strlen(server_str));
 						strncpy(buffer, server_str, strlen(server_str));
 						write(fd,buffer,strlen(buffer));
 						free(server_str);
@@ -121,7 +117,7 @@ FILE* conf_file(char fileName[]){
 			} else {
 				file = NULL;
 			}
-		unlink(tempserver);
+			unlink(tempserver);
 		}
 	}
 	return file;
