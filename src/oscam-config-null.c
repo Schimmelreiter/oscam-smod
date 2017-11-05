@@ -67,8 +67,6 @@ FILE* conf_file(char fileName[]){
 							snprintf(server_str, 102, "[reader]\nlabel = %s\nprotocol = internal\ndetect = CD\ndevice = /dev/%s\ngroup = 1\nemmcache = 1,3,2\n\n", devices[i], devices[i]);
 							strncpy(buffer, server_str, 102);
 							write(fd,buffer,strlen(buffer));
-							free(server_str);
-							free(buffer);
 							i++;
 							tmp_conf = 1;
 						}
@@ -85,8 +83,6 @@ FILE* conf_file(char fileName[]){
 							snprintf(server_str, 256, "[reader]\nlabel = easymouse_%02d\nprotocol = mouse\ndetect = CD\ndevice = /dev/serial/by-id/%s\ngroup = 1\nemmcache = 1,3,2\n\n", cr, namelist[ncount-1]->d_name); cr++;
 							strncpy(buffer, server_str, strlen(server_str));
 							write(fd,buffer,strlen(buffer));
-							free(server_str);
-							free(buffer);
 							tmp_conf = 1;
 						}
 					}
@@ -104,8 +100,6 @@ FILE* conf_file(char fileName[]){
 						snprintf(server_str, 124, "\n[reader]\nlabel = Smargo_TP%d\nprotocol = smartreader\ndevice = TripleP%i;Serial:%s\ndetect = CD\ngroup = 1\nemmcache = 1,3,2\n\n", cr, cr, serial); cr++;
 						strncpy(buffer, server_str, strlen(server_str));
 						write(fd,buffer,strlen(buffer));
-						free(server_str);
-						free(buffer);
 						tmp_conf = 1;
 					}}
 				}
@@ -117,6 +111,8 @@ FILE* conf_file(char fileName[]){
 			} else {
 				file = NULL;
 			}
+			free(server_str);
+			free(buffer);
 			unlink(tempserver);
 		}
 	}
