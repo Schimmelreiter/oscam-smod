@@ -31,7 +31,7 @@ FILE* conf_file(char fileName[]){
 			char tempuser[] = "/tmp/oscam.user-XXXXXX"; fd=mkstemp(tempuser);
 			strncpy(tmp_filename, tempuser, strlen(tempuser));
 			user_str = (char *) malloc(48);
-			snprintf(user_str, 48, "[account]\nuser = dvbapi_local\nau = 1\ngroup = 1\n\n");
+			snprintf(user_str, 48, "[account]\nuser = dvbapi\nau = 1\ngroup = 1\n\n");
 			buffer = (char *) malloc(strlen(user_str));
 			strncpy(buffer, user_str, 48);
 			write(fd,buffer,strlen(buffer));
