@@ -101,7 +101,7 @@ static bool use_srvid2 = false;
 #define MNU_CFG_LCD			14
 #define MNU_CFG_MONITOR		15
 #define MNU_CFG_WEBIF		16
-#define MNU_CFG_STREAMRELAY 17
+#define MNU_CFG_STREAMRELAY     17
 
 /* constants for files.html submenuactivating */
 #define MNU_CFG_FVERSION	0
@@ -4471,7 +4471,7 @@ static char *send_oscam_entitlement(struct templatevars *vars, struct uriparams 
 					int jsondelimiter = 0;
 					while((item = ll_iter_next(&itr)))
 					{
-#ifdef WITH_EMU						
+#ifdef WITH_EMU
 						if(item->isKey) {
 							tpl_addVar(vars, TPLADD, "ENTSTARTDATE", "");
 							tpl_addVar(vars, TPLADD, "ENTENDDATE", "");
@@ -4489,11 +4489,11 @@ static char *send_oscam_entitlement(struct templatevars *vars, struct uriparams 
 							if(item->isData) { tpl_addVar(vars, TPLADD, "ENTTYPE", "data"); }
 							else { tpl_addVar(vars, TPLADD, "ENTTYPE", "key"); }
 							tpl_addVar(vars, TPLADD, "ENTRESNAME", "");
-
+							
 							if((strcmp(getParam(params, "hideexpired"), "1") != 0) || (item->end > now))
-								{ tpl_addVar(vars, TPLAPPEND, "READERENTENTRY", tpl_getTpl(vars, "ENTITLEMENTITEMBIT")); }							
-						
-							continue;	
+								{ tpl_addVar(vars, TPLAPPEND, "READERENTENTRY", tpl_getTpl(vars, "ENTITLEMENTITEMBIT")); }
+							
+							continue;
 						}
 #endif
 

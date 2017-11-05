@@ -1820,7 +1820,7 @@ int32_t main(int32_t argc, char *argv[])
 	init_readerdb();
 #ifdef WITH_EMU
 	add_emu_reader();
-#endif	
+#endif
 	cfg.account = init_userdb();
 	init_signal();
 	init_provid();
@@ -1904,11 +1904,11 @@ int32_t main(int32_t argc, char *argv[])
 	SAFE_COND_SIGNAL(&reader_check_sleep_cond); // Stop reader_check thread
 
 	// Cleanup
-#ifdef WITH_EMU
-	stop_stream_server();
-#endif
 #ifdef MODULE_GBOX
 	stop_sms_sender();
+#endif
+#ifdef WITH_EMU
+	stop_stream_server();
 #endif
 	webif_close();
 	azbox_close();

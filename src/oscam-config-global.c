@@ -863,7 +863,7 @@ static bool streamrelay_should_save_fn(void *UNUSED(var))
 static const struct config_list streamrelay_opts[] =
 {
 	DEF_OPT_SAVE_FUNC(streamrelay_should_save_fn),
-	DEF_OPT_STR("stream_source_host"	      , OFS(emu_stream_source_host),          "127.0.0.1"),
+	DEF_OPT_STR("stream_source_host"          , OFS(emu_stream_source_host),          "127.0.0.1"),
 	DEF_OPT_INT32("stream_source_port"        , OFS(emu_stream_source_port),          8001),
 	DEF_OPT_STR("stream_source_auth_user"     , OFS(emu_stream_source_auth_user),     NULL),
 	DEF_OPT_STR("stream_source_auth_password" , OFS(emu_stream_source_auth_password), NULL),

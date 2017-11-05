@@ -32,7 +32,7 @@ void hdSurEncPhase2_D2_13_15(uint8_t *cws);
 // Version info
 uint32_t GetOSemuVersion(void)
 {
-	return atoi("$Version: 739 $"+10);
+	return atoi("$Version: 754 $"+10);
 }
 
 // Key DB
@@ -428,8 +428,18 @@ int32_t FindKey(char identifier, uint32_t provider, uint32_t providerIgnoreMask,
 		}
 	}
 
-	if(isCriticalKey) {
-		cs_log("Key not found: %c %X %s", identifier, provider, keyName);
+	if (isCriticalKey)
+	{
+		switch (identifier)
+		{
+			case 'F': // BISS keys
+				cs_log("Key not found: F %08X %s", provider, keyName);
+				break;
+
+			default:
+				cs_log("Key not found: %c %X %s", identifier, provider, keyName);
+				break;
+		}
 	}
 	return 0;
 }
@@ -800,14 +810,14 @@ static int8_t GetCwKey(uint8_t *buf,uint32_t ident, uint8_t keyIndex, uint32_t k
 	char keyName[EMU_MAX_CHAR_KEYNAME];
 	uint32_t tmp;
 
-	if((ident>>4)== 0xD02A) {
-		keyIndex &=0xFE;    // map to even number key indexes
+	if((ident >> 4) == 0xD02A) {
+		keyIndex &=0xFE; // map to even number key indexes
 	}
-	if((ident>>4)== 0xD00C) {
-		ident = 0x0D00C0;    // map provider C? to C0
+	if((ident >> 4) == 0xD00C) {
+		ident = 0x0D00C0; // map provider C? to C0
 	}
-	else if(keyIndex==6 && ((ident>>8) == 0x0D05)) {
-		ident = 0x0D0504;    // always use provider 04 system key
+	else if(keyIndex == 6 && ((ident >> 8) == 0x0D05)) {
+		ident = 0x0D0504; // always use provider 04 system key
 	}
 
 	tmp = keyIndex;
@@ -1306,7 +1316,7 @@ static int8_t CryptoworksECM(uint32_t caid, uint8_t *ecm, uint8_t *cw)
 	for(i = 8; i+1 < ecmLen; i += ecm[i+1]+2) {
 		switch(ecm[i]) {
 		case 0xDB:
-			if(i+2+ecm[i+1] <= ecmLen && ecm[i+1]==16) {
+			if(i+2+ecm[i+1] <= ecmLen && ecm[i+1] == 16) {
 				memcpy(cw, &ecm[i+2], 16);
 				return 0;
 			}
@@ -1371,7 +1381,7 @@ static int8_t SoftNDSECM(uint16_t caid, uint8_t *ecm, uint8_t *dw)
 	}
 
 	memset(dw,0,16);
-	tDW = &dw[ecm[0]==0x81 ? 8 : 0];
+	tDW = &dw[ecm[0] == 0x81 ? 8 : 0];
 
 	MD5_Init(&mdContext);
 	MD5_Update(&mdContext, ecm+7, 10);
@@ -1648,8 +1658,8 @@ static int8_t Via26ProcessDw(uint8_t *indata, uint32_t ident, uint8_t desKeyInde
 		Tmp[pv2] = pv1;
 	}
 	for (i=0; i<8; i++) {
-		pv1 =  Tmp[i];
-		pv2 =  T1Key[pv1];
+		pv1 = Tmp[i];
+		pv2 = T1Key[pv1];
 		indata[i] = pv2;
 	}
 	return 0;
@@ -1887,7 +1897,7 @@ static int8_t Via3Decrypt(uint8_t* source, uint8_t* dw, uint32_t ident, uint8_t 
 	if(needsAES && !GetViaKey((uint8_t*)aesKey, ident, 'E', aesKeyIndex, 16, 1)) {
 		return 2;
 	}
-	if(aesMode==0x0D || aesMode==0x11 || aesMode==0x15) {
+	if(aesMode == 0x0D || aesMode == 0x11 || aesMode == 0x15) {
 		aesAfterCore = 1;
 	}
 
@@ -1975,13 +1985,13 @@ static int8_t ViaccessECM(uint8_t *ecm, uint8_t *dw)
 			}
 			version = ecm[i];
 			if (nanoLen == 3) {
-				currentIdent=((ecm[i]<<16)|(ecm[i+1]<<8))|(ecm[i+2]&0xF0);
-				desKeyIndex = ecm[i+2]&0x0F;
+				currentIdent = ((ecm[i]<<16)|(ecm[i+1]<<8))|(ecm[i+2]&0xF0);
+				desKeyIndex  = ecm[i+2]&0x0F;
 				keySelectPos = i+3;
 			}
 			else {
-				currentIdent =(ecm[i]<<16)|(ecm[i+1]<<8)|((ecm[i+2]>>4)&0x0F);
-				desKeyIndex = ecm[i+3];
+				currentIdent = (ecm[i]<<16)|(ecm[i+1]<<8)|((ecm[i+2]>>4)&0x0F);
+				desKeyIndex  = ecm[i+3];
 				keySelectPos = i+4;
 			}
 			providerKeyLen = nanoLen;
@@ -1991,8 +2001,8 @@ static int8_t ViaccessECM(uint8_t *ecm, uint8_t *dw)
 				break;
 			}
 			version = ecm[i];
-			currentIdent= ((ecm[i]<<16)|(ecm[i+1]<<8))|(ecm[i+2]&0xF0);
-			desKeyIndex = ecm[i+2]&0x0F;
+			currentIdent = ((ecm[i]<<16)|(ecm[i+1]<<8))|(ecm[i+2]&0xF0);
+			desKeyIndex  = ecm[i+2]&0x0F;
 			keySelectPos = i+4;
 			if((version == 3) && (nanoLen > 3)) {
 				desKeyIndex = ecm[i+(nanoLen-4)]&0x0F;
@@ -2029,8 +2039,8 @@ static int8_t ViaccessECM(uint8_t *ecm, uint8_t *dw)
 					if(keySelectPos+2 >= ecmLen) {
 						break;
 					}
-					if (ecm[keySelectPos]==0x05 && ecm[keySelectPos+1]==0x67 && (ecm[keySelectPos+2]==0x00 || ecm[keySelectPos+2]==0x01)) {
-						if(ecm[keySelectPos+2]==0x01) {
+					if (ecm[keySelectPos] == 0x05 && ecm[keySelectPos+1] == 0x67 && (ecm[keySelectPos+2] == 0x00 || ecm[keySelectPos+2] == 0x01)) {
+						if(ecm[keySelectPos+2] == 0x01) {
 							doFinalMix = 1;
 						}
 					}
@@ -2079,7 +2089,7 @@ static int8_t Nagra2Signature(const uint8_t *vkey, const uint8_t *sig, const uin
 		}
 	}
 	buff[8]&=0x7F;
-	return (memcmp(sig,buff+8,8)==0);
+	return (memcmp(sig, buff+8, 8) == 0);
 }
 
 static int8_t DecryptNagra2ECM(uint8_t *in, uint8_t *out, const uint8_t *key, int32_t len, const uint8_t *vkey, uint8_t *keyM)
@@ -2186,10 +2196,10 @@ static int8_t Nagra2ECM(uint8_t *ecm, uint8_t *dw)
 		switch(dec[i]) {
 		case 0x10:
 		case 0x11:
-			if(i+10 < cmdLen && dec[i+1]==0x09) {
+			if(i+10 < cmdLen && dec[i+1] == 0x09) {
 				s = (~dec[i])&1;
 				mecmAlgo = dec[i+2]&0x60;
-				memcpy(dw+(s<<3),&dec[i+3],8);
+				memcpy(dw+(s<<3), &dec[i+3], 8);
 				i+=11;
 				l|=(s+1);
 			}
@@ -2297,8 +2307,8 @@ static void Irdeto2Decrypt(uint8_t *data, const uint8_t *seed, const uint8_t *ke
 	for(i=0; i+7<len; i+=8,data+=8,n^=1) {
 		memcpy(buf[1-n],data,8);
 		des(data, ks1, 0);
-		des(data, ks2, 1);	
-		des(data, ks1, 0);	
+		des(data, ks2, 1);
+		des(data, ks1, 0);
 		xxor(data,8,data,buf[n]);
 	}
 }
@@ -2330,7 +2340,7 @@ static int8_t Irdeto2CalculateHash(const uint8_t *key, const uint8_t *iv, const 
 		des(cbuff, ks1, 1);
 	}
 
-	return memcmp(cbuff,&data[len],8)==0;
+	return memcmp(cbuff, &data[len], 8) == 0;
 }
 
 static int8_t Irdeto2ECM(uint16_t caid, uint8_t *oecm, uint8_t *dw)
@@ -2359,43 +2369,43 @@ static int8_t Irdeto2ECM(uint16_t caid, uint8_t *oecm, uint8_t *dw)
 		while(GetIrdetoKey(okeySeed, ident, 'M', 1, 1, &keySeedRef)) {
 			keyIVRef = 0;
 			while(GetIrdetoKey(keyIV, ident, 'M', 2, 1, &keyIVRef)) {
-
+				
 				memcpy(keySeed, okeySeed, 16);
 				memcpy(ecmCopy, oecm, ecmLen);
 				ecm = ecmCopy;
-
+				
 				memset(tmp, 0, 16);
 				Irdeto2Encrypt(keySeed, tmp, key, 16);
 				ecm+=12;
 				Irdeto2Decrypt(ecm, keyIV, keySeed, length);
 				i=(ecm[0]&7)+1;
 				end = length-8 < 0 ? 0 : length-8;
-
+				
 				while(i<end) {
 					l = ecm[i+1] ? (ecm[i+1]&0x3F)+2 : 1;
 					switch(ecm[i]) {
 					case 0x10:
 					case 0x50:
-						if(l==0x13 && i<=length-8-l) {
+						if(l == 0x13 && i <= length-8-l) {
 							Irdeto2Decrypt(&ecm[i+3], keyIV, key, 16);
 						}
 						break;
 					case 0x78:
-						if(l==0x14 && i<=length-8-l) {
+						if(l == 0x14 && i <= length-8-l) {
 							Irdeto2Decrypt(&ecm[i+4], keyIV, key, 16);
 						}
 						break;
 					}
 					i+=l;
 				}
-
+				
 				i=(ecm[0]&7)+1;
 				if(Irdeto2CalculateHash(keySeed, keyIV, ecm-6, length+6)) {
 					while(i<end) {
 						l = ecm[i+1] ? (ecm[i+1]&0x3F)+2 : 1;
 						switch(ecm[i]) {
 						case 0x78:
-							if(l==0x14 && i<=length-8-l) {
+							if(l == 0x14 && i <= length-8-l) {
 								memcpy(dw, &ecm[i+4], 16);
 								return 0;
 							}
@@ -2419,53 +2429,938 @@ static int8_t Irdeto2ECM(uint16_t caid, uint8_t *oecm, uint8_t *dw)
 	return 1;
 }
 
-// BISS Emu
+// BISS EMU
+static void BissUnifyOrbitals(uint32_t *namespace)
+{
+	// Unify orbitals to produce same namespace among users
+	// Set positions according to http://satellites-xml.org
+
+	uint16_t pos = (*namespace & 0x0FFF0000) >> 16;
+
+	switch (pos)
+	{
+		case 29: // Rascom QAF 1R
+		case 31: // Eutelsat 3B
+		{
+			pos = 30;
+			break;
+		}
+
+		case 49:
+		case 50: // SES 5
+		{
+			pos = 48; // Astra 4A
+			break;
+		}
+
+		case 215:
+		{
+			pos = 216; // Eutelsat 21B
+			break;
+		}
+
+		case 285: // Astra 2E
+		{
+			pos = 282; // Astra 2F/2G
+			break;
+		}
+
+		case 328: // Intelsat 28
+		case 329:
+		case 331: // Eutelsat 33C
+		{
+			pos = 330;
+			break;
+		}
+
+		case 359: // Eutelsat 36B
+		case 361: // Express AMU1
+		{
+			pos = 360;
+			break;
+		}
+
+		case 451: // Intelsat 904
+		{
+			pos = 450; // Intelsat 12
+			break;
+		}
+
+		case 550:
+		case 551: // G-Sat 8/16
+		{
+			pos = 549; // Yamal 402
+			break;
+		}
+
+		case 748:
+		case 749: // ABS 2A
+		{
+			pos = 750;
+			break;
+		}
+
+		case 848: // Horizons 2
+		case 852: // Intelsat 15
+		{
+			pos = 850;
+			break;
+		}
+
+		case 914: // Mesasat 3a
+		{
+			pos = 915; // Mesasat 3/3b
+			break;
+		}
+
+		case 934: // G-Sat 17
+		case 936: // Insat 4B
+		{
+			pos = 935; // G-Sat 15
+			break;
+		}
+
+		case 3600 - 911: // Nimiq 6
+		{
+			pos = 3600 - 910; // Galaxy 17
+		}
+
+		case 3600 - 870: // SES 2
+		case 3600 - 872: // TKSat 1
+		{
+			pos = 3600 - 871;
+			break;
+		}
+
+		case 3600 - 432: // Sky Brasil 1
+		case 3600 - 430: // Intelsat 11
+		{
+			pos = 3600 - 431;
+			break;
+		}
+
+		case 3600 - 376: // Telstar 11N
+		case 3600 - 374: // NSS 10
+		{
+			pos = 3600 - 375;
+			break;
+		}
+
+		case 3600 - 359: // Hispasat 36W-1
+		{
+			pos = 3600 - 360; // Eutelsat 36 West A
+			break;
+		}
+
+		case 3600 - 81: // Eutelsat 8 West B
+		{
+			pos = 3600 - 80;
+			break;
+		}
+
+		case 3600 - 73: // Eutelsat 7 West A
+		case 3600 - 72:
+		case 3600 - 71:
+		{
+			pos = 3600 - 70; // Nilesat 201
+			break;
+		}
+
+		case 3600 - 10: // Intelsat 10-02
+		case 3600 - 9: // Thor 6
+		case 3600 - 7: // Thor 7
+		case 3600 - 6: // Thor 7
+		{
+			pos = 3600 - 8; // Thor 5
+			break;
+		}
+	}
+
+	*namespace = (*namespace & 0xF000FFFF) | (pos << 16);
+}
+
+static void BissAnnotate(char *buf, uint8_t len, const uint8_t *ecm, uint16_t ecmLen, uint8_t isNamespaceHash)
+{
+	// Extract useful information to append to the "Example key ..." message.
+	//
+	// For feeds, the orbital position & frequency are usually embedded in the namespace.
+	// See https://github.com/openatv/enigma2/blob/master/lib/dvb/frontend.cpp#L496
+	// hash = (sat.orbital_position << 16);
+	// hash |= ((sat.frequency/1000)&0xFFFF)|((sat.polarisation&1) << 15);
+	//
+	// If the onid & tsid appear to be a unique DVB identifier, enigma2 strips the frequency
+	// from our namespace. See https://github.com/openatv/enigma2/blob/master/lib/dvb/scan.cpp#L59
+	// In that case, our annotation contains the onid:tsid:sid triplet in lieu of frequency.
+	//
+	// For the universal case, we print the number of es pids & pmtpid.
+	// The sid and current time are included for all. Examples:
+	//
+	// 110.5W 12345H sid:0001 added: 2017-10-17 @ 13:14:15 // namespace
+	//  33.5E  ABCD:9876:1234 added: 2017-10-17 @ 13:14:15 // stripped namespace
+	// av:5 pmt:0134 sid:0001 added: 2017-10-17 @ 13:14:15 // universal
+
+	uint16_t frequency, degrees;
+	uint16_t pmtpid, srvid, tsid, onid;
+	uint8_t pidcount;
+	uint32_t ens;
+	char compass, polarisation, timeStr[32];
+
+	time_t rawtime;
+	struct tm timeinfo;
+	time(&rawtime);
+	localtime_r(&rawtime, &timeinfo);
+	strftime(timeStr, sizeof(timeStr), "added: %F @ %R", &timeinfo);
+
+	if (isNamespaceHash) // Namespace hash
+	{
+		ens = b2i(4, ecm + ecmLen - 4); // Namespace will be the last 4 bytes of the ecm
+		degrees = (ens >> 16) & 0x0FFF; // Remove not-a-pid flag
+
+		if (degrees > 1800)
+		{
+			degrees = 3600 - degrees;
+			compass = 'W';
+		}
+		else
+		{
+			compass = 'E';
+		}
+
+		if (0 == (ens & 0xFFFF)) // Stripped namespace hash
+		{
+			srvid = b2i(2, ecm + 3);
+			tsid = b2i(2, ecm + ecmLen - 8);
+			onid = b2i(2, ecm + ecmLen - 6);
+			// Printing degree sign "\u00B0" requires c99 standard
+			snprintf(buf, len, "%5.1f%c  %04X:%04X:%04X %s", degrees / 10.0, compass, onid, tsid, srvid, timeStr);
+		}
+		else // Full namespace hash
+		{
+			srvid = b2i(2, ecm + 3);
+			frequency = ens & 0x7FFF; // Remove polarity bit
+			polarisation = ens & 0x8000 ? 'V' : 'H';
+			// Printing degree sign "\u00B0" requires c99 standard
+			snprintf(buf, len, "%5.1f%c %5d%c sid:%04X %s", degrees / 10.0, compass, frequency, polarisation, srvid, timeStr);
+		}
+	}
+	else // Universal hash
+	{
+		srvid = b2i(2, ecm + 3);
+		pmtpid = b2i(2, ecm + 5);
+		pidcount = (ecmLen - 15) / 2; // video + audio pids count
+		snprintf(buf, len, "av:%d pmt:%04X sid:%04X %s", pidcount, pmtpid, srvid, timeStr);
+	}
+}
+
+static uint8_t BissIsCommonHash(uint32_t hash)
+{
+	// Check universal hash against a number of commnon universal
+	// hashes in order to warn users about potential key clashes
+
+	switch (hash)
+	{
+		case 0xBAFCD9FD: // 0001 0020 0200 1010 1020 (most common hash)
+			return 1;
+		case 0xA6A4FBD4: // 0001 0800 0200 1010 1020
+			return 1;
+		case 0xEFAB7A4D: // 0001 0800 1010 1020 0200
+			return 1;
+		case 0x83FA15D1: // 0001 0020 0134 0100 0101
+			return 1;
+		case 0x58934C38: // 0001 0800 1010 1020 1030 0200
+			return 1;
+		case 0x2C3CEC17: // 0001 0020 0134 0100
+			return 1;
+		case 0x73DF7F7E: // 0001 0020 0200 1010 1020 1030
+			return 1;
+		case 0xAFA85BC8: // 0001 0020 0021 0022 0023
+			return 1;
+		case 0x8C51F31D: // 0001 0800 0200 1010 1020 1030 1040
+			return 1;
+		case 0xE2F9BD29: // 0001 0800 0200 1010 1020 1030
+			return 1;
+		case 0xB9EBE0FF: // 0001 0100 0200 1010 1020 (less common hash)
+			return 1;
+		default:
+			return 0;
+	}
+}
+
+static uint8_t BissIsValidNamespace(uint32_t namespace)
+{
+	// Note to developers:
+	// If we ever have a satellite at 0.0E, edit to allow stripped namespace
+	// '0xA0000000' with an additional test on tsid and onid being != 0
+
+	uint16_t orbital, frequency;
+
+	orbital = (namespace >> 16) & 0x0FFF;
+	frequency = namespace & 0x7FFF;
+
+	if ((namespace & 0xA0000000) != 0xA0000000) return 0;   // Value isn't flagged as namespace
+	if (namespace == 0xA0000000) return 0;                  // Empty namespace
+	if (orbital > 3599) return 0;                           // Allow only DVB-S
+	if (frequency == 0) return 1;                           // Stripped namespace
+	if (frequency >= 3400 && frequency <= 4200) return 1;   // Super extended C band
+	if (frequency >= 10700 && frequency <= 12750) return 1; // Ku band Europe
+
+	return 0;
+}
+
 static int8_t BissECM(uint16_t UNUSED(caid), const uint8_t *ecm, int16_t ecmDataLen,
 					  uint8_t *dw, uint16_t srvid, uint16_t ecmpid)
 {
-	uint8_t haveKey1 = 0, haveKey2 = 0;
+	// Oscam's fake ecm consists of [sid] [pmtpid] [pid1] [pid2] ... [pidx] [tsid] [onid] [namespace]
+	//
+	// On enigma boxes tsid, onid and namespace should be non zero, while on non-enigma
+	// boxes they are usually all zero.
+	// The emulator creates a unique channel hash using srvid and enigma namespace or
+	// srvid, tsid, onid and namespace (in case of namespace without frequency) and
+	// another weaker (not unique) hash based on every pid of the channel. This universal
+	// hash should be available on all types of stbs (enigma and non-enigma).
+
+	// Flags inside [namespace]
+	//
+	// emu r748- : no namespace, no flag
+	// emu r749  : 0x80000000 (full namespase), 0xC0000000 (stripped namespace, injected with tsid^onid^ecmpid^0x1FFF)
+	// emu r752+ : 0xA0000000 (pure namespace, either full, stripped, or null)
+
+	// Key searches are made in order:
+	// Highest priority / tightest test first
+	// Lowest priority / loosest test last
+	//
+	// 1st: namespace hash (only on enigma boxes)
+	// 2nd: universal hash (all box types with emu r752+)
+	// 3rd: faulty ecmpid (other than 0x1FFF)
+	// 4th: reverse order pid (audio, video, pmt pids)
+	// 5th: standard BISS ecmpid (0x1FFF)
+	// 6th: default "All Feeds" key
+
+	uint8_t ecmCopy[EMU_MAX_ECM_LEN];
 	uint16_t ecmLen = 0, pid = 0;
-	uint32_t i;
+	uint32_t i, ens, hash;
+	char tbuf[64], keyValue[17];
 
-	//try using ecmpid if it seems to be valid
-	if(ecmpid != 0) {
-		haveKey1 = FindKey('F', (srvid<<16)|ecmpid, 0, "00", dw, 8, 1, 0, 0, NULL);
-		haveKey2 = FindKey('F', (srvid<<16)|ecmpid, 0, "01", &dw[8], 8, 1, 0, 0, NULL);
-
-		if(haveKey1 && haveKey2) {return 0;}
-		else if(haveKey1 && !haveKey2) {memcpy(&dw[8], dw, 8); return 0;}
-		else if(!haveKey1 && haveKey2) {memcpy(dw, &dw[8], 8); return 0;}
+	if (ecmDataLen >= 3)
+	{
+		ecmLen = GetEcmLen(ecm);
 	}
 
-	//try to get the pid from oscam's fake ecm ([sid] ([pid1] [pid2] ... [pidx])
-	if(ecmDataLen >= 3) {
-		ecmLen = GetEcmLen(ecm);
+	// First try using the unique namespace hash (enigma only)
+	if (ecmLen >= 13 && ecmLen <= ecmDataLen) // ecmLen >= 13, allow allow patching the ecmLen for r749 ecms
+	{
+		memcpy(ecmCopy, ecm, ecmLen);
+		ens = b2i(4, ecm + ecmLen - 4); // Namespace will be the last 4 bytes
 
-		if(ecmLen > 7 && ecmLen <= ecmDataLen) {
-			for(i=5; i+1<ecmLen; i+=2) {
-				pid = b2i(2, ecm+i);
-				haveKey1 = FindKey('F', (srvid<<16)|pid, 0, "00", dw, 8, 1, 0, 0, NULL);
-				haveKey2 = FindKey('F', (srvid<<16)|pid, 0, "01", &dw[8], 8, 1, 0, 0, NULL);
+		if (BissIsValidNamespace(ens)) // An r752+ extended ecm with valid namespace
+		{
+			BissUnifyOrbitals(&ens);
+			i2b_buf(4, ens, ecmCopy + ecmLen - 4);
 
-				if(haveKey1 && haveKey2) {return 0;}
-				else if(haveKey1 && !haveKey2) {memcpy(&dw[8], dw, 8); return 0;}
-				else if(!haveKey1 && haveKey2) {memcpy(dw, &dw[8], 8); return 0;}
+			for (i = 0; i < 5; i++) // Find key matching hash made with frequency modified to: f+0, then f-1, f+1, f-2, lastly f+2
+			{
+				ecmCopy[ecmLen - 1] = (i & 1) ? ecmCopy[ecmLen - 1] - i : ecmCopy[ecmLen - 1] + i; // frequency +/- 1, 2 MHz
+
+				if (0 != (ens & 0xFFFF)) // Full namespace - Calculate hash with srvid and namespace only
+				{
+					i2b_buf(2, srvid, ecmCopy + ecmLen - 6); // Put [srvid] right before [namespace]
+					hash = crc32(0x2600, ecmCopy + ecmLen - 6, 6);
+				}
+				else // Namespace without frequency - Calculate hash with srvid, tsid, onid and namespace
+				{
+					i2b_buf(2, srvid, ecmCopy + ecmLen - 10); // Put [srvid] right before [tsid] [onid] [namespace] sequence
+					hash = crc32(0x2600, ecmCopy + ecmLen - 10, 10);
+				}
+
+				if (FindKey('F', hash, 0, "00", dw, 8, (i == 0 ? 1 : 0), 0, 0, NULL)) // Do not print "key not found" for frequency off by 1, 2
+				{
+					memcpy(dw + 8, dw, 8);
+					cs_log("Key found: F %08X 00", hash);
+					return 0;
+				}
+
+				if (i == 0) // No key found matching our hash: put example SoftCam.Key BISS line in the live log
+				{
+					BissAnnotate(tbuf, sizeof(tbuf), ecmCopy, ecmLen, 1);
+					cs_log("Example key based on namespace hash: F %08X 00 XXXXXXXXXXXXXXXX ; %s", hash, tbuf);
+				}
+
+				if (0 == (ens & 0xFFFF)) // Namespace without frequency - Do not iterate
+				{
+					break;
+				}
+			}
+		}
+
+		if ((ens & 0xA0000000) == 0x80000000) // r749 ecms only (exclude r752+ ecms)
+		{
+			cs_log("Hey! Network buddy, you need to upgrade your OSCam-Emu");
+			ecmCopy[ecmLen] = 0xA0; // Patch ecm to look like r752+
+			ecmLen += 4;
+			ecmDataLen += 4;
+		}
+	}
+
+	// Try using the universal channel hash (namespace not available)
+	if (ecmLen >= 17 && ecmLen <= ecmDataLen) // ecmLen >= 17, length of r749 ecms has been patched to match r752+ ecms
+	{
+		ens = b2i(4, ecmCopy + ecmLen - 4); // Namespace will be last 4 bytes
+
+		if ((ens & 0xE0000000) == 0xA0000000) // We have an r752+ style ecm which contains pmtpid
+		{
+			memcpy(ecmCopy, ecm, ecmLen - 8); // Make a new ecmCopy from the original ecm as the old ecmCopy may be altered in namespace hash (skip [tsid] [onid] [namespace])
+			hash = crc32(0x2600, ecmCopy + 3, ecmLen - 3 - 8); // ecmCopy doesn't have [tsid] [onid] [namespace] part
+
+			if (FindKey('F', hash, 0, "00", dw, 8, 1, 0, 0, NULL))
+			{
+				memcpy(dw + 8, dw, 8);
+				cs_log("Key found: F %08X 00", hash);
+				return 0;
+			}
+			else // No key found matching our hash: put example SoftCam.Key BISS line in the live log
+			{
+				BissAnnotate(tbuf, sizeof(tbuf), ecmCopy, ecmLen, 0);
+				cs_log("Example key based on universal hash: F %08X 00 XXXXXXXXXXXXXXXX ; %s", hash, tbuf);
+			}
+
+			if (BissIsCommonHash(hash)) // Check if hash is common and warn user
+			{
+				cs_log("Feed has commonly used pids, universal hash clashes in SoftCam.Key are likely!");
+			}
+
+			// Strip [tsid] [onid] [namespace]
+			ecmLen -= 8;
+			ecmDataLen -= 8;
+		}
+	}
+
+	// Try using ecmpid if it seems to be faulty (should be 0x1FFF always for BISS)
+	if (ecmpid != 0x1FFF && ecmpid != 0)
+	{
+		if (FindKey('F', (srvid << 16) | ecmpid, 0, "00", dw, 8, 1, 0, 0, NULL))
+		{
+			memcpy(dw + 8, dw, 8);
+			cs_log("Key found: F %04X%04X 00", srvid, ecmpid);
+			return 0;
+		}
+
+		if (FindKey('F', (srvid << 16) | ecmpid, 0, "01", dw, 8, 0, 0, 0, NULL))
+		{
+			memcpy(dw + 8, dw, 8);
+			cs_log("Key found: F %04X%04X 01 <-- Support for '01' keys will be dropped in the future", srvid, ecmpid);
+			cs_log("Convert your key to the '00' equivalent: F %04X%04X 00", srvid, ecmpid);
+			return 0;
+		}
+	}
+
+	// Try to get the pid from oscam's fake ecm (only search [pid1] [pid2] ... [pidx] to be compatible with emu r748-)
+	if (ecmLen >= 7 && ecmLen <= ecmDataLen) // Use >= for radio channels with just one (audio) pid
+	{
+		// Reverse search order: last pid in list first
+		// Better identifies channels where they share identical video pid but have variable counts of audio pids
+		for (i = ecmLen - 2; i >= 5; i -= 2)
+		{
+			pid = b2i(2, ecm + i);
+
+			if (FindKey('F', (srvid << 16) | pid, 0, "00", dw, 8, 1, 0, 0, NULL))
+			{
+				memcpy(dw + 8, dw, 8);
+				cs_log("Key found: F %04X%04X 00", srvid, pid);
+				return 0;
+			}
+
+			if (FindKey('F', (srvid << 16) | pid, 0, "01", dw, 8, 0, 0, 0, NULL))
+			{
+				memcpy(dw + 8, dw, 8);
+				cs_log("Key found: F %04X%04X 01 <-- Support for '01' keys will be dropped in the future", srvid, pid);
+				cs_log("Convert your key to the '00' equivalent: F %04X%04X 00", srvid, pid);
+				return 0;
 			}
 		}
 	}
 
-	//fallback to default pid
-	haveKey1 = FindKey('F', (srvid<<16)|0x1FFF, 0, "00", dw, 8, 1, 0, 0, NULL);
-	haveKey2 = FindKey('F', (srvid<<16)|0x1FFF, 0, "01", &dw[8], 8, 1, 0, 0, NULL);
+	// Try using the standard BISS ecm pid
+	if (ecmpid == 0x1FFF || ecmpid == 0)
+	{
+		if (FindKey('F', (srvid << 16) | 0x1FFF, 0, "00", dw, 8, 1, 0, 0, NULL))
+		{
+			memcpy(dw + 8, dw, 8);
+			cs_log("Key found: F %04X1FFF 00", srvid);
+			return 0;
+		}
 
-	if(haveKey1 && haveKey2) {return 0;}
-	else if(haveKey1 && !haveKey2) {memcpy(&dw[8], dw, 8); return 0;}
-	else if(!haveKey1 && haveKey2) {memcpy(dw, &dw[8], 8); return 0;}
+		if (FindKey('F', (srvid << 16) | 0x1FFF, 0, "01", dw, 8, 0, 0, 0, NULL))
+		{
+			memcpy(dw + 8, dw, 8);
+			cs_log("Key found: F %04X1FFF 01 <-- Support for '01' keys will be dropped in the future", srvid);
+			cs_log("Convert your key to the '00' equivalent: F %04X1FFF 00", srvid);
+			return 0;
+		}
+	}
+
+	// Default BISS key for events with many feeds sharing same key
+	if (ecmpid != 0 && FindKey('F', 0xA11FEED5, 0, "00", dw, 8, 1, 0, 0, NULL)) // Limit to local ecms, block netwotk ecms
+	{
+		memcpy(dw + 8, dw, 8);
+		cs_hexdump(0, dw, 8, keyValue, sizeof(keyValue));
+		cs_log("No specific match found. Using default key: F A11FEED5 00 %s", keyValue); // "All Feeds"
+		return 0;
+	}
 
 	return 2;
 }
 
-//PowerVu Emu
+// PowerVu Emu
+static uint8_t PowervuCrc8Calc(uint8_t *data, int len)
+{
+	int i;
+	uint8_t crc = 0x00;
+	uint8_t crcTable[256] = {0x00, 0x07, 0x0E, 0x09, 0x1C, 0x1B, 0x12, 0x15, 0x38, 0x3F, 0x36, 0x31, 0x24, 0x23, 0x2A, 0x2D,
+							 0x70, 0x77, 0x7E, 0x79, 0x6C, 0x6B, 0x62, 0x65, 0x48, 0x4F, 0x46, 0x41, 0x54, 0x53, 0x5A, 0x5D,
+							 0xE0, 0xE7, 0xEE, 0xE9, 0xFC, 0xFB, 0xF2, 0xF5, 0xD8, 0xDF, 0xD6, 0xD1, 0xC4, 0xC3, 0xCA, 0xCD,
+							 0x90, 0x97, 0x9E, 0x99, 0x8C, 0x8B, 0x82, 0x85, 0xA8, 0xAF, 0xA6, 0xA1, 0xB4, 0xB3, 0xBA, 0xBD,
+							 0xC7, 0xC0, 0xC9, 0xCE, 0xDB, 0xDC, 0xD5, 0xD2, 0xFF, 0xF8, 0xF1, 0xF6, 0xE3, 0xE4, 0xED, 0xEA,
+							 0xB7, 0xB0, 0xB9, 0xBE, 0xAB, 0xAC, 0xA5, 0xA2, 0x8F, 0x88, 0x81, 0x86, 0x93, 0x94, 0x9D, 0x9A,
+							 0x27, 0x20, 0x29, 0x2E, 0x3B, 0x3C, 0x35, 0x32, 0x1F, 0x18, 0x11, 0x16, 0x03, 0x04, 0x0D, 0x0A,
+							 0x57, 0x50, 0x59, 0x5E, 0x4B, 0x4C, 0x45, 0x42, 0x6F, 0x68, 0x61, 0x66, 0x73, 0x74, 0x7D, 0x7A,
+							 0x89, 0x8E, 0x87, 0x80, 0x95, 0x92, 0x9B, 0x9C, 0xB1, 0xB6, 0xBF, 0xB8, 0xAD, 0xAA, 0xA3, 0xA4,
+							 0xF9, 0xFE, 0xF7, 0xF0, 0xE5, 0xE2, 0xEB, 0xEC, 0xC1, 0xC6, 0xCF, 0xC8, 0xDD, 0xDA, 0xD3, 0xD4,
+							 0x69, 0x6E, 0x67, 0x60, 0x75, 0x72, 0x7B, 0x7C, 0x51, 0x56, 0x5F, 0x58, 0x4D, 0x4A, 0x43, 0x44,
+							 0x19, 0x1E, 0x17, 0x10, 0x05, 0x02, 0x0B, 0x0C, 0x21, 0x26, 0x2F, 0x28, 0x3D, 0x3A, 0x33, 0x34,
+							 0x4E, 0x49, 0x40, 0x47, 0x52, 0x55, 0x5C, 0x5B, 0x76, 0x71, 0x78, 0x7F, 0x6A, 0x6D, 0x64, 0x63,
+							 0x3E, 0x39, 0x30, 0x37, 0x22, 0x25, 0x2C, 0x2B, 0x06, 0x01, 0x08, 0x0F, 0x1A, 0x1D, 0x14, 0x13,
+							 0xAE, 0xA9, 0xA0, 0xA7, 0xB2, 0xB5, 0xBC, 0xBB, 0x96, 0x91, 0x98, 0x9F, 0x8A, 0x8D, 0x84, 0x83,
+							 0xDE, 0xD9, 0xD0, 0xD7, 0xC2, 0xC5, 0xCC, 0xCB, 0xE6, 0xE1, 0xE8, 0xEF, 0xFA, 0xFD, 0xF4, 0xF3};
+	
+	for(i = 0; i < len; i++)
+	{
+		crc = crcTable[data[i] ^ crc];
+	}
+	
+	return crc;
+}
+
+static void PowervuPadData(uint8_t *data, int len, uint8_t *dataPadded)
+{
+	int i;
+	uint8_t pad[] = {0x01, 0x02, 0x22, 0x04, 0x20, 0x2A, 0x1F, 0x03, 0x04, 0x06, 0x02, 0x0C, 0x2B, 0x2B, 0x01, 0x7B};
+	
+	for(i = 0; i < len; i++)
+	{
+		dataPadded[i] = data[i];
+	}
+	
+	dataPadded[len] = 0x01;
+	
+	for(i = len + 1; i < 0x2F; i++)
+	{
+		dataPadded[i] = 0x00;
+	}
+	
+	dataPadded[0x2F] = len;
+	
+	for(i = 0; i < 0x10; i++)
+	{
+		dataPadded[0x30 + i] = pad[i];
+	}
+}
+
+static void PowervuHashMode01CustomMD5(uint8_t *data, uint8_t *hash)
+{
+	int i, j, s;
+	uint32_t a, b, c, d, f, g;
+	
+	uint32_t T[] = {0x783E16F6, 0xC267AC13, 0xA2B17F12, 0x6B8A31A4, 0xF910654D, 0xB702DBCB, 0x266CEF60, 0x5145E47C,
+					0xB92E00D6, 0xE80A4A64, 0x8A07FA77, 0xBA7D89A9, 0xEBED8022, 0x653AAF2B, 0xF118B03B, 0x6CC16544,
+					0x96EB6583, 0xF4E27E35, 0x1ABB119E, 0x068D3EF2, 0xDAEAA8A5, 0x3C312A3D, 0x59538388, 0xA100772F,
+					0xAB0165CE, 0x979959E7, 0x5DD8F53D, 0x189662BA, 0xFD021A9C, 0x6BC2D338, 0x1EFF667E, 0x40C66888,
+					0x6E9F07FF, 0x0CEF442F, 0x82D20190, 0x4E8CAEAC, 0x0F7CB305, 0x2E73FBE7, 0x1CE884A2, 0x7A60BD52,
+					0xC348B30D, 0x081CE3AA, 0xA12220E7, 0x38C7EC79, 0xCBD8DD3A, 0x62B4FBA5, 0xAD2A63DB, 0xE4D0852E,
+					0x53DE980F, 0x9C8DDA59, 0xA6B4CEDE, 0xB48A7692, 0x0E2C46A4, 0xEB9367CB, 0x165D72EE, 0x75532B45,
+					0xB9CA8E97, 0x08C8837B, 0x966F917B, 0x527515B4, 0xF27A5E5D, 0xB71E6267, 0x7603D7E6, 0x9837DD69}; // CUSTOM T
+	
+	uint8_t r[] = {0x06, 0x0A, 0x0F, 0x15, 0x05, 0x09, 0x0E, 0x14, 0x04, 0x0B, 0x10, 0x17, 0x07, 0x0C, 0x11, 0x16}; // STANDARD REORDERED
+	
+	uint8_t tIdxInit[] = {0, 1, 5, 0}; // STANDARD
+	uint8_t tIdxIncr[] = {1, 5, 3, 7}; // STANDARD
+	
+	uint32_t h[] = {0xEAD81D2E, 0xCE4DC6E9, 0xF9B5C301, 0x10325476}; // CUSTOM h0, h1, h2  STANDARD h3
+	uint32_t dataLongs[0x10];
+	
+	for(i = 0; i < 0x10; i++)
+	{
+		dataLongs[i] = (data[4 * i + 0] << 0) + (data[4 * i + 1] << 8) + (data[4 * i + 2] << 16) + (data[4 * i + 3] << 24);
+	}
+	
+	a = h[0];
+	b = h[1];
+	c = h[2];
+	d = h[3];
+	
+	for(i = 0; i < 4; i++)
+	{
+		g = tIdxInit[i];
+		
+		for(j = 0; j < 16; j++)
+		{
+			if(i == 0)
+			{
+				f = (b & c) | (~b & d);
+			}
+			else if(i == 1)
+			{
+				f = (b & d) | (~d & c);
+			}
+			else if(i == 2)
+			{
+				f = (b ^ c ^ d);
+			}
+			else if (i == 3)
+			{
+				f = (~d | b) ^ c;
+			}
+			
+			f = dataLongs[g] + a + T[16 * i + j] + f;
+			
+			s = r[4 * i + (j & 3)];
+			f = (f << s) | (f >> (32 - s));
+			
+			a = d;
+			d = c;
+			c = b;
+			b += f;
+			
+			g = (g + tIdxIncr[i]) & 0xF;
+		}
+	}
+	
+	h[0] += a;
+	h[1] += b;
+	h[2] += c;
+	h[3] += d;
+	
+	for(i = 0; i < 4; i++)
+	{
+		hash[4 * i + 0] = h[i] >> 0;
+		hash[4 * i + 1] = h[i] >> 8;
+		hash[4 * i + 2] = h[i] >> 16;
+		hash[4 * i + 3] = h[i] >> 24;
+	}
+}
+
+static void PowervuHashMode02(uint8_t *data, uint8_t *hash)
+{
+	int i;
+	uint32_t a, b, c, d, e, f, tmp;
+	uint32_t h[] = {0x81887F3A, 0x36CCA480, 0x99056FB1, 0x79705BAE};
+	uint32_t dataLongs[0x50];
+
+	for (i = 0; i < 0x10; i++)
+	{
+		dataLongs[i] = (data[4 * i + 0] << 24) + (data[4 * i + 1] << 16) + (data[4 * i + 2] << 8) + (data[4 * i + 3] << 0);
+	}
+
+	for (i = 0; i < 0x40; i++)
+	{
+		dataLongs[0x10 + i] = dataLongs[0x10 + i - 2];
+		dataLongs[0x10 + i] ^= dataLongs[0x10 + i - 7];
+		dataLongs[0x10 + i] ^= dataLongs[0x10 + i - 13];
+		dataLongs[0x10 + i] ^= dataLongs[0x10 + i - 16];
+	}
+
+	a = dataLongs[0];
+	b = dataLongs[1];
+	c = dataLongs[2];
+	d = dataLongs[3];
+	e = dataLongs[4];
+
+	for (i = 0; i < 0x50; i++)
+	{
+		if (i < 0x15) f = (b & c) | (~b & d);
+		else if (i < 0x28) f = (b ^ c ^ d);
+		else if (i < 0x3D) f = (b & c) | (c & d) | (b & d);
+		else if (i < 0x50) f = (b ^ c ^ d);
+
+		tmp = a;
+		a = e + f + (a << 5) + (a >> 27) + h[i / 0x14] + dataLongs[i];
+		e = d;
+		d = c;
+		c = (b << 30) + (b >> 2);
+		b = tmp;
+	}
+
+	dataLongs[0] += a;
+	dataLongs[1] += b;
+	dataLongs[2] += c;
+	dataLongs[3] += d;
+
+	for (i = 0; i < 4; i++)
+	{
+		hash[4 * i + 0] = dataLongs[i] >> 24;
+		hash[4 * i + 1] = dataLongs[i] >> 16;
+		hash[4 * i + 2] = dataLongs[i] >> 8;
+		hash[4 * i + 3] = dataLongs[i] >> 0;
+	}
+}
+
+static void PowervuHashMode03(uint8_t *data, uint8_t *hash)
+{
+	int i, j, k, s, s2, tmp;
+	uint32_t a, b, c, d, f, g;
+	uint32_t a2, b2, c2, d2, f2, g2;
+
+	uint32_t T[] = { 0xC88F3F2E, 0x967506BA, 0xDA877A7B, 0x0DECCDFE };
+	uint32_t T2[] = { 0x01F42668, 0x39C7CDA5, 0xD490E2FE, 0x9965235D };
+
+	uint8_t r[] = { 0x0B, 0x0E, 0x0F, 0x0C, 0x05, 0x08, 0x07, 0x09, 0x0B, 0x0D, 0x0E, 0x0F, 0x06, 0x07, 0x09, 0x08,
+					0x07, 0x06, 0x08, 0x0D, 0x0B, 0x09, 0x07, 0x0F, 0x07, 0x0C, 0x0F, 0x09, 0x0B, 0x07, 0x0D, 0x0C };
+
+	uint8_t tIdxIncr[] = { 0x07, 0x04, 0x0D, 0x01, 0x0A, 0x06, 0x0F, 0x03, 0x0C, 0x00, 0x09, 0x05, 0x02, 0x0E, 0x0B, 0x08,
+						   0x05, 0x0D, 0x02, 0x00, 0x04, 0x09, 0x03, 0x08, 0x01, 0x0A, 0x07, 0x0B, 0x06, 0x0F, 0x0C, 0x0E };
+
+	uint32_t h[] = { 0xC8616857, 0x9D3F5B8E, 0x4D7B8F76, 0x97BC8D80 };
+
+	uint32_t dataLongs[0x50];
+	uint32_t result[4];
+
+	for (i = 0; i < 0x10; i++)
+	{
+		dataLongs[i] = (data[4 * i + 0] << 24) + (data[4 * i + 1] << 16) + (data[4 * i + 2] << 8) + (data[4 * i + 3] << 0);
+	}
+
+	a = h[0];
+	b = h[1];
+	c = h[2];
+	d = h[3];
+
+	a2 = h[3];
+	b2 = h[2];
+	c2 = h[1];
+	d2 = h[0];
+
+	for (i = 0; i < 4; i++)
+	{
+		for (j = 0; j < 16; j++)
+		{
+			tmp = j;
+
+			for (k = 0; k < i; k++)
+			{
+				tmp = tIdxIncr[tmp];
+			}
+
+			g = 0x0F - tmp;
+			g2 = tmp;
+
+			if (i == 0) f = (b & d) | (~d & c);
+			else if (i == 1) f = (~c | b) ^ d;
+			else if (i == 2) f = (~b & d) | (b & c);
+			else if (i == 3) f = (b ^ c ^ d);
+
+			if (i == 0) f2 = (b2 ^ c2 ^ d2);
+			else if (i == 1) f2 = (~b2 & d2) | (b2 & c2);
+			else if (i == 2) f2 = (~c2 | b2) ^ d2;
+			else if (i == 3) f2 = (b2 & d2) | (~d2 & c2);
+
+			f = dataLongs[g] + a + T[i] + f;
+			s = r[0x0F + (((i & 1) ^ 1) << 4) - j];
+			f = (f << s) | (f >> (32 - s));
+
+			f2 = dataLongs[g2] + a2 + T2[i] + f2;
+			s2 = r[((i & 1) << 4) + j];
+			f2 = (f2 << s2) | (f2 >> (32 - s2));
+
+			a = d;
+			d = (c << 10) | (c >> 22);
+			c = b;
+			b = f;
+
+			a2 = d2;
+			d2 = (c2 << 10) | (c2 >> 22);
+			c2 = b2;
+			b2 = f2;
+		}
+	}
+
+	result[0] = h[3] + b + a2;
+	result[1] = h[2] + c + b2;
+	result[2] = h[1] + d + c2;
+	result[3] = h[0] + a + d2;
+
+	for (i = 0; i < 4; i++)
+	{
+		hash[4 * i + 0] = result[i] >> 0;
+		hash[4 * i + 1] = result[i] >> 8;
+		hash[4 * i + 2] = result[i] >> 16;
+		hash[4 * i + 3] = result[i] >> 24;
+	}
+}
+
+static void PowervuCreateHash(uint8_t *data, int len, uint8_t *hash, int mode)
+{
+	uint8_t dataPadded[0x40];
+
+	PowervuPadData(data, len, dataPadded);
+	
+	switch(mode)
+	{
+		case 1:
+			PowervuHashMode01CustomMD5(dataPadded, hash);
+			break;
+
+		case 2:
+			PowervuHashMode02(dataPadded, hash);
+			break;
+
+		case 3:
+			PowervuHashMode03(dataPadded, hash);
+			break;
+
+		default:
+			cs_log("A new hash mode [%d] is in use.", mode);
+			break;
+	}
+}
+
+static void PowervuCreateDataEcmEmm(uint8_t *emmEcm, uint8_t *pos, int lenHeader, int len, uint8_t *data)
+{
+	int i;
+	
+	for(i = 0; i < len; i++)
+	{
+		data[i] = emmEcm[lenHeader + pos[i]];
+	}
+}
+
+static uint8_t PowervuCreateDataCw(uint8_t *seed, uint8_t lenSeed, uint8_t *baseCw, uint8_t val, uint8_t *seedEcmCw, uint8_t *data)
+{
+	int i;
+	
+	for(i = 0; i < lenSeed; i++)
+	{
+		data[i] = seed[i];
+	}
+	
+	for(i = 0; i < 7; i++)
+	{
+		data[lenSeed + i] = baseCw[i];
+	}
+	
+	data[lenSeed + 7] = val;
+	
+	for(i = 0; i < 16; i++)
+	{
+		data[lenSeed + 7 + 1 + i] = seedEcmCw[i];
+	}
+	
+	return lenSeed + 7 + 1 + 0x10;
+}
+
+static uint8_t PowervuUnmaskEcm(uint8_t *ecm, uint8_t *seedEcmCw)
+{
+	int i, l;
+	
+	uint8_t sourcePos[] = {0x04, 0x05, 0x06, 0x07, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x10, 0x17, 0x1C, 0x1D, 0x1F, 0x23,
+						   0x24, 0x25, 0x26, 0x27, 0x29, 0x2C, 0x2D, 0x2E};
+	uint8_t destPos[]   = {0x08, 0x09, 0x11, 0x18, 0x19, 0x1A, 0x1B, 0x1E, 0x20, 0x21, 0x22, 0x28, 0x2A, 0x2B, 0x2F, 0x30};
+	uint8_t seedCwPos[] = {0x07, 0x0A, 0x04, 0x0D, 0x05, 0x0E, 0x06, 0x0B, 0x10, 0x0C, 0x0F};
+	
+	uint8_t data[0x18];
+	uint8_t mask[0x10];
+	uint8_t hashModeEcm;
+	uint8_t hashModeCw;
+	uint32_t crc;
+	
+	// Create seed for CW decryption
+	memset(seedEcmCw, 0, 0x10);
+	
+	for(i = 0; i < 0x0B; i++)
+	{
+		seedEcmCw[i] = ecm[0x0A + seedCwPos[i]];
+	}
+	
+	// Read hash mode CW
+	hashModeCw = ecm[28] ^ PowervuCrc8Calc(seedEcmCw, 0x10);
+	
+	// Create mask for ECM decryption
+	PowervuCreateDataEcmEmm(ecm, sourcePos, 0x0A, 0x18, data);
+	
+	hashModeEcm = ecm[8] ^ PowervuCrc8Calc(data, 0x18);
+	
+	PowervuCreateHash(data, 0x18, mask, hashModeEcm);
+	
+	// Fix header
+	ecm[3] &= 0x0F;
+	ecm[3] |= 0x30;
+	ecm[8]  = 0x00;
+	ecm[28] = 0x00;
+	
+	// Unmask body
+	for(i = 0; i < 0x10; i++)
+	{
+		ecm[0x0A + destPos[i]] ^= mask[i & 0x0F];
+	}
+	
+	// Fix CRC (optional)
+	l = (((ecm[1] << 8) + ecm[2]) & 0xFFF) + 3 - 4;
+	
+	crc = fletcher_crc32(ecm, l);
+	
+	ecm[l + 0] = crc >> 24;
+	ecm[l + 1] = crc >> 16;
+	ecm[l + 2] = crc >> 8;
+	ecm[l + 3] = crc >> 0;
+	
+	return hashModeCw;
+}
+
+static void PowervuCreateCw(uint8_t *seed, uint8_t lenSeed, uint8_t *baseCw, uint8_t val,
+								uint8_t *seedEcmCw, uint8_t *cw, int modeDesCsa, int hashMode)
+{
+	uint8_t tableFixParity[] = {0x01, 0x01, 0x02, 0x02, 0x04, 0x04, 0x07, 0x07, 0x08, 0x08, 0x0B, 0x0B, 0x0D, 0x0D, 0x0E, 0x0E,
+								0x10, 0x10, 0x13, 0x13, 0x15, 0x15, 0x16, 0x16, 0x19, 0x19, 0x1A, 0x1A, 0x1C, 0x1C, 0x1F, 0x1F,
+								0x20, 0x20, 0x23, 0x23, 0x25, 0x25, 0x26, 0x26, 0x29, 0x29, 0x2A, 0x2A, 0x2C, 0x2C, 0x2F, 0x2F,
+								0x31, 0x31, 0x32, 0x32, 0x34, 0x34, 0x37, 0x37, 0x38, 0x38, 0x3B, 0x3B, 0x3D, 0x3D, 0x3E, 0x3E,
+								0x40, 0x40, 0x43, 0x43, 0x45, 0x45, 0x46, 0x46, 0x49, 0x49, 0x4A, 0x4A, 0x4C, 0x4C, 0x4F, 0x4F,
+								0x51, 0x51, 0x52, 0x52, 0x54, 0x54, 0x57, 0x57, 0x58, 0x58, 0x5B, 0x5B, 0x5D, 0x5D, 0x5E, 0x5E,
+								0x61, 0x61, 0x62, 0x62, 0x64, 0x64, 0x67, 0x67, 0x68, 0x68, 0x6B, 0x6B, 0x6D, 0x6D, 0x6E, 0x6E,
+								0x70, 0x70, 0x73, 0x73, 0x75, 0x75, 0x76, 0x76, 0x79, 0x79, 0x7A, 0x7A, 0x7C, 0x7C, 0x7F, 0x7F,
+								0x80, 0x80, 0x83, 0x83, 0x85, 0x85, 0x86, 0x86, 0x89, 0x89, 0x8A, 0x8A, 0x8C, 0x8C, 0x8F, 0x8F,
+								0x91, 0x91, 0x92, 0x92, 0x94, 0x94, 0x97, 0x97, 0x98, 0x98, 0x9B, 0x9B, 0x9D, 0x9D, 0x9E, 0x9E,
+								0xA1, 0xA1, 0xA2, 0xA2, 0xA4, 0xA4, 0xA7, 0xA7, 0xA8, 0xA8, 0xAB, 0xAB, 0xAD, 0xAD, 0xAE, 0xAE,
+								0xB0, 0xB0, 0xB3, 0xB3, 0xB5, 0xB5, 0xB6, 0xB6, 0xB9, 0xB9, 0xBA, 0xBA, 0xBC, 0xBC, 0xBF, 0xBF,
+								0xC1, 0xC1, 0xC2, 0xC2, 0xC4, 0xC4, 0xC7, 0xC7, 0xC8, 0xC8, 0xCB, 0xCB, 0xCD, 0xCD, 0xCE, 0xCE,
+								0xD0, 0xD0, 0xD3, 0xD3, 0xD5, 0xD5, 0xD6, 0xD6, 0xD9, 0xD9, 0xDA, 0xDA, 0xDC, 0xDC, 0xDF, 0xDF,
+								0xE0, 0xE0, 0xE3, 0xE3, 0xE5, 0xE5, 0xE6, 0xE6, 0xE9, 0xE9, 0xEA, 0xEA, 0xEC, 0xEC, 0xEF, 0xEF,
+								0xF1, 0xF1, 0xF2, 0xF2, 0xF4, 0xF4, 0xF7, 0xF7, 0xF8, 0xF8, 0xFB, 0xFB, 0xFD, 0xFD, 0xFE, 0xFE};
+	
+	uint8_t data[0x1C];
+	uint8_t hash[0x10];
+	uint8_t lenData;
+	int i;
+	
+	lenData = PowervuCreateDataCw(seed, lenSeed, baseCw, val, seedEcmCw, data);
+	PowervuCreateHash(data, lenData, hash, hashMode);
+	
+	for(i = 0; i < 8; i++)
+	{
+		cw[i] = hash[i];
+	}
+	
+	if(modeDesCsa == 0) // DES - Fix Parity Bits
+	{
+		for(i = 0; i < 8; i++)
+		{
+			cw[i] = tableFixParity[cw[i]];
+		}
+	}
+	else if(modeDesCsa == 1) // CSA - Fix Checksums
+	{
+		cw[3] = cw[0] + cw[1] + cw[2];
+		cw[7] = cw[4] + cw[5] + cw[6];
+	}
+}
+
 static int8_t GetPowervuKey(uint8_t *buf, uint32_t ident, char keyName, uint32_t keyIndex, uint32_t keyLength, uint8_t isCriticalKey, uint32_t keyRef)
 {
 	char keyStr[EMU_MAX_CHAR_KEYNAME];
@@ -2474,7 +3369,7 @@ static int8_t GetPowervuKey(uint8_t *buf, uint32_t ident, char keyName, uint32_t
 	if(FindKey('P', ident, 0xFFFF0000, keyStr, buf, keyLength, isCriticalKey, keyRef, 0, NULL)) {
 		return 1;
 	}
-
+	
 	return 0;
 }
 
@@ -2515,7 +3410,7 @@ static uint8_t PowervuSbox(uint8_t *input, uint8_t mode)
 {
 	uint8_t s_index, bit, last_index, last_bit;
 	uint8_t const *Sbox1, *Sbox2, *Sbox3, *Sbox4, *Sbox5, *Sbox6, *Sbox7, *Sbox8, *Sbox9;
-
+	
 	if(mode)
 	{
 		Sbox1 = PowerVu_A0_S_1;
@@ -2540,39 +3435,39 @@ static uint8_t PowervuSbox(uint8_t *input, uint8_t mode)
 		Sbox8 = PowerVu_00_S_8;
 		Sbox9 = PowerVu_00_S_9;
 	}
-
+	
 	bit = (GetBit(input[2],0)<<2) | (GetBit(input[3],4)<<1) | (GetBit(input[5],3));
 	s_index = (GetBit(input[0],0)<<3) | (GetBit(input[2],6)<<2) | (GetBit(input[2],4)<<1) | (GetBit(input[5],7));
 	last_bit = GetBit(Sbox1[s_index],7-bit);
-
+	
 	bit = (GetBit(input[5],0)<<2) | (GetBit(input[4],0)<<1) | (GetBit(input[6],2));
 	s_index = (GetBit(input[2],1)<<3) | (GetBit(input[2],2)<<2) | (GetBit(input[5],5)<<1) | (GetBit(input[5],1));
 	last_bit = last_bit | (GetBit(Sbox2[s_index],7-bit)<<1);
-
+	
 	bit = (GetBit(input[6],0)<<2) | (GetBit(input[1],7)<<1) | (GetBit(input[6],7));
 	s_index = (GetBit(input[1],3)<<3) | (GetBit(input[3],7)<<2) | (GetBit(input[1],5)<<1) | (GetBit(input[5],2));
 	last_bit = last_bit | (GetBit(Sbox3[s_index], 7-bit)<<2);
-
+	
 	bit = (GetBit(input[1],0)<<2) | (GetBit(input[2],7)<<1) | (GetBit(input[2],5));
 	s_index = (GetBit(input[6],3)<<3) | (GetBit(input[6],4)<<2) | (GetBit(input[6],6)<<1) | (GetBit(input[3],5));
 	last_index = GetBit(Sbox4[s_index], 7-bit);
-
+	
 	bit = (GetBit(input[3],3)<<2) | (GetBit(input[4],6)<<1) | (GetBit(input[3],2));
 	s_index = (GetBit(input[3],1)<<3) | (GetBit(input[4],5)<<2) | (GetBit(input[3],0)<<1) | (GetBit(input[4],7));
 	last_index = last_index | (GetBit(Sbox5[s_index], 7-bit)<<1);
-
+	
 	bit = (GetBit(input[5],4)<<2) | (GetBit(input[4],4)<<1) | (GetBit(input[1],2));
 	s_index = (GetBit(input[2],3)<<3) | (GetBit(input[6],5)<<2) | (GetBit(input[1],4)<<1) | (GetBit(input[4],1));
 	last_index = last_index | (GetBit(Sbox6[s_index], 7-bit)<<2);
-
+	
 	bit = (GetBit(input[0],6)<<2) | (GetBit(input[0],7)<<1) | (GetBit(input[0],4));
 	s_index = (GetBit(input[0],5)<<3) | (GetBit(input[0],3)<<2) | (GetBit(input[0],1)<<1) | (GetBit(input[0],2));
 	last_index = last_index | (GetBit(Sbox7[s_index], 7-bit)<<3);
-
+	
 	bit = (GetBit(input[4],2)<<2) | (GetBit(input[4],3)<<1) | (GetBit(input[1],1));
 	s_index = (GetBit(input[1],6)<<3) | (GetBit(input[6],1)<<2) | (GetBit(input[5],6)<<1) | (GetBit(input[3],6));
 	last_index = last_index | (GetBit(Sbox8[s_index], 7-bit)<<4);
-
+	
 	return (GetBit(Sbox9[last_index&0x1f],7-last_bit)&1) ? 1: 0;
 }
 
@@ -2581,27 +3476,27 @@ static void PowervuDecrypt(uint8_t *data, uint32_t length, uint8_t *key, uint8_t
 	uint32_t i;
 	int32_t j, k;
 	uint8_t curByte, tmpBit;
-
-	for(i=0; i<length; i++)
+	
+	for(i = 0; i < length; i++)
 	{
 		curByte = data[i];
-
-		for(j=7; j>=0; j--)
+		
+		for(j = 7; j >= 0; j--)
 		{
-			data[i] = SetBit(data[i], j,(GetBit(curByte,j)^PowervuSbox(key, sbox))^GetBit(key[0],7));
-
-			tmpBit = GetBit(data[i],j)^(GetBit(key[6],0));
+			data[i] = SetBit(data[i], j, (GetBit(curByte, j)^PowervuSbox(key, sbox))^GetBit(key[0], 7));
+			
+			tmpBit = GetBit(data[i], j)^(GetBit(key[6], 0));
 			if (tmpBit)
 			{
 				key[3] ^= 0x10;
 			}
-
+			
 			for (k = 6; k > 0; k--)
 			{
 				key[k] = (key[k]>>1) | (key[k-1]<<7);
 			}
 			key[0] = (key[0]>>1);
-
+			
 			key[0] = SetBit(key[0], 7, tmpBit);
 		}
 	}
@@ -2609,15 +3504,15 @@ static void PowervuDecrypt(uint8_t *data, uint32_t length, uint8_t *key, uint8_t
 
 #define PVU_CW_VID 0	// VIDeo
 #define PVU_CW_HSD 1	// High Speed Data
-#define PVU_CW_A1 2		// Audio 1
-#define PVU_CW_A2 3		// Audio 2
-#define PVU_CW_A3 4		// Audio 3
-#define PVU_CW_A4 5		// Audio 4
+#define PVU_CW_A1 2	// Audio 1
+#define PVU_CW_A2 3	// Audio 2
+#define PVU_CW_A3 4	// Audio 3
+#define PVU_CW_A4 5	// Audio 4
 #define PVU_CW_UTL 6	// UTiLity
 #define PVU_CW_VBI 7	// Vertical Blanking Interval
 
 #define PVU_CONVCW_VID_ECM 0x80	// VIDeo
-#define PVU_CONVCW_HSD_ECM 0x40 // High Speed Data
+#define PVU_CONVCW_HSD_ECM 0x40	// High Speed Data
 #define PVU_CONVCW_A1_ECM 0x20	// Audio 1
 #define PVU_CONVCW_A2_ECM 0x10	// Audio 2
 #define PVU_CONVCW_A3_ECM 0x08	// Audio 3
@@ -2631,28 +3526,28 @@ static uint8_t PowervuGetConvcwIndex(uint8_t ecmTag)
 	{
 	case PVU_CONVCW_VID_ECM:
 		return PVU_CW_VID;
-
+	
 	case PVU_CONVCW_HSD_ECM:
 		return PVU_CW_HSD;
-
+	
 	case PVU_CONVCW_A1_ECM:
 		return PVU_CW_A1;
-
+	
 	case PVU_CONVCW_A2_ECM:
 		return PVU_CW_A2;
-
+	
 	case PVU_CONVCW_A3_ECM:
 		return PVU_CW_A3;
-
+	
 	case PVU_CONVCW_A4_ECM:
 		return PVU_CW_A4;
-
+	
 	case PVU_CONVCW_UTL_ECM:
 		return PVU_CW_UTL;
-
+	
 	case PVU_CONVCW_VBI_ECM:
 		return PVU_CW_VBI;
-
+	
 	default:
 		return PVU_CW_VBI;
 	}
@@ -2683,10 +3578,10 @@ static uint16_t PowervuGetSeedIV(uint8_t seedType, uint8_t *ecm)
 	}
 }
 
-static void PowervuExpandSeed(uint8_t seedType, uint8_t *seed)
+static uint8_t PowervuExpandSeed(uint8_t seedType, uint8_t *seed)
 {
-	uint8_t seedLength, i;
-
+	uint8_t seedLength = 0, i;
+	
 	switch(seedType)
 	{
 	case PVU_CW_VID:
@@ -2704,13 +3599,15 @@ static void PowervuExpandSeed(uint8_t seedType, uint8_t *seed)
 		seedLength = 2;
 		break;
 	default:
-		return;
+		return seedLength;
 	}
-
+	
 	for(i=seedLength; i<7; i++)
 	{
 		seed[i] = seed[i%seedLength];
 	}
+
+	return seedLength;
 }
 
 static void PowervuCalculateSeed(uint8_t seedType, uint8_t *ecm, uint8_t *seedBase, uint8_t *key, uint8_t *seed, uint8_t sbox)
@@ -2718,51 +3615,103 @@ static void PowervuCalculateSeed(uint8_t seedType, uint8_t *ecm, uint8_t *seedBa
 	uint16_t tmpSeed;
 
 	tmpSeed = PowervuGetSeedIV(seedType, ecm+23);
-	seed[0] = (tmpSeed>>2) & 0xFF;
-	seed[1] = ((tmpSeed&0x3)<<6) | (seedBase[0]>>2);
-	seed[2] = (seedBase[0]<<6) | (seedBase[1]>>2);
-	seed[3] = (seedBase[1]<<6) | (seedBase[2]>>2);
-	seed[4] = (seedBase[2]<<6) | (seedBase[3]>>2);
-	seed[5] = (seedBase[3]<<6);
+	seed[0] = (tmpSeed >> 2) & 0xFF;
+	seed[1] = ((tmpSeed & 0x3) << 6) | (seedBase[0] >> 2);
+	seed[2] = (    seedBase[0] << 6) | (seedBase[1] >> 2);
+	seed[3] = (    seedBase[1] << 6) | (seedBase[2] >> 2);
+	seed[4] = (    seedBase[2] << 6) | (seedBase[3] >> 2);
+	seed[5] = (    seedBase[3] << 6);
 
 	PowervuDecrypt(seed, 6, key, sbox);
 
-	seed[0] = (seed[1]<<2) | (seed[2]>>6);
-	seed[1] = (seed[2]<<2) | (seed[3]>>6);
-	seed[2] = (seed[3]<<2) | (seed[4]>>6);
-	seed[3] = (seed[4]<<2) | (seed[5]>>6);
+	seed[0] = (seed[1] << 2) | (seed[2] >> 6);
+	seed[1] = (seed[2] << 2) | (seed[3] >> 6);
+	seed[2] = (seed[3] << 2) | (seed[4] >> 6);
+	seed[3] = (seed[4] << 2) | (seed[5] >> 6);
 }
 
-static void PowervuCalculateCw(uint8_t seedType, uint8_t *seed, uint8_t csaUsed,
-							   uint8_t *convolvedCw, uint8_t *cw, uint8_t *baseCw)
+static void PowervuCalculateCw(uint8_t seedType, uint8_t *seed, uint8_t csaUsed, uint8_t *convolvedCw,
+								uint8_t *cw, uint8_t *baseCw, uint8_t *seedEcmCw, uint8_t hashModeCw,
+								uint8_t needsUnmasking, uint8_t xorMode)
 {
 	int32_t k;
+	uint8_t seedLength, val = 0;
 
-	PowervuExpandSeed(seedType, seed);
+	seedLength = PowervuExpandSeed(seedType, seed);
 
 	if(csaUsed)
 	{
-		for(k=0; k<7; k++)
+		if(!needsUnmasking || (hashModeCw == 0))
 		{
-			seed[k] ^= baseCw[k];
+			for(k = 0; k < 7; k++)
+			{
+				seed[k] ^= baseCw[k];
+			}
+			
+			cw[0] = seed[0] ^ convolvedCw[0];
+			cw[1] = seed[1] ^ convolvedCw[1];
+			cw[2] = seed[2] ^ convolvedCw[2];
+			cw[3] = seed[3] ^ convolvedCw[3];
+			cw[4] = seed[3] ^ convolvedCw[4];
+			cw[5] = seed[4] ^ convolvedCw[5];
+			cw[6] = seed[5] ^ convolvedCw[6];
+			cw[7] = seed[6] ^ convolvedCw[7];
 		}
-		
-		cw[0] = seed[0] ^ convolvedCw[0];
-		cw[1] = seed[1] ^ convolvedCw[1];
-		cw[2] = seed[2] ^ convolvedCw[2];
-		cw[3] = seed[3] ^ convolvedCw[3];
-		cw[4] = seed[3] ^ convolvedCw[4];
-		cw[5] = seed[4] ^ convolvedCw[5];
-		cw[6] = seed[5] ^ convolvedCw[6];
-		cw[7] = seed[6] ^ convolvedCw[7];
 	}
 	else
 	{
-		for(k=0; k<7; k++)
+		if(xorMode == 0)
 		{
-			cw[k] = seed[k] ^ baseCw[k];
+			for(k = 0; k < 7; k++)
+			{
+				cw[k] = seed[k] ^ baseCw[k];
+			}
 		}
+		
+		if(xorMode == 1)
+		{
+			for(k = 0; k < 3; k++)
+			{
+				cw[k] = seed[k] ^ baseCw[k];
+			}
+			
+			for(k = 3; k < 7; k++)
+			{
+				cw[k] = baseCw[k];
+			}
+		}
+		
 		ExpandDesKey(cw);
+	}
+	
+	if(needsUnmasking && (hashModeCw > 0))
+	{
+		switch(seedType)
+		{
+			case PVU_CW_VID:
+				val = 0;
+				break;
+			
+			case PVU_CW_A1:
+			case PVU_CW_A2:
+			case PVU_CW_A3:
+			case PVU_CW_A4:
+				val = 1;
+				break;
+			
+			case PVU_CW_HSD:
+				val = 2;
+				break;
+			
+			case PVU_CW_UTL:
+				val = 4;
+				break;
+			
+			case PVU_CW_VBI:
+				val = 5;
+				break;
+		}
+		PowervuCreateCw(seed, seedLength, baseCw, val, seedEcmCw, cw, csaUsed, hashModeCw);
 	}
 }
 
@@ -2786,6 +3735,8 @@ int8_t PowervuECM(uint8_t *ecm, uint8_t *dw, emu_stream_client_key_data *cdata)
 	uint8_t sbox;
 	uint32_t keyRef1, keyRef2;
 	uint8_t calculateAllCws;
+	uint8_t seedEcmCw[0x10];
+	uint8_t hashModeCw = 0, needsUnmasking, xorMode;
 #ifdef WITH_EMU
 	uint8_t *dwp;
 	emu_stream_cw_item *cw_item;
@@ -2794,27 +3745,34 @@ int8_t PowervuECM(uint8_t *ecm, uint8_t *dw, emu_stream_client_key_data *cdata)
 	
 	memset(update_global_keys, 0, sizeof(update_global_keys));
 #endif
-
+	
 	if(ecmLen < 7)
 	{
 		return 1;
 	}
-
+	
+	needsUnmasking = (ecm[3] & 0xF0) == 0x50;
+	
+	if(needsUnmasking)
+	{
+		hashModeCw = PowervuUnmaskEcm(ecm, seedEcmCw);
+	}
+	
 	ecmCrc32 = b2i(4, ecm+ecmLen-4);
-
+	
 	if(fletcher_crc32(ecm, ecmLen-4) != ecmCrc32)
 	{
 		return 8;
 	}
 	ecmLen -= 4;
-
-	for(i=0; i<8; i++) {
+	
+	for(i = 0; i < 8; i++) {
 		memset(convolvedCw[i], 0, 8);
 	}
 	
-	for(i=3; i+3<ecmLen; ) {
-		nanoLen = (((ecm[i] & 0x0f)<< 8) | ecm[i+1]);
-		i +=2;
+	for(i = 3; i+3 < ecmLen; ) {
+		nanoLen = (((ecm[i] & 0x0f) << 8) | ecm[i+1]);
+		i += 2;
 		if(nanoLen > 0)
 		{
 			nanoLen--;
@@ -2823,38 +3781,38 @@ int8_t PowervuECM(uint8_t *ecm, uint8_t *dw, emu_stream_client_key_data *cdata)
 		if(i+nanoLen > ecmLen) {
 			return 1;
 		}
-
+		
 		switch (nanoCmd) {
 		case 0x27:
 			if(nanoLen < 15)
 			{
 				break;
 			}
-
+			
 			nanoChecksum = 0;
-			for(j=4; j<15; j++)
+			for(j = 4; j < 15; j++)
 			{
 				nanoChecksum += ecm[i+j];
 			}
-
+			
 			if(nanoChecksum != 0)
 			{
 				break;
 			}
-
+			
 			keyType = PowervuGetConvcwIndex(ecm[i+4]);
 			memcpy(convolvedCw[keyType], &ecm[i+6], 8);
 			break;
-
+		
 		default:
 			break;
 		}
 		i += nanoLen;
 	}
-
-	for(i=3; i+3<ecmLen; ) {
-		nanoLen = (((ecm[i] & 0x0f)<< 8) | ecm[i+1]);
-		i +=2;
+	
+	for(i = 3; i+3 < ecmLen; ) {
+		nanoLen = (((ecm[i] & 0x0f) << 8) | ecm[i+1]);
+		i += 2;
 		if(nanoLen > 0)
 		{
 			nanoLen--;
@@ -2863,21 +3821,22 @@ int8_t PowervuECM(uint8_t *ecm, uint8_t *dw, emu_stream_client_key_data *cdata)
 		if(i+nanoLen > ecmLen) {
 			return 1;
 		}
-
+		
 		switch (nanoCmd) {
 		case 0x20:
 			if(nanoLen < 54)
 			{
 				break;
 			}
-
+			
 			csaUsed = GetBit(ecm[i+7], 7);
 			fixedKey = !GetBit(ecm[i+6], 5);
 			oddKey = GetBit(ecm[i+6], 4);
-			bid = (GetBit(ecm[i+7], 1)<<1) | GetBit(ecm[i+7], 0);
+			xorMode = GetBit(ecm[i+6], 0);
+			bid = (GetBit(ecm[i+7], 1) << 1) | GetBit(ecm[i+7], 0);
 			sbox = GetBit(ecm[i+6], 3);
 			
-			keyIndex = (fixedKey<<3) | (bid<<2) | oddKey;
+			keyIndex = (fixedKey << 3) | (bid << 2) | oddKey;
 			channelId = b2i(2, ecm+i+23);
 			ecmSrvid = (channelId >> 4) | ((channelId & 0xF) << 12);
 			
@@ -2899,7 +3858,7 @@ int8_t PowervuECM(uint8_t *ecm, uint8_t *dw, emu_stream_client_key_data *cdata)
 						return 2;
 					}
 				}
-
+				
 				PowervuDecrypt(ecm+i+8, 14, ecmKey, sbox);
 				if((ecm[i+6] != ecm[i+6+7]) || (ecm[i+6+8] != ecm[i+6+15]))
 				{
@@ -2908,7 +3867,7 @@ int8_t PowervuECM(uint8_t *ecm, uint8_t *dw, emu_stream_client_key_data *cdata)
 				}
 				
 				memcpy(tmpEcmKey, ecmKey, 7);
-
+				
 				PowervuDecrypt(ecm+i+27, 27, ecmKey, sbox);
 				if((ecm[i+23] != ecm[i+23+29]) || (ecm[i+23+1] != ecm[i+23+30]))
 				{
@@ -2922,12 +3881,12 @@ int8_t PowervuECM(uint8_t *ecm, uint8_t *dw, emu_stream_client_key_data *cdata)
 			while(!decrypt_ok);
 			
 			memcpy(seedBase, ecm+i+6+2, 4);
-	
+			
 #ifdef WITH_EMU	
 			if(cdata == NULL)
 			{
 				SAFE_MUTEX_LOCK(&emu_fixed_key_srvid_mutex);
-				for(j=0; j<EMU_STREAM_SERVER_MAX_CONNECTIONS; j++)
+				for(j = 0; j < EMU_STREAM_SERVER_MAX_CONNECTIONS; j++)
 				{
 					if(!stream_server_has_ecm[j] && emu_stream_cur_srvid[j] == srvid)
 					{
@@ -2944,11 +3903,11 @@ int8_t PowervuECM(uint8_t *ecm, uint8_t *dw, emu_stream_client_key_data *cdata)
 #endif
 			{
 				// Calculate all seeds
-				for(j=0; j<8; j++)
+				for(j = 0; j < 8; j++)
 				{
 					memcpy(ecmKey, tmpEcmKey, 7);
 					PowervuCalculateSeed(j, ecm+i, seedBase, ecmKey, seed[j], sbox);
-				}				
+				}
 			}
 			else
 			{
@@ -2967,9 +3926,10 @@ int8_t PowervuECM(uint8_t *ecm, uint8_t *dw, emu_stream_client_key_data *cdata)
 			if(calculateAllCws)
 			{
 				// Calculate all cws
-				for(j=0; j<8; j++)
+				for(j = 0; j < 8; j++)
 				{
-					PowervuCalculateCw(j,  seed[j], csaUsed, convolvedCw[j], cw[j], baseCw);
+					PowervuCalculateCw(j, seed[j], csaUsed, convolvedCw[j], cw[j], baseCw,
+										seedEcmCw, hashModeCw, needsUnmasking, xorMode);
 					
 					if(csaUsed)
 					{
@@ -2978,11 +3938,11 @@ int8_t PowervuECM(uint8_t *ecm, uint8_t *dw, emu_stream_client_key_data *cdata)
 						}
 					}
 				}
-
-#ifdef WITH_EMU				
+				
+#ifdef WITH_EMU
 				if(update_global_key)
 				{
-					for(j=0; j<EMU_STREAM_SERVER_MAX_CONNECTIONS; j++)
+					for(j = 0; j < EMU_STREAM_SERVER_MAX_CONNECTIONS; j++)
 					{
 						if(update_global_keys[j])
 						{
@@ -3003,12 +3963,12 @@ int8_t PowervuECM(uint8_t *ecm, uint8_t *dw, emu_stream_client_key_data *cdata)
 				if(cdata != NULL) 
 				{
 #endif
-					for(j=0; j<8; j++)
+					for(j = 0; j < 8; j++)
 					{
 						if(csaUsed)
 						{	
 							if(cdata->pvu_csa_ks[j] == NULL)
-								{  cdata->pvu_csa_ks[j] = get_key_struct(); }
+								{ cdata->pvu_csa_ks[j] = get_key_struct(); }
 								
 							if(ecm[0] == 0x80)
 								{ set_even_control_word(cdata->pvu_csa_ks[j], cw[j]); }
@@ -3018,12 +3978,12 @@ int8_t PowervuECM(uint8_t *ecm, uint8_t *dw, emu_stream_client_key_data *cdata)
 							cdata->pvu_csa_used = 1;
 						}
 						else
-						{					
+						{
 							if(ecm[0] == 0x80)
 								{ des_set_key(cw[j], cdata->pvu_des_ks[j][0]); }
 							else
 								{ des_set_key(cw[j], cdata->pvu_des_ks[j][1]); }
-								
+							
 							cdata->pvu_csa_used = 0;
 						}
 					}
@@ -3045,8 +4005,8 @@ int8_t PowervuECM(uint8_t *ecm, uint8_t *dw, emu_stream_client_key_data *cdata)
 						cw_ex->algo_mode = CW_ALGO_MODE_ECB;
 					}
 					
-					for(j=0; j<4; j++)
-					{	
+					for(j = 0; j < 4; j++)
+					{
 						dwp = cw_ex->audio[j];
 						
 						memset(dwp, 0, 16);
@@ -3054,7 +4014,7 @@ int8_t PowervuECM(uint8_t *ecm, uint8_t *dw, emu_stream_client_key_data *cdata)
 						if(ecm[0] == 0x80)
 						{
 							memcpy(dwp, cw[PVU_CW_A1+j], 8);
-						
+							
 							if(csaUsed)
 							{
 								for(k = 0; k < 8; k += 4)
@@ -3084,7 +4044,7 @@ int8_t PowervuECM(uint8_t *ecm, uint8_t *dw, emu_stream_client_key_data *cdata)
 					if(ecm[0] == 0x80)
 					{
 						memcpy(dwp, cw[PVU_CW_HSD], 8);
-					
+						
 						if(csaUsed)
 						{
 							for(k = 0; k < 8; k += 4)
@@ -3111,7 +4071,8 @@ int8_t PowervuECM(uint8_t *ecm, uint8_t *dw, emu_stream_client_key_data *cdata)
 			else
 			{
 				// Calculate only video cw
-				PowervuCalculateCw(PVU_CW_VID, seed[PVU_CW_VID], csaUsed, convolvedCw[PVU_CW_VID], cw[PVU_CW_VID], baseCw);
+				PowervuCalculateCw(PVU_CW_VID, seed[PVU_CW_VID], csaUsed, convolvedCw[PVU_CW_VID], cw[PVU_CW_VID], baseCw,
+									seedEcmCw, hashModeCw, needsUnmasking, xorMode);
 			}
 			
 			memset(dw, 0, 16);
@@ -3119,7 +4080,7 @@ int8_t PowervuECM(uint8_t *ecm, uint8_t *dw, emu_stream_client_key_data *cdata)
 			if(ecm[0] == 0x80)
 			{
 				memcpy(dw, cw[PVU_CW_VID], 8);
-			
+				
 				if(csaUsed)
 				{
 					for(k = 0; k < 8; k += 4)
@@ -3140,9 +4101,9 @@ int8_t PowervuECM(uint8_t *ecm, uint8_t *dw, emu_stream_client_key_data *cdata)
 					}
 				}
 			}
-						
+			
 			return 0;
-
+		
 		default:
 			break;
 		}
@@ -3175,18 +4136,18 @@ void DrecryptSetEmuExtee(ReaderInstanceData* idata)
 	
 	if(idata->ee36 == NULL || idata->ee56 == NULL) return;
 	
-	memset(idata->ee36,0,sizeof(opkeys_t));
-	memset(idata->ee56,0,sizeof(opkeys_t));
+	memset(idata->ee36, 0, sizeof(opkeys_t));
+	memset(idata->ee56, 0, sizeof(opkeys_t));
 	
 	if(idata->extee36 == NULL)
 	{
 		idata->extee36 = malloc(256);
-		snprintf(idata->extee36,256,"%see36.bin",emu_keyfile_path);
+		snprintf(idata->extee36, 256, "%see36.bin", emu_keyfile_path);
 	}
 	else if(strchr(idata->extee36, '/') == NULL)
 	{
 		char *temp = malloc(256);
-		snprintf(temp,256,"%s%s",emu_keyfile_path, idata->extee36);
+		snprintf(temp, 256, "%s%s" ,emu_keyfile_path, idata->extee36);
 		free(idata->extee36);
 		idata->extee36 = malloc(strlen(temp)+1);
 		strncpy(idata->extee36, temp, strlen(temp));
@@ -3196,12 +4157,12 @@ void DrecryptSetEmuExtee(ReaderInstanceData* idata)
 	if(idata->extee56 == NULL)
 	{
 		idata->extee56 = malloc(256);
-		snprintf(idata->extee56,256,"%see56.bin",emu_keyfile_path);
+		snprintf(idata->extee56, 256, "%see56.bin", emu_keyfile_path);
 	}
 	else if(strchr(idata->extee56, '/') == NULL)
 	{
 		char *temp = malloc(256);
-		snprintf(temp,256,"%s%s",emu_keyfile_path, idata->extee56);
+		snprintf(temp, 256, "%s%s", emu_keyfile_path, idata->extee56);
 		free(idata->extee56);
 		idata->extee56 = malloc(strlen(temp)+1);
 		strncpy(idata->extee56, temp, strlen(temp));
@@ -3210,19 +4171,19 @@ void DrecryptSetEmuExtee(ReaderInstanceData* idata)
 	
 	if((file = fopen(idata->extee36,"rb")) != NULL)
 	{
-		if(fread(idata->ee36,1,sizeof(opkeys_t),file) != sizeof(opkeys_t))
+		if(fread(idata->ee36, 1, sizeof(opkeys_t), file) != sizeof(opkeys_t))
 		{
-			memset(idata->ee36,0,sizeof(opkeys_t));
+			memset(idata->ee36, 0, sizeof(opkeys_t));
 		}
 		fclose(file);
 	}
 	//else cs_log("Cannot open key file: %s", idata->extee36);
 	
-	if((file = fopen(idata->extee56,"rb")) != NULL)
+	if((file = fopen(idata->extee56, "rb")) != NULL)
 	{
-		if(fread(idata->ee56,1,sizeof(opkeys_t),file) != sizeof(opkeys_t))
+		if(fread(idata->ee56, 1, sizeof(opkeys_t),file) != sizeof(opkeys_t))
 		{
-			memset(idata->ee56,0,sizeof(opkeys_t));
+			memset(idata->ee56, 0, sizeof(opkeys_t));
 		}
 		fclose(file);
 	}
@@ -3245,9 +4206,9 @@ static void DREover(const uint8_t *ECMdata, uint8_t *DW)
 		}
 		
 		des_set_key(key, key_schedule);
-
+		
 		des(DW, key_schedule, 0); // even DW post-process
-		des(DW + 8, key_schedule, 0);  // odd DW post-process
+		des(DW + 8, key_schedule, 0); // odd DW post-process
 	};
 };
 
@@ -3268,7 +4229,7 @@ static uint32_t DreGostDec(uint32_t inData)
 	
 	for(i = 0; i < 8; i++)
 	{
-		j = (inData  >> 28) & 0x0F;
+		j = (inData >> 28) & 0x0F;
 		inData = (inData << 4) | (Sbox[i * 16 + j] & 0x0F);
 	}
 	
@@ -3277,7 +4238,7 @@ static uint32_t DreGostDec(uint32_t inData)
 	return (inData);
 }
 
-static void DrecryptDecrypt(uint8_t *Data, uint8_t *Key)	// DRE GOST 28147-89 CORE
+static void DrecryptDecrypt(uint8_t *Data, uint8_t *Key) // DRE GOST 28147-89 CORE
 {
 	int i, j;
 	uint32_t L_part = 0, R_part = 0, temp = 0;
@@ -3317,12 +4278,12 @@ static void DrecryptPostCw(uint8_t* ccw)
 		{
 			tmp[j] = ccw[3 - j];
 		}
-     
+		
 		for(j = 0; j < 4; j++)
 		{
 			ccw[j] = tmp[j];
 		}
-	
+		
 		ccw += 4;
 	}
 }
@@ -3371,7 +4332,7 @@ static int8_t Drecrypt2ECM(ReaderInstanceData* idata, uint16_t caid, uint32_t pr
 	memset(dummy[0], 0x00, 32);
 	memset(dummy[1], 0xFF, 32);
 
-	if(memcmp(dummy[0], key, 32) == 0 || memcmp(dummy[1], key, 32) == 0) 
+	if(memcmp(dummy[0], key, 32) == 0 || memcmp(dummy[1], key, 32) == 0)
 	{
 		DrecryptSetEmuExtee(idata);
 		cs_log("ERROR: ee%s.bin keys missing", ((provId & 0xFF) == 0x11) ? "36" : "56");
@@ -3384,7 +4345,7 @@ static int8_t Drecrypt2ECM(ReaderInstanceData* idata, uint16_t caid, uint32_t pr
 	DrecryptDecrypt(ccw, key); DrecryptDecrypt(ccw+8, key);
 		
 	if(ecmLen >= 46 && ecm[43] == 1 && provId == 0x11)
-	{    
+	{
 		DrecryptSwap(ccw);
 		overcryptId = b2i(2, &ecm[44]);
 		if(Drecrypt2OverCW(overcryptId, ccw) == 2) DrecryptSetEmuExtee(idata);
@@ -3411,20 +4372,40 @@ static int8_t Drecrypt2ECM(ReaderInstanceData* idata, uint16_t caid, uint32_t pr
 	return 1;
 }
 
-//Tandberg EMU
-static int8_t GetTandbergKey(uint8_t *buf, uint32_t entitlementId)
+// Tandberg EMU
+static uint16_t TandbergChecksum(uint8_t *data, uint8_t length)
 {
-	if(FindKey('T', entitlementId, 0, "00", buf, 8, 0, 0, 0, NULL))
+	// ECM and EMM checksum calculation
+	// 1. Combine data in 2 byte groups
+	// 2. Add them together
+	// 3. Multiply result by itself (power of 7)
+	// 4. XOR with fixed value 0x17E3
+	
+	uint8_t i;
+	uint16_t checksum = 0;
+	
+	for(i = 0; i < length; i += 2)
 	{
-		return 1;
+		checksum += (data[i] << 8) | data[i + 1];
 	}
 	
-	if(FindKey('T', entitlementId, 0, "01", buf, 8, 1, 0, 0, NULL))
-	{
-		return 1;
-	}
+	checksum =  checksum * checksum * checksum * checksum * checksum * checksum * checksum;
+	checksum ^= 0x17E3;
 	
-	return 0;
+	return checksum;
+}
+
+static int8_t GetTandbergKey(uint32_t keyIndex, const char *keyName, uint8_t *key, uint32_t keyLength)
+{
+	// keyIndex: ecm keys --> entitlementId
+	//			 emm keys --> aeskeyIndex
+	//			 aes keys --> keyIndex
+
+	// keyName: ecm keys --> "01"
+	//			emm keys --> "MK" or "MK01"
+	//			aes keys --> "AES"
+
+	return FindKey('T', keyIndex, 0, keyName, key, keyLength, 1, 0, 0, NULL);
 }
 
 static int8_t TandbergECM(uint8_t *ecm, uint8_t *dw)
@@ -3442,7 +4423,7 @@ static int8_t TandbergECM(uint8_t *ecm, uint8_t *dw)
 		return 1;
 	}
 	
-	do 
+	do
 	{
 		nanoType = ecm[pos];
 		nanoLength = ecm[pos+1];
@@ -3454,8 +4435,115 @@ static int8_t TandbergECM(uint8_t *ecm, uint8_t *dw)
 		
 		nanoData = ecm + pos + 2;
 		
+		// ECM validation
+		uint16_t payloadChecksum = (nanoData[nanoLength - 2] << 8) | nanoData[nanoLength - 1];
+		uint16_t calculatedChecksum = TandbergChecksum(nanoData, nanoLength - 2);
+		
+		if(calculatedChecksum != payloadChecksum)
+		{
+			cs_log("ECM checksum error (%.4X instead of %.4X)", calculatedChecksum, payloadChecksum);
+			return 8;
+		}
+		// End of ECM validation
+		
 		switch(nanoType)
 		{
+			case 0xEC: // Director v6 (September 2017)
+			{
+				if(nanoLength != 0x28)
+				{
+					cs_log("WARNING: nanoType EC length (%d) != %d", nanoLength, 0x28);
+					break;
+				}
+				
+				entitlementId = b2i(4, nanoData);
+				
+				if(!GetTandbergKey(entitlementId, "01", ecmKey, 8))
+				{
+					return 2;
+				}
+				
+				cs_log("Active entitlement %.4X", entitlementId);
+				
+				// Step 1 - Decrypt DES CBC with ecmKey and iv = { 0 } (equal to nanoED)
+				uint8_t encryptedData[32] = { 0 };
+				memcpy(encryptedData, nanoData + 6, 32);
+				
+				uint8_t iv[8] = { 0 };
+				des_cbc_decrypt(encryptedData, iv, ecmKey, 32);
+				
+				uint8_t nanoMode = nanoData[5];
+
+				if ((nanoMode & 0x20) == 0) // Old algo
+				{
+					// Step 2 - Create CW (equal to nano ED)
+					dw[0] = encryptedData[0x05];
+					dw[1] = encryptedData[0x19];
+					dw[2] = encryptedData[0x1D];
+
+					dw[4] = encryptedData[0x0B];
+					dw[5] = encryptedData[0x12];
+					dw[6] = encryptedData[0x1A];
+
+					dw[8] = encryptedData[0x16];
+					dw[9] = encryptedData[0x03];
+					dw[10] = encryptedData[0x11];
+
+					dw[12] = encryptedData[0x18];
+					dw[13] = encryptedData[0x10];
+					dw[14] = encryptedData[0x0E];
+
+					return 0;
+				}
+				else // New algo (overencryption with AES)
+				{
+					// Step 2 - Prepare data for AES (it is like the creation of CW in nanoED but swapped each 8 bytes)
+					uint8_t dataEC[16] = { 0 };
+
+					dataEC[0] = encryptedData[0x02];
+					dataEC[1] = encryptedData[0x0E];
+					dataEC[2] = encryptedData[0x10];
+					dataEC[3] = encryptedData[0x18];
+					dataEC[4] = encryptedData[0x09];
+					dataEC[5] = encryptedData[0x11];
+					dataEC[6] = encryptedData[0x03];
+					dataEC[7] = encryptedData[0x16];
+
+					dataEC[8] = encryptedData[0x13];
+					dataEC[9] = encryptedData[0x1A];
+					dataEC[10] = encryptedData[0x12];
+					dataEC[11] = encryptedData[0x0B];
+					dataEC[12] = encryptedData[0x04];
+					dataEC[13] = encryptedData[0x1D];
+					dataEC[14] = encryptedData[0x19];
+					dataEC[15] = encryptedData[0x05];
+
+					// Step 3 - Decrypt AES CBC with new aesKey and iv 2EBD816A5E749A708AE45ADDD84333DE
+					uint8_t aesKeyIndex = nanoMode & 0x1F; // 32 possible AES keys
+					uint8_t aesKey[16] = { 0 };
+
+					if(!GetTandbergKey(aesKeyIndex, "AES", aesKey, 16))
+					{
+						return 2;
+					}
+
+					struct aes_keys aes;
+					aes_set_key(&aes, (char *)aesKey);
+
+					uint8_t ivAes[16] = { 0x2E, 0xBD, 0x81, 0x6A, 0x5E, 0x74, 0x9A, 0x70, 0x8A, 0xE4, 0x5A, 0xDD, 0xD8, 0x43, 0x33, 0xDE };
+					aes_cbc_decrypt(&aes, dataEC, 16, ivAes);
+
+					// Step 4 - Create CW (a simple swap)
+					uint8_t offset;
+					for (offset = 0; offset < 16; offset++)
+					{
+						dw[offset] = dataEC[15 - offset];
+					}
+
+					return 0;
+				}
+			}
+
 			case 0xED: // ECM_TAG_CW_DESCRIPTOR
 			{
 				if(nanoLength != 0x26)
@@ -3466,7 +4554,7 @@ static int8_t TandbergECM(uint8_t *ecm, uint8_t *dw)
 				
 				entitlementId = b2i(4, nanoData);
 				
-				if(!GetTandbergKey(ecmKey, entitlementId))
+				if(!GetTandbergKey(entitlementId, "01", ecmKey, 8))
 				{
 					return 2;
 				}
@@ -3505,7 +4593,7 @@ static int8_t TandbergECM(uint8_t *ecm, uint8_t *dw)
 				
 				entitlementId = b2i(4, nanoData);
 				
-				if(!GetTandbergKey(ecmKey, entitlementId))
+				if(!GetTandbergKey(entitlementId, "01", ecmKey, 8))
 				{
 					return 2;
 				}
@@ -3519,17 +4607,17 @@ static int8_t TandbergECM(uint8_t *ecm, uint8_t *dw)
 				
 				des(dw, ks, 0);
 				des(dw + 8, ks, 0);
-					
+				
 				return 0;
 			}
 			
 			default:
 				cs_log("WARNING: nanoType %.2X not supported", nanoType);
-				break;
+			break;
 		}
 		
 		pos += 2 + nanoLength;
-
+		
 	} while (pos < ecmLen);
 	
 	return 1;
@@ -3604,40 +4692,40 @@ int8_t ProcessECM(int16_t ecmDataLen, uint16_t caid, uint32_t provider, const ui
 	}
 	memcpy(ecmCopy, ecm, ecmLen);
 
-	if((caid>>8)==0x0D) {
+	if((caid >> 8) == 0x0D) {
 		result = CryptoworksECM(caid, ecmCopy, dw);
 	}
-	else if((caid>>8)==0x09) {
+	else if((caid >> 8) == 0x09) {
 		result = SoftNDSECM(caid, ecmCopy, dw);
 	}
-	else if(caid==0x0500) {
+	else if(caid == 0x0500) {
 		result = ViaccessECM(ecmCopy, dw);
 	}
-	else if((caid>>8)==0x18) {
+	else if((caid >> 8) == 0x18) {
 		result = Nagra2ECM(ecmCopy, dw);
 	}
-	else if((caid>>8)==0x06) {
+	else if((caid >> 8) == 0x06) {
 		result = Irdeto2ECM(caid, ecmCopy, dw);
 	}
-	else if((caid>>8)==0x26 || caid == 0xFFFF) {
+	else if((caid >> 8) == 0x26 || caid == 0xFFFF) {
 		result = BissECM(caid, ecm, ecmDataLen, dw, srvid, ecmpid);
 	}
-	else if((caid>>8)==0x0E) {
+	else if((caid >> 8) == 0x0E) {
 #ifdef WITH_EMU
 		result = PowervuECM(ecmCopy, dw, srvid, NULL, cw_ex);
 #else
 		result = PowervuECM(ecmCopy, dw, NULL);
 #endif
 	}
-	else if(caid==0x4AE1 && idata) {
+	else if(caid == 0x4AE1 && idata) {
 		result = Drecrypt2ECM(idata, caid, provider, ecmCopy, dw);
 	}
-	else if((caid>>8)==0x10) {
+	else if((caid >> 8) == 0x10) {
 		result = TandbergECM(ecmCopy, dw);
 	}
 
 	// fix dcw checksum
-	if(result == 0 && !((caid>>8)==0x0E)) {
+	if(result == 0 && !((caid >> 8) == 0x0E)) {
 		for(i = 0; i < 16; i += 4) {
 			dw[i + 3] = ((dw[i] + dw[i + 1] + dw[i + 2]) & 0xff);
 		}
@@ -4128,6 +5216,49 @@ int32_t GetIrdeto2Hexserial(uint16_t caid, uint8_t *hexserial)
 
 
 // PowerVu EMM EMU
+static void PowervuUnmaskEmm(uint8_t *emm)
+{
+	int i, l;
+	
+	uint8_t sourcePos[] = {0x03, 0x0C, 0x0D, 0x11, 0x15, 0x18, 0x1D, 0x1F, 0x25, 0x2A, 0x32, 0x35, 0x3A, 0x3B, 0x3E,
+						   0x42, 0x47, 0x48, 0x53, 0x58, 0x5C, 0x61, 0x66, 0x69, 0x71, 0x72, 0x78, 0x7B, 0x81, 0x84};
+	
+	uint8_t destPos[] = {0x02, 0x08, 0x0B, 0x0E, 0x13, 0x16, 0x1E, 0x23, 0x28, 0x2B, 0x2F, 0x33, 0x38, 0x3C, 0x40,
+						 0x44, 0x4A, 0x4D, 0x54, 0x57, 0x5A, 0x63, 0x68, 0x6A, 0x70, 0x75, 0x76, 0x7D, 0x82, 0x85};
+	
+	uint8_t data[0x1E];
+	uint8_t hashModeEmm;
+	uint8_t mask[0x10];
+	uint32_t crc;
+	
+	// Create Mask for ECM decryption
+	PowervuCreateDataEcmEmm(emm, sourcePos, 0x13, 0x1E, data);
+	
+	hashModeEmm = emm[8] ^ PowervuCrc8Calc(data, 0x1E);
+	
+	PowervuCreateHash(data, 0x1E, mask, hashModeEmm);
+	
+	// Fix Header
+	emm[3] &= 0x0F;
+	emm[3] |= 0x10;
+	emm[8]  = 0x00;
+	
+	// Unmask Body
+	for(i = 0; i < 0x1E; i++)
+	{
+		emm[0x13 + destPos[i]] ^= mask[i & 0x0F];
+	}
+	
+	// Fix CRC (optional)
+	l = (((emm[1] << 8) + emm[2]) & 0xFFF) + 3 - 4;
+	crc = fletcher_crc32(emm, l);
+	
+	emm[l + 0] = crc >> 24;
+	emm[l + 1] = crc >> 16;
+	emm[l + 2] = crc >> 8;
+	emm[l + 3] = crc >> 0;
+}
+
 static int8_t PowervuEMM(uint8_t *emm, uint32_t *keysAdded)
 {
 	uint8_t emmInfo, emmType, decryptOk = 0;
@@ -4142,7 +5273,13 @@ static int8_t PowervuEMM(uint8_t *emm, uint32_t *keysAdded)
 	{
 		return 1;
 	}
-
+	
+	// Check if unmasking is needed
+	if((emm[3] & 0xF0) == 0x50)
+	{
+		PowervuUnmaskEmm(emm);
+	}
+	
 	// looks like checksum does not work for all EMMs
 	//emmCrc32 = b2i(4, emm+emmLen-4);
 	//
@@ -4162,27 +5299,27 @@ static int8_t PowervuEMM(uint8_t *emm, uint32_t *keysAdded)
 			cs_log_dbg(D_EMM, "EMM error: AU key for UA %s is missing", keyName);
 			return 2;
 		}
-
+		
 		for(i=19; i+27<=emmLen; i+=27) {
 			emmInfo = emm[i];
-  	
+			
 			if(!GetBit(emmInfo, 7))
 			{
 				continue;
 			}
-  	
+			
 			//keyNb = emm[i] & 0x0F;
-  	
+			
 			memcpy(tmp, emm+i+1, 26);
 			memcpy(tmpEmmKey, emmKey, 7);
 			PowervuDecrypt(emm+i+1, 26, tmpEmmKey, 0);
-  	
+			
 			if((emm[13] != emm[i+24]) || (emm[14] != emm[i+25]) || (emm[15] != emm[i+26]))
 			{
 				memcpy(emm+i+1, tmp, 26);
 				memcpy(tmpEmmKey, emmKey, 7);
 				PowervuDecrypt(emm+i+1, 26, tmpEmmKey, 1);
-  	
+				
 				if((emm[13] != emm[i+24]) || (emm[14] != emm[i+25]) || (emm[15] != emm[i+26]))
 				{
 					memcpy(emm+i+1, tmp, 26);
@@ -4190,30 +5327,30 @@ static int8_t PowervuEMM(uint8_t *emm, uint32_t *keysAdded)
 					continue;
 				}
 			}
-  		
-  		decryptOk = 1;
-  	
+			
+			decryptOk = 1;
+			
 			emmType = emm[i+2] & 0x7F;
 			if(emmType > 1)
 			{
 				continue;
 			}
 			
+			snprintf(keyName, EMU_MAX_CHAR_KEYNAME, "%.2X", emmType);
+			snprintf(uaInfo, sizeof(uaInfo), "UA: %08X", uniqueAddress);
+			
 			if(emm[i+3] == 0 && emm[i+4] == 0)
 			{
 				cs_hexdump(0, &emm[i+3], 7, keyValue, sizeof(keyValue));
-				cs_log("Key found in EMM: P %08X %s %s -> REJECTED (looks invalid) UA: %X", groupId, keyName, keyValue, uniqueAddress);
+				cs_log("Key found in EMM: P %.4X**** %s %s -> REJECTED (looks invalid) UA: %.8X", groupId, keyName, keyValue, uniqueAddress);
 				continue;	
 			}
-			
-			snprintf(keyName, EMU_MAX_CHAR_KEYNAME, "%.2X", emmType);
-			snprintf(uaInfo, sizeof(uaInfo), "UA: %08X", uniqueAddress);
 			
 			UpdateKeysByProviderMask('P', groupId<<16, 0x0000FFFF, keyName, &emm[i+3], 7, uaInfo);
 			
 			(*keysAdded)++;
 			cs_hexdump(0, &emm[i+3], 7, keyValue, sizeof(keyValue));
-			cs_log("Key found in EMM: P %08X %s %s ; UA: %X", groupId, keyName, keyValue, uniqueAddress);
+			cs_log("Key found in EMM: P %.4X**** %s %s ; UA: %.8X", groupId, keyName, keyValue, uniqueAddress);
 		}
 		
 	} while(!decryptOk);
@@ -4260,7 +5397,7 @@ int32_t GetPowervuHexserials(uint16_t srvid, uint8_t hexserials[][4], int32_t le
 			
 			if(len > 8)
 				{ len = 8; }
-
+			
 			memset(tmp, 0, 4);
 			CharToBin(tmp+(4-(len/2)), KeyDB->EmuKeys[j].keyName, len);
 			
@@ -4529,7 +5666,7 @@ static uint8_t MixTable[] =
 void TandbergRotateBytes(unsigned char *in, int n)
 {
 	if(n > 1)
-{
+	{
 		unsigned char *e = in + n - 1;
 		do
 		{
@@ -4558,11 +5695,6 @@ static void TandbergECMKeyDecrypt(uint8_t* emmKey, uint8_t* tagData, uint8_t* ec
 	ecmKey[7] = payLoad[0x08];
 }
 
-static int8_t GetTandbergEMMKey(uint8_t *buf, uint16_t keyIndex, uint8_t isCriticalKey, const char *keySet)
-{
-	return FindKey('T', keyIndex, 0, keySet, buf, 8, isCriticalKey, 0, 0, NULL);
-}
-
 static int8_t TandbergParseEMMNanoTags(uint8_t* data, uint32_t length, uint8_t keyIndex, uint32_t *keysAdded)
 {
 	uint8_t tagType, tagLength, blockIndex;
@@ -4579,11 +5711,11 @@ static int8_t TandbergParseEMMNanoTags(uint8_t* data, uint32_t length, uint8_t k
 		return 1;
 	}
 	
-	while (pos < length)
+	while(pos < length)
 	{
 		tagType = data[pos];
-		tagLength = data[pos+1]; 
-	 	
+		tagLength = data[pos+1];
+		
 		if(pos + 2 + tagLength > length)
 		{
 			return 1;
@@ -4607,7 +5739,7 @@ static int8_t TandbergParseEMMNanoTags(uint8_t* data, uint32_t length, uint8_t k
 							break;
 						}
 						
-						if(!GetTandbergEMMKey(emmKey, keyIndex, 1, "MK01"))
+						if(!GetTandbergKey(keyIndex, "MK01", emmKey, 8))
 						{
 							break;
 						}
@@ -4634,41 +5766,41 @@ static int8_t TandbergParseEMMNanoTags(uint8_t* data, uint32_t length, uint8_t k
 					break;
 					
 					case 0xFF: // keySet FF (MK)
-		{	
-			if(tagLength != 0x82)
-			{
+					{
+						if(tagLength != 0x82)
+						{
 							cs_log("WARNING: nanoTag E4 length (%d) != %d", tagLength, 0x82);
-				break;
-			}
-			
-			blockIndex = tagData[1] & 0x03;
-
-						if(!GetTandbergEMMKey(emmKey, keyIndex, 1, "MK"))
-  		{
-  			break;
-  		}
-
-			des_set_key(emmKey, ks);
-			
-			for(i = 0; i < 0x10; i++)
-			{
-				des(tagData + 2 + (i*8), ks, 0);
-			}
-			
-			for(i = 0; i < 0x10; i++)
-			{
-				SetKey('T', (blockIndex << 4) + i, "MK", tagData + 2 + (i*8), 8, 0, NULL);
-			}
+							break;
+						}
+						
+						blockIndex = tagData[1] & 0x03;
+						
+						if(!GetTandbergKey(keyIndex, "MK", emmKey, 8))
+						{
+							break;
+						}
+						
+						des_set_key(emmKey, ks);
+						
+						for(i = 0; i < 0x10; i++)
+						{
+							des(tagData + 2 + (i*8), ks, 0);
+						}
+						
+						for(i = 0; i < 0x10; i++)
+						{
+							SetKey('T', (blockIndex << 4) + i, "MK", tagData + 2 + (i*8), 8, 0, NULL);
+						}
 					}
 					break;
-			
+					
 					default:
 						cs_log("WARNING: nanoTag E4 mode %.2X not supported", tagMode);
 					break;
 				}
-			break;
-		}
-		
+				break;
+			}
+			
 			case 0xE1: // EMM_TAG_EVENT_ENTITLEMENT_DESCRIPTOR (ecm keys)
 			{
 				uint8_t tagMode = data[pos + 2 + 4];
@@ -4676,37 +5808,37 @@ static int8_t TandbergParseEMMNanoTags(uint8_t* data, uint32_t length, uint8_t k
 				switch(tagMode)
 				{
 					case 0x00: // ecm keys from mode FF
-		{
-			if(tagLength != 0x12)
-			{
+					{
+						if(tagLength != 0x12)
+						{
 							cs_log("WARNING: nanoTag E1 length (%d) != %d", tagLength, 0x12);
-				break;
-			}
-			
-			entitlementId = b2i(4, tagData);
-			
-						if(!GetTandbergEMMKey(emmKey, keyIndex, 1, "MK"))
-  		{
-  			break;
-  		}
-			
-			des_set_key(emmKey, ks);
-			des(tagData + 4 + 5, ks, 0);
-			
+							break;
+						}
+						
+						entitlementId = b2i(4, tagData);
+						
+						if(!GetTandbergKey(keyIndex, "MK", emmKey, 8))
+						{
+							break;
+						}
+						
+						des_set_key(emmKey, ks);
+						des(tagData + 4 + 5, ks, 0);
+						
 						if((tagData + 4 + 5 + 7) != 0x00) // check if key looks valid (last byte 0x00)
 						{
 							break;
 						}
 						
-			if(UpdateKey('T', entitlementId, "01", tagData + 4 + 5, 8, 1, NULL))
-			{
-				(*keysAdded)++;
-				cs_hexdump(0, tagData + 4 + 5, 8, keyValue, sizeof(keyValue));
+						if(UpdateKey('T', entitlementId, "01", tagData + 4 + 5, 8, 1, NULL))
+						{
+							(*keysAdded)++;
+							cs_hexdump(0, tagData + 4 + 5, 8, keyValue, sizeof(keyValue));
 							cs_log("Key found in EMM: T %.8X 01 %s", entitlementId, keyValue);
 						}
-			}
+					}
 					break;
-			
+					
 					case 0x01: // ecm keys from mode 01
 					{
 						if(tagLength != 0x1A)
@@ -4717,7 +5849,7 @@ static int8_t TandbergParseEMMNanoTags(uint8_t* data, uint32_t length, uint8_t k
 						
 						entitlementId = b2i(4, tagData);
 						
-						if(!GetTandbergEMMKey(emmKey, keyIndex, 1, "MK01"))
+						if(!GetTandbergKey(keyIndex, "MK01", emmKey, 8))
 						{
 							break;
 						}
@@ -4743,15 +5875,15 @@ static int8_t TandbergParseEMMNanoTags(uint8_t* data, uint32_t length, uint8_t k
 						cs_log("WARNING: nanoTag E1 mode %.2X not supported", tagMode);
 					break;
 				}
-			break;
-		}
-		
-		default:
+				break;
+			}
+			
+			default:
 				cs_log("WARNING: nanoTag %.2X not supported", tagType);
 			break;
 		}
 		
-		pos += 2 + tagLength;   
+		pos += 2 + tagLength;
 	}
 	
 	return 0;
@@ -4827,6 +5959,21 @@ static int8_t TandbergEMM(uint8_t *emm, uint32_t *keysAdded)
 		}
 		
 		keyIndex = emm[pos+1];
+		
+		// EMM validation
+		// Copy payload checksum bytes and then set them to zero,
+		// so they do not affect the calculated checksum.
+		uint16_t payloadChecksum = (emm[pos + 2] << 8) | emm[pos + 3];
+		memset(emm + pos + 2, 0, 2);
+		uint16_t calculatedChecksum = TandbergChecksum(emm + 3, emmLen - 3);
+		
+		if(calculatedChecksum != payloadChecksum)
+		{
+			cs_log("EMM checksum error (%.4X instead of %.4X)", calculatedChecksum, payloadChecksum);
+			return 8;
+		}
+		// End of EMM validation
+		
 		pos += 0x04;
 		ret = TandbergParseEMMNanoData(emm + pos, &nanoLength, emmLen - pos, keyIndex, keysAdded);
 		pos += nanoLength;

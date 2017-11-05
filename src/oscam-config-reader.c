@@ -110,7 +110,7 @@ static void protocol_fn(const char *token, char *value, void *setting, FILE *f)
 			{ "newcamd",    R_NEWCAMD },
 			{ "newcamd525", R_NEWCAMD },
 			{ "newcamd524", R_NEWCAMD },
-			{ "drecas",		R_DRECAS },
+			{ "drecas",	R_DRECAS },
 			{ "emu",        R_EMU },
 			{ NULL        , 0 }
 		}, *p;
@@ -452,7 +452,7 @@ void ftab_fn(const char *token, char *value, void *setting, long ftab_type, FILE
 		if(ftab_type & FTAB_LOCALCARDS)  { rdr = container_of(setting, struct s_reader, localcards); }
 		if(ftab_type & FTAB_IGNCHKSMCAID){ rdr = container_of(setting, struct s_reader, disablecrccws_only_for); }
 #ifdef WITH_EMU
-		if(ftab_type & FTAB_EMUAU)      { rdr = container_of(setting, struct s_reader, emu_auproviders); }
+		if(ftab_type & FTAB_EMUAU)       { rdr = container_of(setting, struct s_reader, emu_auproviders); }
 #endif
 		if(rdr)
 			{ rdr->changes_since_shareupdate = 1; }

@@ -228,8 +228,8 @@ int32_t emm_reader_match(struct s_reader *reader, uint16_t caid, uint32_t provid
 				{
 					return 1;
 				}
-			}		
-		}		
+			}
+		}
 		return 0;
 	}
 #endif

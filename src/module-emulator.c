@@ -9,8 +9,8 @@
 #include "module-emulator-stream.h"
 
 // oscam virtual emu card reader
-#define CS_OK      1
-#define CS_ERROR   0
+#define CS_OK     1
+#define CS_ERROR  0
 
 static int32_t emu_do_ecm(struct s_reader *rdr, const struct ecm_request_t *er, struct s_ecm_answer *ea)
 {
@@ -197,23 +197,23 @@ int32_t emu_get_dre2_emm_type(EMM_PACKET *ep, struct s_reader *UNUSED(rdr))
 	{
 		switch(ep->emm[0])
 		{
-		case 0x86:
-			ep->type = SHARED;
-			memset(ep->hexserial, 0, 8);
-			ep->hexserial[0] = ep->emm[3];
-			return 1;
-
+			case 0x86:
+				ep->type = SHARED;
+				memset(ep->hexserial, 0, 8);
+				ep->hexserial[0] = ep->emm[3];
+				return 1;
+			
 			//case 0x87:
-			//	ep->type = UNIQUE;
-			//	return 1; //FIXME: no filling of ep->hexserial
+				//	ep->type = UNIQUE;
+				//	return 1; //FIXME: no filling of ep->hexserial
 			
 			case 0x88:
 				ep->type = UNIQUE;
 				return 1; //FIXME: no filling of ep->hexserial
-    	
-		default:
-			ep->type = UNKNOWN;
-			return 1;
+			
+			default:
+				ep->type = UNKNOWN;
+				return 1;
 		}
 	}
 }
@@ -229,7 +229,7 @@ int32_t emu_get_tan_emm_type(EMM_PACKET *ep, struct s_reader *rdr)
 		ep->type = UNKNOWN;
 		rdr_log_dbg(rdr, D_EMM, "UNKNOWN");
 	}
-	return 1;	
+	return 1;
 }
 
 static int32_t emu_get_emm_type(struct emm_packet_t *ep, struct s_reader *rdr)
@@ -238,19 +238,19 @@ static int32_t emu_get_emm_type(struct emm_packet_t *ep, struct s_reader *rdr)
 	{
 		case 0x05:
 			return emu_get_via3_emm_type(ep, rdr);
-
+		
 		case 0x06:
 			return emu_get_ird2_emm_type(ep, rdr);
-			
+		
 		case 0x0E:
 			return emu_get_pvu_emm_type(ep, rdr);
-	
+		
 		case 0x4A:
 			return emu_get_dre2_emm_type(ep, rdr);
-	
+		
 		case 0x10:
 			return emu_get_tan_emm_type(ep, rdr);
-				
+		
 		default:
 			break;
 	}
@@ -266,22 +266,22 @@ static int32_t emu_get_via3_emm_filter(struct s_reader *UNUSED(rdr), struct s_cs
 		
 		if(!cs_malloc(emm_filters, max_filter_count * sizeof(struct s_csystem_emm_filter)))
 			{ return CS_ERROR; }
-
+		
 		struct s_csystem_emm_filter *filters = *emm_filters;
 		*filter_count = 0;
-
+		
 		int32_t idx = 0;
-
+		
 		filters[idx].type = EMM_GLOBAL;
 		filters[idx].enabled   = 1;
 		filters[idx].filter[0] = 0x8A;
 		filters[idx].mask[0]   = 0xFE;
-		filters[idx].filter[3] = 0x80; 
+		filters[idx].filter[3] = 0x80;
 		filters[idx].mask[3]   = 0x80;
 		idx++;
-
+		
 		*filter_count = idx;
-	}	
+	}
 	
 	return CS_OK;
 }
@@ -298,7 +298,7 @@ static int32_t emu_get_ird2_emm_filter(struct s_reader* rdr, struct s_csystem_em
 
 	emu_provids = get_emu_prids_for_caid(rdr, caid);
 	if(emu_provids != NULL && emu_provids->nprids > 0)
-		{ have_provid = 1;}		
+		{ have_provid = 1; }
 
 	if(*emm_filters == NULL)
 	{
@@ -337,7 +337,7 @@ static int32_t emu_get_ird2_emm_filter(struct s_reader* rdr, struct s_csystem_em
 			memcpy(&filters[idx].filter[2], &prid[1], 3);
 			memset(&filters[idx].mask[2], 0xFF, 3);
 			idx++;
-        	
+			
 			filters[idx].type = EMM_SHARED;
 			filters[idx].enabled   = 1;
 			filters[idx].filter[0] = 0x82;
@@ -348,10 +348,10 @@ static int32_t emu_get_ird2_emm_filter(struct s_reader* rdr, struct s_csystem_em
 			memset(&filters[idx].mask[2], 0xFF, 2);
 			idx++;
 		}
-
+		
 		*filter_count = idx;
 	}
-
+	
 	return CS_OK;
 }
 
@@ -368,29 +368,29 @@ static int32_t emu_get_pvu_emm_filter(struct s_reader *UNUSED(rdr), struct s_csy
 		const unsigned int max_filter_count = count;
 		if(!cs_malloc(emm_filters, max_filter_count * sizeof(struct s_csystem_emm_filter)))
 			{ return CS_ERROR; }
-
+		
 		struct s_csystem_emm_filter *filters = *emm_filters;
 		*filter_count = 0;
-
+		
 		int32_t idx = 0;
-
+		
 		for(i=0; i<count; i++)
 		{
 			filters[idx].type = EMM_UNIQUE;
-			filters[idx].enabled   = 1;
-			filters[idx].filter[0] = 0x82;
+			filters[idx].enabled    = 1;
+			filters[idx].filter[0]  = 0x82;
 			filters[idx].filter[10] = hexserials[i][0];
 			filters[idx].filter[11] = hexserials[i][1];
 			filters[idx].filter[12] = hexserials[i][2];
 			filters[idx].filter[13] = hexserials[i][3];
-			filters[idx].mask[0]   = 0xFF;
-			filters[idx].mask[10]  = 0xFF;
-			filters[idx].mask[11]  = 0xFF;
-			filters[idx].mask[12]  = 0xFF;
-			filters[idx].mask[13]  = 0xFF;
+			filters[idx].mask[0]    = 0xFF;
+			filters[idx].mask[10]   = 0xFF;
+			filters[idx].mask[11]   = 0xFF;
+			filters[idx].mask[12]   = 0xFF;
+			filters[idx].mask[13]   = 0xFF;
 			idx++;
 		}
-
+		
 		*filter_count = idx;
 	}
 
@@ -410,12 +410,12 @@ static int32_t emu_get_dre2_emm_filter(struct s_reader *UNUSED(rdr), struct s_cs
 		const unsigned int max_filter_count = 1 + count + 1;
 		if(!cs_malloc(emm_filters, max_filter_count * sizeof(struct s_csystem_emm_filter)))
 			{ return CS_ERROR; }
-
+		
 		struct s_csystem_emm_filter *filters = *emm_filters;
 		*filter_count = 0;
-
+		
 		int32_t idx = 0;
-
+		
 		if(provid == 0xFE)
 		{
 			filters[idx].type = EMM_GLOBAL;
@@ -450,7 +450,7 @@ static int32_t emu_get_dre2_emm_filter(struct s_reader *UNUSED(rdr), struct s_cs
 		
 		*filter_count = idx;
 	}
-
+	
 	return CS_OK;
 }
 
@@ -466,24 +466,24 @@ static int32_t emu_get_tan_emm_filter(struct s_reader *UNUSED(rdr), struct s_csy
 		
 		if(!cs_malloc(emm_filters, max_filter_count * sizeof(struct s_csystem_emm_filter)))
 			{ return CS_ERROR; }
-
+		
 		struct s_csystem_emm_filter *filters = *emm_filters;
 		*filter_count = 0;
-
+		
 		int32_t idx = 0;
-
+		
 		filters[idx].type = EMM_GLOBAL;
 		filters[idx].enabled   = 1;
 		filters[idx].filter[0] = 0x82;
 		filters[idx].mask[0]   = 0xFF;
 		idx++;
-
+		
 		filters[idx].type = EMM_GLOBAL;
 		filters[idx].enabled   = 1;
 		filters[idx].filter[0] = 0x83;
 		filters[idx].mask[0]   = 0xFF;
 		idx++;
-
+		
 		*filter_count = idx;
 	}	
 	
@@ -496,16 +496,16 @@ static int32_t emu_get_emm_filter_adv(struct s_reader *rdr, struct s_csystem_emm
 	{
 		case 0x05:
 			return emu_get_via3_emm_filter(rdr, emm_filters, filter_count, caid, provid);
-
+		
 		case 0x06:
 			return emu_get_ird2_emm_filter(rdr, emm_filters, filter_count, caid, provid);
-			
+		
 		case 0x0E:
 			return emu_get_pvu_emm_filter(rdr, emm_filters, filter_count, caid, provid, srvid);
-			
+		
 		case 0x4A:
 			return emu_get_dre2_emm_filter(rdr, emm_filters, filter_count, caid, provid);
-	
+		
 		case 0x10:
 			return emu_get_tan_emm_filter(rdr, emm_filters, filter_count, caid, provid);
 		
@@ -525,7 +525,7 @@ const struct s_cardsystem reader_emu =
 	.card_info = emu_card_info,
 	.card_init = emu_card_init,
 	.get_emm_type = emu_get_emm_type,
-	.get_emm_filter = emu_get_emm_filter, //needed to pass checks
+	.get_emm_filter = emu_get_emm_filter, // needed to pass checks
 	.get_emm_filter_adv = emu_get_emm_filter_adv,
 };
 
@@ -540,7 +540,7 @@ static void emu_add_entitlement(struct s_reader *rdr, uint16_t caid, uint32_t pr
 	S_ENTITLEMENT *item;
 	if(cs_malloc(&item, sizeof(S_ENTITLEMENT)))
 	{
-
+	
 		// fill item
 		item->caid = caid;
 		item->provid = provid;
@@ -554,8 +554,8 @@ static void emu_add_entitlement(struct s_reader *rdr, uint16_t caid, uint32_t pr
 		item->key = key;
 		item->keyLength = keyLength;
 		item->isData = isData;
-
-		//add item
+		
+		// add item
 		ll_append(rdr->ll_entitlements, item);
 	}
 }
@@ -746,15 +746,15 @@ static int32_t EMU_Init(struct s_reader *reader)
 static int32_t EMU_GetStatus(struct s_reader *UNUSED(reader), int32_t *in) { *in = 1; return CR_OK; }
 static int32_t EMU_Activate(struct s_reader *UNUSED(reader), struct s_ATR *UNUSED(atr)) { return CR_OK; }
 static int32_t EMU_Transmit(struct s_reader *UNUSED(reader), uint8_t *UNUSED(buffer), uint32_t UNUSED(size),
-							uint32_t UNUSED(expectedlen), uint32_t UNUSED(delay), uint32_t UNUSED(timeout)) { return CR_OK; }
+									uint32_t UNUSED(expectedlen), uint32_t UNUSED(delay), uint32_t UNUSED(timeout)) { return CR_OK; }
 static int32_t EMU_Receive(struct s_reader *UNUSED(reader), uint8_t *UNUSED(buffer), uint32_t UNUSED(size),
-						   uint32_t UNUSED(delay), uint32_t UNUSED(timeout)) { return CR_OK; }
+									uint32_t UNUSED(delay), uint32_t UNUSED(timeout)) { return CR_OK; }
 static int32_t EMU_Close(struct s_reader *UNUSED(reader)) { return CR_OK; }
 static int32_t EMU_write_settings(struct s_reader *UNUSED(reader), struct s_cardreader_settings *UNUSED(s)) { return CR_OK; }
 static int32_t EMU_card_write(struct s_reader *UNUSED(pcsc_reader),const uchar *UNUSED(buf) ,uint8_t *UNUSED(cta_res),
-							  uint16_t *UNUSED(cta_lr),int32_t UNUSED(l)) { return CR_OK; }
+									uint16_t *UNUSED(cta_lr),int32_t UNUSED(l)) { return CR_OK; }
 static int32_t EMU_set_protocol(struct s_reader *UNUSED(rdr),uint8_t *UNUSED(params),uint32_t *UNUSED(length),
-								uint32_t UNUSED(len_request)) { return CR_OK; }
+									uint32_t UNUSED(len_request)) { return CR_OK; }
 
 const struct s_cardreader cardreader_emu =
 {
@@ -788,18 +788,18 @@ void add_emu_reader(void)
 			break;
 		}
 	}
-
+	
 	rdr = NULL;
-
+	
 	if(!haveEmuReader) {
 		if(!cs_malloc(&rdr, sizeof(struct s_reader))) { return; }
 		reader_set_defaults(rdr);
-
+		
 		rdr->enable = 1;
 		rdr->typ = R_EMU;
 		strncpy(rdr->label, emuName, strlen(emuName));
 		strncpy(rdr->device, emuName, strlen(emuName));
-
+		
 		ctab = strdup("090F,0500,1801,0604,2600,FFFF,0E00,4AE1,1010");
 		chk_caidtab(ctab, &rdr->ctab);
 		NULLFREE(ctab);
@@ -818,20 +818,20 @@ void add_emu_reader(void)
 		
 		chk_ftab(ftab, &rdr->ftab);
 		NULLFREE(ftab);
-
+		
 		emu_auproviders = strdup("0604:010200;0E00:000000;4AE1:000011,000014,0000FE;1010:000000;");
 		chk_ftab(emu_auproviders, &rdr->emu_auproviders);
 		NULLFREE(emu_auproviders);
-
+		
 		rdr->cachemm = 2;
 		rdr->rewritemm = 1;
 		rdr->logemm = 2;
 		rdr->deviceemm = 1;
-
+		
 		rdr->grp = 0x1ULL;
-
+		
 		rdr->crdr = &cardreader_emu;
-
+		
 		reader_fixups_fn(rdr);
 		ll_append(configured_readers, rdr);
 	}

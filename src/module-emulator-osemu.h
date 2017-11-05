@@ -52,14 +52,14 @@
 #ifndef WITH_EMU
 	typedef struct opkeys
 	{
-		uint8_t key3b[32][32]; 
-		uint8_t key56[32][32]; 
+		uint8_t key3b[32][32];
+		uint8_t key56[32][32];
 	} opkeys_t;
 #endif	
 	
 	typedef struct {
 		char *extee36;
-		char  *extee56;
+		char *extee56;
 		opkeys_t *ee36;
 		opkeys_t *ee56;
 		uint8_t dre36_force_group;
@@ -96,10 +96,10 @@
 	5
 	6  Checksum error
 	7  Out of memory
-	*/	
+	*/
 	int8_t ProcessEMM(uint16_t caid, uint32_t provider, const uint8_t *emm, ReaderInstanceData* idata, uint32_t *keysAdded);
 	
-	const char* GetProcessEMMErrorReason(int8_t result);			  
+	const char* GetProcessEMMErrorReason(int8_t result);
 
 	//hexserial must be of type "uint8_t hexserial[3]"
 	//returns 0 on error, 1 on success
@@ -118,10 +118,10 @@
 
 #define PVU_CW_VID 0	// VIDeo
 #define PVU_CW_HSD 1	// High Speed Data
-#define PVU_CW_A1 2		// Audio 1
-#define PVU_CW_A2 3		// Audio 2
-#define PVU_CW_A3 4		// Audio 3
-#define PVU_CW_A4 5		// Audio 4
+#define PVU_CW_A1  2	// Audio 1
+#define PVU_CW_A2  3	// Audio 2
+#define PVU_CW_A3  4	// Audio 3
+#define PVU_CW_A4  5	// Audio 4
 #define PVU_CW_UTL 6	// UTiLity
 #define PVU_CW_VBI 7	// Vertical Blanking Interval
 
@@ -134,8 +134,8 @@
 #ifdef WITH_EMU
 	int32_t SetKey(char identifier, uint32_t provider, char *keyName, uint8_t *orgKey, uint32_t keyLength, uint8_t writeKey, char *comment);
 	
-	int32_t FindKey(char identifier, uint32_t provider, uint32_t providerIgnoreMask, const char *keyName, uint8_t *key, 
+	int32_t FindKey(char identifier, uint32_t provider, uint32_t providerIgnoreMask, const char *keyName, uint8_t *key,
 										uint32_t maxKeyLength, uint8_t isCriticalKey, uint32_t keyRef, uint8_t matchLength, uint32_t *getProvider);
 #endif
-  
+
 #endif
