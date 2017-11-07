@@ -8,5 +8,6 @@ EXTRA_OECMAKE += "\
 
 DESCRIPTION += "- IPv6 support\nThis version can connect to servers using IPv6 and/or IPv4."
 
-#RREPLACES_${PN} = "${PN}-ipv4"
-#RCONFLICTS_${PN} = "${PN}-ipv4"
+RPROVIDES_${PN}  = "softcam-${BINFILE}"
+RREPLACES_${PN}  = "softcam-${BINFILE}-ipv4"
+RCONFLICTS_${PN} = "softcam-${BINFILE}-ipv4"

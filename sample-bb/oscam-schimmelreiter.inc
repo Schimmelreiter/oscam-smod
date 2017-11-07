@@ -38,11 +38,19 @@ EXTRA_OECMAKE += "\
 	-DHAVE_PCSC=0 \
 	"
 
+do_configure_prepend() {
+    cp ${F}/SoftCam.Key ${S}/SoftCam.Key
+}
+
 do_compile_prepend() {
     # Shitquake fucks up git revision detection, patch it in
     export GITREV=$(echo ${GITPKGV} | perl -pe"s#\d+\+##") ; sed -i s#GIT_VERSION\ \"test\"#GIT_VERSION\ \"${GITREV}\"# ${S}/globals.h
-    # As we build for a STB, set default for dvbapi to 1
+
+    # As we build for a STB, set default for dvbapi to 1 and don't hide idle clients
     perl -i -pe 's:(OFS\(dvbapi_enabled\),[ \t]*?)0\),:${1}1\),:g' ${S}/oscam-config-global.c
+    perl -i -pe 's:(OFS\(http_hide_idle_clients\),[ \t]*?)1\),:${1}0\),:g' ${S}/oscam-config-global.c
+
+    LDFLAGS="${LDFLAGS} -Wl,--format=binary -Wl,SoftCam.Key -Wl,--format=default"
 }
 
 do_install() {
@@ -51,13 +59,12 @@ do_install() {
     install -d ${D}/${sysconfdir}/init.d
     install -m 0755 ${F}/softcam.oscam ${D}/${sysconfdir}/init.d/softcam.${BINFILE}
     install -d ${D}/${sysconfdir}/tuxbox/config/${BINFILE}
-    install -m 0644 ${F}/oscam.conf ${D}/${sysconfdir}/tuxbox/config/${BINFILE}
-    install -m 0644 ${F}/oscam.server ${D}/${sysconfdir}/tuxbox/config/${BINFILE}
-    install -m 0644 ${F}/oscam.user ${D}/${sysconfdir}/tuxbox/config/${BINFILE}
     install -m 0644 ${F}/oscam.dvbapi ${D}/${sysconfdir}/tuxbox/config/${BINFILE}
-    install -m 0644 ${F}/oscam.constcw ${D}/${sysconfdir}/tuxbox/config/${BINFILE}
-    install -m 0644 ${F}/SoftCam.Key ${D}/${sysconfdir}/tuxbox/config/${BINFILE}
-    sed -i s#config/oscam/oscam.constcw#config/${BINFILE}/oscam.constcw# ${D}/${sysconfdir}/tuxbox/config/${BINFILE}/oscam.server
+
+    # Uncomment for a pre-defined constcw-Reader
+    #install -m 0644 ${F}/oscam.constcw ${D}/${sysconfdir}/tuxbox/config/${BINFILE}
+    #install -m 0644 ${F}/oscam.server ${D}/${sysconfdir}/tuxbox/config/${BINFILE}
+    #sed -i s#config/oscam/oscam.constcw#config/${BINFILE}/oscam.constcw# ${D}/${sysconfdir}/tuxbox/config/${BINFILE}/oscam.server
 }
 
 FILES_${PN} = "/usr /etc/init.d /etc/tuxbox"

@@ -1,11 +1,12 @@
 include oscam-schimmelreiter.inc
 
-BINFILE = "oscam-schimmelreiter-ipv4"
+BINFILE = "oscam-schimmelreiter"
 
 EXTRA_OECMAKE += "\
 	-DIPV6SUPPORT=0 \
 	"
 DESCRIPTION += "Note: You should never need this IPv4-ONLY version!"
 
-#RREPLACES_${PN} = "${@'${PN}'.replace('-ipv4', '')}"
-#RCONFLICTS_${PN} = "${@'${PN}'.replace('-ipv4', '')}"
+RPROVIDES_${PN}  = "softcam-${BINFILE}-ipv4"
+RREPLACES_${PN}  = "softcam-${BINFILE}"
+RCONFLICTS_${PN} = "softcam-${BINFILE}"
