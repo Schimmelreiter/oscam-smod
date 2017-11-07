@@ -18,7 +18,7 @@ PKGV = "1.20+git${GITPKGV}"
 
 SRC_URI="git://github.com/Schimmelreiter/oscam-schimmelreiter.git;protocol=git"
 
-S = "${WORKDIR}/git/src"
+S = "${WORKDIR}/git"
 F = "${WORKDIR}/git/files"
 
 PACKAGE_ARCH = "${DEFAULTTUNE}"
