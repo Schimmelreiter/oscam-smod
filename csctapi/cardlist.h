@@ -74,7 +74,6 @@ void findatr(struct s_reader *reader) {
 		memcpy(current.providername, eliteryl.providername, strlen(eliteryl.providername));
 		memcpy(reader->boxkey, eliteryl.boxkey, 9);
 		memcpy(reader->des_key, eliteryl.deskey, 33);
-		memcpy(reader->pincode, "0000", 5);
 		current.found = 1;
 	}
 	/* test ATR for ins7e11 11,12,13,14,15 */
