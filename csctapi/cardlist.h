@@ -39,8 +39,7 @@ struct atrlist {
 	char atr[80];
 } current = { 0, "\0", "\0" };
 
-void findatr(struct s_reader *reader)
-{
+void findatr(struct s_reader *reader) {
 	current.found = 0;
 	memset(current.providername, 0, 32);
 	if ( strncmp(current.atr, hdplus01.atr, hdplus01.atrsize) == 0 ) {
@@ -75,7 +74,7 @@ void findatr(struct s_reader *reader)
 		memcpy(current.providername, eliteryl.providername, strlen(eliteryl.providername));
 		memcpy(reader->boxkey, eliteryl.boxkey, 9);
 		memcpy(reader->des_key, eliteryl.deskey, 33);
-		memcpy(reader->pincode, "0000\0", 5);
+		memcpy(reader->pincode, "0000", 5);
 		current.found = 1;
 	}
 	/* test ATR for ins7e11 11,12,13,14,15 */
