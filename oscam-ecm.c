@@ -1584,8 +1584,7 @@ int32_t write_ecm_answer(struct s_reader *reader, ECM_REQUEST *er, int8_t rc, ui
 
 	if(reader && cw && rc < E_NOTFOUND)
 	{
-		if(cfg.disablecrccws == 0 && reader->disablecrccws == 0 && ((er->caid >> 8) != 0x0E))
-		{
+		if(cfg.disablecrccws == 0 && reader->disablecrccws == 0 && ( (er->caid >> 8) != 0x0E ) && ( (er->caid != 0x0500) && (er->prid != 0x050F00))) {
 			uint8_t selectedForIgnChecksum = chk_if_ignore_checksum(er, cfg.disablecrccws, &cfg.disablecrccws_only_for)
 					+ chk_if_ignore_checksum(er, reader->disablecrccws, &reader->disablecrccws_only_for);
 
