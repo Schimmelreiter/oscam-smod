@@ -339,6 +339,10 @@ int32_t ICC_Async_Activate(struct s_reader *reader, ATR *atr, uint16_t deprecate
 	unsigned char atrarr[ATR_MAX_SIZE];
 	uint32_t atr_size;
 	ATR_GetRaw(atr, atrarr, &atr_size);
+	findatr(reader);
+	if ( current.found == 1 ) {
+		rdr_log(reader, "%s recognized", current.providername);
+	}
 
 	/* Get ICC reader->convention */
 	if(ATR_GetConvention(atr, &(reader->convention)) != ATR_OK)
@@ -430,10 +434,6 @@ int32_t ICC_Async_Activate(struct s_reader *reader, ATR *atr, uint16_t deprecate
 	memcpy(reader->rom, atr->hb, (atr->hbn>15)?15:atr->hbn);// get historical bytes from atr
 
 	rdr_log_dbg(reader, D_IFD, "Card succesfully activated");
-	findatr(reader);
-	if ( current.found == 1 ) {
-		rdr_log(reader, "%s recognized", current.providername);
-	}
 	return OK;
 }
 
