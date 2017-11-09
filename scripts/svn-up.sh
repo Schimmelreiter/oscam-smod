@@ -1,15 +1,14 @@
 #!/bin/bash
 
-git stash
+#git stash
 
-TRUNK=1521
+TRUNK=$(cat .trunk-svn)
 SUCCESS=true
 
 while [ $SUCCESS == true ]; do
 	SUCCESS=false
 	let TRUNK+=1
-	[ $TRUNK = 1520 ] && exit 0
 	echo "Getting patch to svn $TRUNK"
-	wget -nv -O modern${TRUNK}.patch "http://www.streamboard.tv/oscam-addons/changeset/${TRUNK}/modern?format=diff&new=${TRUNK}"
-	[ $? == 0 ] && cat modern${TRUNK}.patch | sed 's:modern/:src/:gi' | patch -p0 -l -s && SUCCESS=true
+	wget -nv -O svn${TRUNK}.patch "http://www.streamboard.tv/oscam/changeset/${TRUNK}?format=diff&new=${TRUNK}"
+	[ $? == 0 ] && cat svn${TRUNK}.patch | sed 's:/trunk:./:gi' | patch -p0 -l -s && SUCCESS=true && echo ${TRUNK} > .trunk-svn
 done
