@@ -698,7 +698,7 @@ do
 		break
 	;;
 	'-g'|'--git-revision')
-		git rev-list --all --max-count=1 | cut -c1-7
+		echo $(git rev-list --count HEAD ; echo "+" ; git rev-list --all --max-count=1 | cut -c1-7) | sed 's# ##g'
 		break
 	;;
 	'-r'|'--oscam-revision')
