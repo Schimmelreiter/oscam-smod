@@ -48,47 +48,47 @@ void findatr(struct s_reader *reader) {
 	if ( strncmp(current.atr, hdplus01.atr, hdplus01.atrsize) == 0 ) {
 		memcpy(current.providername, hdplus01.providername, strlen(hdplus01.providername));
 		memcpy(reader->boxkey, hdplus01.boxkey, 8);
-		memcpy(reader->rsa_mod, hdplus01.rsakey, 128);
+		memcpy(reader->rsa_mod, hdplus01.rsakey, 64);
 		reader->saveemm = hdplus01.saveemm;
 		reader->blockemm = hdplus01.blockemm;
 		reader->boxkey_length = 8;
-		reader->rsa_mod_length = 128;
+		reader->rsa_mod_length = 64;
 		current.found = 1;
 	} else if ( strncmp(current.atr, hdplus02.atr, hdplus02.atrsize) == 0 ) {
 		memcpy(current.providername, hdplus02.providername, strlen(hdplus02.providername));
 		memcpy(reader->boxkey, hdplus02.boxkey, 8);
-		memcpy(reader->rsa_mod, hdplus02.rsakey, 128);
+		memcpy(reader->rsa_mod, hdplus02.rsakey, 64);
 		reader->saveemm = hdplus02.saveemm;
 		reader->blockemm = hdplus02.blockemm;
 		reader->boxkey_length = 8;
-		reader->rsa_mod_length = 128;
+		reader->rsa_mod_length = 64;
 		current.found = 1;
 	} else if ( strncmp(current.atr, hdplus03.atr, hdplus03.atrsize) == 0 ) {
 		memcpy(current.providername, hdplus03.providername, strlen(hdplus03.providername));
 		memcpy(reader->boxkey, hdplus03.boxkey, 8);
-		memcpy(reader->rsa_mod, hdplus03.rsakey, 128);
+		memcpy(reader->rsa_mod, hdplus03.rsakey, 64);
 		reader->saveemm = hdplus03.saveemm;
 		reader->blockemm = hdplus03.blockemm;
 		reader->boxkey_length = 8;
-		reader->rsa_mod_length = 128;
+		reader->rsa_mod_length = 64;
 		current.found = 1;
 	} else if ( strncmp(current.atr, unity_01.atr, unity_01.atrsize) == 0 ) {
 		memcpy(current.providername, unity_01.providername, strlen(unity_01.providername));
 		memcpy(reader->boxkey, unity_01.boxkey, 8);
-		memcpy(reader->rsa_mod, unity_01.rsakey, 128);
+		memcpy(reader->rsa_mod, unity_01.rsakey, 64);
 		reader->saveemm = unity_01.saveemm;
 		reader->blockemm = unity_01.blockemm;
 		reader->boxkey_length = 8;
-		reader->rsa_mod_length = 128;
+		reader->rsa_mod_length = 64;
 		current.found = 1;
 	} else if ( strncmp(current.atr, unity_02.atr, unity_02.atrsize) == 0 ) {
 		memcpy(current.providername, unity_02.providername, strlen(unity_02.providername));
 		memcpy(reader->boxkey, unity_02.boxkey, 8);
-		memcpy(reader->rsa_mod, unity_02.rsakey, 128);
+		memcpy(reader->rsa_mod, unity_02.rsakey, 64);
 		reader->saveemm = unity_02.saveemm;
 		reader->blockemm = unity_02.blockemm;
 		reader->boxkey_length = 8;
-		reader->rsa_mod_length = 128;
+		reader->rsa_mod_length = 64;
 		current.found = 1;
 	} else if ( strncmp(current.atr, redlight.atr, redlight.atrsize) == 0 ) {
 		memcpy(current.providername, redlight.providername, strlen(redlight.providername));
