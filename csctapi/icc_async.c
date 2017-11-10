@@ -422,6 +422,7 @@ int32_t ICC_Async_Activate(struct s_reader *reader, ATR *atr, uint16_t deprecate
 			//
 			call(crdr_ops->activate(reader, atr));// read previous layer atr to switch back
 			ATR_GetRaw(atr, atrarr, &atr_size);
+			memcpy(reader->rom, atr->hb, (atr->hbn>15)?15:atr->hbn);// get historical bytes from atr
 		}
 		else
 		{
@@ -435,7 +436,6 @@ int32_t ICC_Async_Activate(struct s_reader *reader, ATR *atr, uint16_t deprecate
 	rdr_log(reader, "ATR: %s", cs_hexdump(1, atrarr, atr_size, tmp, sizeof(tmp)));
 	memcpy(reader->card_atr, atrarr, atr_size);
 	reader->card_atr_length = atr_size;
-	memcpy(reader->rom, atr->hb, (atr->hbn>15)?15:atr->hbn);// get historical bytes from atr
 
 	rdr_log_dbg(reader, D_IFD, "Card succesfully activated");
 	return OK;
