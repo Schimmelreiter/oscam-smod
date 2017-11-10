@@ -85,7 +85,7 @@ void findatr(struct s_reader *reader) {
 		memcpy(reader->boxkey, redlight.boxkey, 5);
 		memcpy(reader->des_key, redlight.deskey, 17);
 		memcpy(reader->pincode, "0000\0", 5);
-		reader->des_key_length = 16;
+//		reader->des_key_length = 16;
 		current.found = 1;
 	} else if ( strncmp(current.atr, tntviav5.atr, tntviav5.atrsize) == 0 ) {
 		memcpy(current.providername, tntviav5.providername, strlen(tntviav5.providername));
@@ -93,7 +93,7 @@ void findatr(struct s_reader *reader) {
 		memcpy(reader->des_key, tntviav5.deskey, 17);
 		memcpy(reader->pincode, "0000\0", 5);
 		parse_aes_keys(reader, tntviav5.aeskeys);
-		reader->des_key_length = 16;
+//		reader->des_key_length = 16;
 		current.found = 1;
 	} else if ( strncmp(current.atr, tntviav6.atr, tntviav6.atrsize) == 0 ) {
 		memcpy(current.providername, tntviav6.providername, strlen(tntviav6.providername));
@@ -101,7 +101,7 @@ void findatr(struct s_reader *reader) {
 		memcpy(reader->des_key, tntviav6.deskey, 17);
 		memcpy(reader->pincode, "0000\0", 5);
 		parse_aes_keys(reader, tntviav6.aeskeys);
-		reader->des_key_length = 16;
+//		reader->des_key_length = 16;
 		current.found = 1;
 	}
 	/* test ATR for ins7e11 11,12,13,14,15 */
