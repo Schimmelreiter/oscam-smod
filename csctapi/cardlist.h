@@ -82,26 +82,29 @@ void findatr(struct s_reader *reader) {
 		current.found = 1;
 	} else if ( strncmp(current.atr, redlight.atr, redlight.atrsize) == 0 ) {
 		memcpy(current.providername, redlight.providername, strlen(redlight.providername));
-		memcpy(reader->boxkey, redlight.boxkey, 5);
-		memcpy(reader->des_key, redlight.deskey, 17);
+		memcpy(reader->boxkey, redlight.boxkey, 4);
+		memcpy(reader->des_key, redlight.deskey, 16);
 		memcpy(reader->pincode, "0000\0", 5);
-//		reader->des_key_length = 16;
+		reader->boxkey_length = 4;
+		reader->des_key_length = 16;
 		current.found = 1;
 	} else if ( strncmp(current.atr, tntviav5.atr, tntviav5.atrsize) == 0 ) {
 		memcpy(current.providername, tntviav5.providername, strlen(tntviav5.providername));
-		memcpy(reader->boxkey, tntviav5.boxkey, 5);
-		memcpy(reader->des_key, tntviav5.deskey, 17);
+		memcpy(reader->boxkey, tntviav5.boxkey, 4);
+		memcpy(reader->des_key, tntviav5.deskey, 16);
 		memcpy(reader->pincode, "0000\0", 5);
 		parse_aes_keys(reader, tntviav5.aeskeys);
-//		reader->des_key_length = 16;
+		reader->boxkey_length = 4;
+		reader->des_key_length = 16;
 		current.found = 1;
 	} else if ( strncmp(current.atr, tntviav6.atr, tntviav6.atrsize) == 0 ) {
 		memcpy(current.providername, tntviav6.providername, strlen(tntviav6.providername));
-		memcpy(reader->boxkey, tntviav6.boxkey, 5);
-		memcpy(reader->des_key, tntviav6.deskey, 17);
+		memcpy(reader->boxkey, tntviav6.boxkey, 4);
+		memcpy(reader->des_key, tntviav6.deskey, 16);
 		memcpy(reader->pincode, "0000\0", 5);
 		parse_aes_keys(reader, tntviav6.aeskeys);
-//		reader->des_key_length = 16;
+		reader->boxkey_length = 4;
+		reader->des_key_length = 16;
 		current.found = 1;
 	}
 	/* test ATR for ins7e11 11,12,13,14,15 */
