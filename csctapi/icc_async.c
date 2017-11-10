@@ -377,7 +377,7 @@ int32_t ICC_Async_Activate(struct s_reader *reader, ATR *atr, uint16_t deprecate
 		{ return ERROR; }
 	
 	// switch rom
-/*	rdr_log(reader, "Checking for nagra tunneled card");
+	rdr_log(reader, "Checking for nagra tunneled card");
 	static uint8_t changerom_handshake[] = 
 		{ 0x80, 0xCA, 0x00, 0x00, 0x11, // 0x11: length of data we will send
 		  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -439,7 +439,7 @@ int32_t ICC_Async_Activate(struct s_reader *reader, ATR *atr, uint16_t deprecate
 	memcpy(reader->card_atr, atrarr, atr_size);
 	reader->card_atr_length = atr_size;
 	memcpy(reader->rom, atr->hb, (atr->hbn>15)?15:atr->hbn);// get historical bytes from atr
-*/
+
 	rdr_log_dbg(reader, D_IFD, "Card succesfully activated");
 	return OK;
 }
