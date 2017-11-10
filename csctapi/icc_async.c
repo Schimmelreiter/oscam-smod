@@ -343,8 +343,6 @@ int32_t ICC_Async_Activate(struct s_reader *reader, ATR *atr, uint16_t deprecate
 	memcpy(current.atr, cs_hexdump(1, atrarr, atr_size, tmp, sizeof(tmp)), atr_size * 3 - 1);
 	current.atr[atr_size * 3 - 1] = '\0';
 	rdr_log(reader, "ATR: %s", current.atr);
-	memcpy(reader->card_atr, atrarr, atr_size);
-	reader->card_atr_length = atr_size;
 	findatr(reader);
 	if ( current.found == 1 ) {
 		rdr_log(reader, "%s recognized", current.providername);
@@ -389,9 +387,8 @@ int32_t ICC_Async_Activate(struct s_reader *reader, ATR *atr, uint16_t deprecate
 	memset(reader->rom2, 0, 15);
 
 	unsigned char cta_res[CTA_RES_LEN];
-    memset(cta_res, 0, CTA_RES_LEN);
-    uint16_t cta_lr;
-	char tmp[atr_size * 3 + 1];
+	memset(cta_res, 0, CTA_RES_LEN);
+	uint16_t cta_lr;
 	
 	uint8_t block_nad = 0;
 	changerom_handshake[4] = 0x11; // 0x11: length of data we will send
