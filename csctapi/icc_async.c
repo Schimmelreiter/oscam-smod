@@ -339,12 +339,17 @@ int32_t ICC_Async_Activate(struct s_reader *reader, ATR *atr, uint16_t deprecate
 	unsigned char atrarr[ATR_MAX_SIZE];
 	uint32_t atr_size;
 	ATR_GetRaw(atr, atrarr, &atr_size);
+	char tmp[atr_size * 3 + 1];
+	memcpy(current.atr, cs_hexdump(1, atrarr, atr_size, tmp, sizeof(tmp)), atr_size * 3 - 1);
+	current.atr[atr_size * 3 - 1] = '\0';
+	rdr_log(reader, "ATR: %s", current.atr);
 	memcpy(reader->card_atr, atrarr, atr_size);
 	reader->card_atr_length = atr_size;
 	findatr(reader);
 	if ( current.found == 1 ) {
 		rdr_log(reader, "%s recognized", current.providername);
 	}
+
 
 	/* Get ICC reader->convention */
 	if(ATR_GetConvention(atr, &(reader->convention)) != ATR_OK)
