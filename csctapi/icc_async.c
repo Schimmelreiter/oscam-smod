@@ -350,8 +350,7 @@ int32_t ICC_Async_Activate(struct s_reader *reader, ATR *atr, uint16_t deprecate
 
 
 	/* Get ICC reader->convention */
-	if(ATR_GetConvention(atr, &(reader->convention)) != ATR_OK)
-	{
+	if(ATR_GetConvention(atr, &(reader->convention)) != ATR_OK) {
 		rdr_log(reader, "ERROR: Could not read reader->convention");
 		reader->convention = 0;
 		reader->protocol_type = 0;
@@ -361,78 +360,77 @@ int32_t ICC_Async_Activate(struct s_reader *reader, ATR *atr, uint16_t deprecate
 	reader->protocol_type = ATR_PROTOCOL_TYPE_T0;
 
 	// Parse_ATR and InitCard need to be included in lock because they change parity of serial port
-	if(crdr_ops->lock)
-		{ crdr_ops->lock(reader); }
+	if(crdr_ops->lock) {
+		crdr_ops->lock(reader);
+	}
 
 	int32_t ret = Parse_ATR(reader, atr, deprecated);
 
-	if(crdr_ops->unlock)
-		{ crdr_ops->unlock(reader); }
+	if(crdr_ops->unlock) {
+		crdr_ops->unlock(reader);
+	}
 
-	if(ret)
-		{ rdr_log(reader, "ERROR: Parse_ATR returned error"); }
-	if(ret)
-		{ return ERROR; }
-	
+	if(ret) {
+		rdr_log(reader, "ERROR: Parse_ATR returned error");
+		return ERROR;
+	}
+
 	// switch rom
 	rdr_log(reader, "Checking for nagra tunneled card");
-	static uint8_t changerom_handshake[] = 
+	static uint8_t changerom_handshake[] =
 		{ 0x80, 0xCA, 0x00, 0x00, 0x11, // 0x11: length of data we will send
 		  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 		  0x10 // 0x10: response size we expect from card
-		}; 
-	
+		};
+
 	calculate_changerom_cmd(reader, atr, &changerom_handshake[5]);
-	memset(reader->rom, 0, 15);
-	memset(reader->rom2, 0, 15);
 
 	unsigned char cta_res[CTA_RES_LEN];
 	memset(cta_res, 0, CTA_RES_LEN);
 	uint16_t cta_lr;
-	
-	uint8_t block_nad = 0;
-	changerom_handshake[4] = 0x11; // 0x11: length of data we will send
-	uint8_t cta_res1_ok = 0x61;
-	uint8_t cta_res2_ok = 0x10;
-	
-	if(reader->protocol_type != ATR_PROTOCOL_TYPE_T0)
-	{
+	uint8_t block_nad;
+	uint8_t cta_res1_ok;
+	uint8_t cta_res2_ok;
+
+	if(reader->protocol_type != ATR_PROTOCOL_TYPE_T0) {
 		block_nad = 0x21;
 		changerom_handshake[4] = 0x10; // 0x10: length of data we will send
 		cta_res1_ok = 0x90;
 		cta_res2_ok = 0x00;
+	} else {
+		block_nad = 0;
+		changerom_handshake[4] = 0x11; // 0x11: length of data we will send
+		cta_res1_ok = 0x61;
+		cta_res2_ok = 0x10;
 	}
-	
+
 	rdr_log_dump_dbg(reader, D_READER, changerom_handshake, sizeof(changerom_handshake), "Switch to nagra layer command:");
-	if(!ICC_Async_CardWrite(reader, changerom_handshake, sizeof(changerom_handshake), cta_res, &cta_lr, block_nad)) // try to init nagra layer
-	{
-		if(cta_res[cta_lr-2] == cta_res1_ok && cta_res[cta_lr-1] == cta_res2_ok)
-		{
+	if(!ICC_Async_CardWrite(reader, changerom_handshake, sizeof(changerom_handshake), cta_res, &cta_lr, block_nad)) { // try to init nagra layer
+		if(cta_res[cta_lr-2] == cta_res1_ok && cta_res[cta_lr-1] == cta_res2_ok) {
 			memset(atr, 0, 1);
 			call(crdr_ops->activate(reader, atr)); //try to read the atr of this layer
 			ATR_GetRaw(atr, atrarr, &atr_size);
 			rdr_log(reader, "Nagra layer ATR: %s", cs_hexdump(1, atrarr, atr_size, tmp, sizeof(tmp)));
 			memcpy(reader->card_atr2, atrarr, atr_size);
 			reader->card_atr_length2 = atr_size;
+			memset(reader->rom2, 0, 15);
 			memcpy(reader->rom2, atr->hb, (atr->hbn>15)?15:atr->hbn);// get historical bytes containing romrev from nagra atr
 			memset(atr, 0, 1);
-			
+
 			//
 			// Since we dont know how to handle the nagra layer in detail switch back!
 			//
 			call(crdr_ops->activate(reader, atr));// read previous layer atr to switch back
 			ATR_GetRaw(atr, atrarr, &atr_size);
-			memcpy(reader->rom, atr->hb, (atr->hbn>15)?15:atr->hbn);// get historical bytes from atr
-		}
-		else
-		{
+			memset(reader->rom, 0, 15);
+			memcpy(reader->rom, atr->hb, (atr->hbn>15)?15:atr->hbn); // get historical bytes from atr
+		} else {
 			rdr_log(reader,"Switch to nagra layer failed!");
 		}
-	}
-	else
-	{
+	} else {
 		rdr_log(reader, "Switch to nagra layer command failed!");
 	}
+
 	rdr_log(reader, "ATR: %s", cs_hexdump(1, atrarr, atr_size, tmp, sizeof(tmp)));
 	memcpy(reader->card_atr, atrarr, atr_size);
 	reader->card_atr_length = atr_size;
