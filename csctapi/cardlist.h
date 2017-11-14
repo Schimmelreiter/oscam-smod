@@ -24,7 +24,6 @@ struct known_cards {
 orfice	 =	{ "ORF ICE CW-Mode", 0, 12, "3B 78 12 00 00 54 C4 03 00 8F F1 90 00",        38, 0, "", "", "", "" },
 cdnl	 =	{ "CANAL DIGITAAL (NL)", 3, 12, "3B F7 11 00 01 40 96 70 70 0A 0E 6C B6 D6", 42, 0, "", "", "", "" },
 vf_g09	 =	{ "Vodafone G09", 0, 12, "3F FD 11 25 02 50 00 03 33 B0 15 69 FF 4A 50 F0 80 03 4B 4C 03",   62, 0x12345678, "", "", "", ""},
-ziggo_nl =	{ "Ziggo NL", 0, 12,     "3B 9F 21 0E 49 52 44 45 54 4F 20 41 43 53 20 56 35 2E 33 9E",                                                   30, 0, "\x11\x22\x33\x44\x55\x66\x77\x88", "\x3C\x86\x33\xAA\xC0\xD3\x67\x53\x3D\xEC\x7B\xB2\xEE\xED\xEB\x8C\xA3\xAD\xA5\x2E\x58\xB9\x9B\xB3\x46\x72\x78\x32\x77\xA1\xDA\xAC\x3B\x61\x06\xAD\x09\x09\x77\x4E\x03\x1B\x2A\x6E\x30\x19\x5B\x43\x76\x83\xAD\x0F\xC5\x99\xB8\x7D\x08\xCE\xA4\x7B\xE1\xB6\xC7\x6A", "", "" };
 skyDEv14 =	{ "Sky Deutschland V14", 1, 15, "3F FD 13 25 02 50 80 0F 41 B0 0A 69 FF 4A 50 F0 00 00 50 31 03",    62, 0x12345678, "", "", "", "" },
 skyDEv13 =	{ "Sky Deutschland V13", 1, 15, "3F FF 11 25 03 10 80 41 B0 07 69 FF 4A 50 70 00 00 50 31 01 00 11", 65, 0x12345678, "", "", "", "" },
 skyUMv23 =	{ "Sky/Unitymedia V23", 0, 12, "3F FF 14 25 03 10 80 54 B0 01 69 FF 4A 50 70 00 00 4B 57 01 00 00", 65, 0x12345678, "", "", "", ""},
