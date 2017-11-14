@@ -3233,7 +3233,7 @@ int32_t dvbapi_parse_capmt(unsigned char *buffer, uint32_t length, int32_t connf
 #define LIST_LAST 0x02   //*CA application should append a 'LAST' CAPMT object to the list and start working with the list
 #define LIST_ONLY 0x03   //*CA application should clear the list when an 'ONLY' CAPMT object is received, and start working with the object
 #define LIST_ADD 0x04    //*CA application should append an 'ADD' CAPMT object to the current list and start working with the updated list
-#define LIST_UPDATE 0x05 //*CA application should replace an entry in the list with an 'UPDATE' CAPMT object, and start working with the updated list *//
+#define LIST_UPDATE 0x05 //*CA application should replace an entry in the list with an 'UPDATE' CAPMT object, and start working with the updated list
 
 #if defined WITH_COOLAPI || defined WITH_COOLAPI2
 		int32_t ca_pmt_list_management = LIST_ONLY;
