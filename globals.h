@@ -1466,14 +1466,6 @@ struct s_emmlen_range
 	int16_t max;
 };
 
-#ifdef WITH_EMU
-typedef struct opkeys
-{
-	uint8_t key3b[32][32]; 
-	uint8_t key56[32][32]; 
-} opkeys_t;
-#endif
-
 struct s_reader                                     //contains device info, reader info and card info
 {
 	uint8_t         keepalive;
@@ -1737,11 +1729,9 @@ struct s_reader                                     //contains device info, read
 	uint8_t         ghttp_use_ssl;
 #endif
 #ifdef WITH_EMU
-	FTAB            emu_auproviders;
-	char            *extee36;
-	char            *extee56;
-	opkeys_t        *ee36;
-	opkeys_t        *ee56;
+	FTAB            emu_auproviders;                // AU providers for Emu reader
+	char            *extee36;                       // path to "ee36.bin" - Set by the user via the webif
+	char            *extee56;                       // path to "ee56.bin" - Set by the user via the webif
 	uint8_t         dre36_force_group;
 	uint8_t         dre56_force_group;
 #endif
@@ -2192,6 +2182,7 @@ struct s_config
 	int8_t      dvbapi_read_sdt;
 	int8_t      dvbapi_write_sdt_prov;
 	int8_t      dvbapi_extended_cw_api;
+	int8_t      dvbapi_extended_cw_pids;            // pid limiter
 #endif
 
 #ifdef CS_ANTICASC
@@ -2243,7 +2234,7 @@ struct s_config
 	char        *emu_stream_source_host;
 	int32_t     emu_stream_source_port;
 	char        *emu_stream_source_auth_user;
-	char        *emu_stream_source_auth_password;	
+	char        *emu_stream_source_auth_password;
 	int32_t     emu_stream_relay_port;
 	uint32_t    emu_stream_ecm_delay;
 	int8_t      emu_stream_relay_enabled;

@@ -289,7 +289,7 @@ static void ParseEMMData(emu_stream_client_data *cdata)
 	uint8_t* data = cdata->emm_data;
 	uint32_t keysAdded = 0;
 	
-	ProcessEMM(0x0E00, 0, data, NULL, &keysAdded);
+	ProcessEMM(NULL, 0x0E00, 0, data, &keysAdded);
 	
 	if(keysAdded)
 	{

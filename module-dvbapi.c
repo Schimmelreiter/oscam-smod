@@ -3218,6 +3218,7 @@ int32_t dvbapi_parse_capmt(unsigned char *buffer, uint32_t length, int32_t connf
 {
 	uint32_t i = 0, start_descrambling = 0;
 	int32_t j = 0;
+	int32_t max_pids = 64;
 	int32_t demux_id = -1;
 	uint16_t demux_index, adapter_index, pmtpid;
 	uint32_t ca_mask;
@@ -3227,12 +3228,12 @@ int32_t dvbapi_parse_capmt(unsigned char *buffer, uint32_t length, int32_t connf
 	if(!is_real_pmt)
 	{
 
-#define LIST_MORE 0x00    //*CA application should append a 'MORE' CAPMT object to the list and start receiving the next object
-#define LIST_FIRST 0x01   //*CA application should clear the list when a 'FIRST' CAPMT object is received, and start receiving the next object
-#define LIST_LAST 0x02   //*CA application should append a 'LAST' CAPMT object to the list and start working with the list
-#define LIST_ONLY 0x03   //*CA application should clear the list when an 'ONLY' CAPMT object is received, and start working with the object
-#define LIST_ADD 0x04    //*CA application should append an 'ADD' CAPMT object to the current list and start working with the updated list
-#define LIST_UPDATE 0x05 //*CA application should replace an entry in the list with an 'UPDATE' CAPMT object, and start working with the updated list
+#define LIST_MORE 0x00    //CA application should append a 'MORE' CAPMT object to the list and start receiving the next object
+#define LIST_FIRST 0x01   //CA application should clear the list when a 'FIRST' CAPMT object is received, and start receiving the next object
+#define LIST_LAST 0x02   //CA application should append a 'LAST' CAPMT object to the list and start working with the list
+#define LIST_ONLY 0x03   //CA application should clear the list when an 'ONLY' CAPMT object is received, and start working with the object
+#define LIST_ADD 0x04    //CA application should append an 'ADD' CAPMT object to the current list and start working with the updated list
+#define LIST_UPDATE 0x05 //CA application should replace an entry in the list with an 'UPDATE' CAPMT object, and start working with the updated list
 
 #if defined WITH_COOLAPI || defined WITH_COOLAPI2
 		int32_t ca_pmt_list_management = LIST_ONLY;
@@ -3380,6 +3381,12 @@ int32_t dvbapi_parse_capmt(unsigned char *buffer, uint32_t length, int32_t connf
 	uint32_t es_info_length = 0, vpid = 0;
 	struct s_dvbapi_priority *addentry;
 
+	++	// pid limiter - use "max_pids"
+	if(cfg.dvbapi_extended_cw_api == 1)
+	{
+		max_pids = cfg.dvbapi_extended_cw_pids;
+	}
+
 	for(i = program_info_length + program_info_start; i + 4 < length; i += es_info_length + 5)
 	{
 		uint8_t stream_type = buffer[i];
@@ -3387,7 +3394,7 @@ int32_t dvbapi_parse_capmt(unsigned char *buffer, uint32_t length, int32_t connf
 		uint8_t is_audio = 0;
 		es_info_length = b2i(2, buffer + i +3)&0x0FFF;
 
-		if(demux[demux_id].STREAMpidcount < ECM_PIDS)
+		if(demux[demux_id].STREAMpidcount < max_pids) // was "ECM_PIDS" (pid limiter)
 		{
 
 			demux[demux_id].STREAMpids[demux[demux_id].STREAMpidcount] = elementary_pid;
