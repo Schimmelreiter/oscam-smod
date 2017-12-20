@@ -1905,7 +1905,8 @@ int32_t main(int32_t argc, char *argv[])
 
 	// Cleanup
 #ifdef MODULE_GBOX
-	stop_sms_sender();
+ if(!cfg.gsms_dis)
+	{ stop_sms_sender(); }
 #endif
 #ifdef WITH_EMU
 	stop_stream_server();
