@@ -3382,8 +3382,8 @@ int32_t dvbapi_parse_capmt(unsigned char *buffer, uint32_t length, int32_t connf
 	uint32_t es_info_length = 0, vpid = 0;
 	struct s_dvbapi_priority *addentry;
 
-	// pid limiter - use "max_pids"
-	if(cfg.dvbapi_extended_cw_api == 1)
+	// pid limiter for PowerVu
+	if(demux[demux_id].ECMpids[0].CAID >> 8 == 0x0E)
 	{
 		max_pids = cfg.dvbapi_extended_cw_pids;
 	}
@@ -4433,15 +4433,17 @@ void dvbapi_process_input(int32_t demux_id, int32_t filter_num, uchar *buffer, i
 				return;
 			}
 
-			if(curpid->CAID>>8 == 0x0E){
+			if(curpid->CAID >> 8 == 0x0E)
+			{
 				pvu_skip = 1;
 
-				if(sctlen > 0xb)
+				if(sctlen - 11 > buffer[9])
 				{
-					if(buffer[0xb] > curpid->pvu_counter || (curpid->pvu_counter == 255 && buffer[0xb] == 0)
-							|| ((curpid->pvu_counter - buffer[0xb]) > 5))
+					if(buffer[11 + buffer[9]] > curpid->pvu_counter || (curpid->pvu_counter == 255 && buffer[11$
+							|| ((curpid->pvu_counter - buffer[11 + buffer[9]]) > 5))
+
 					{
-						curpid->pvu_counter = buffer[0xb];
+						curpid->pvu_counter = buffer[11 + buffer[9]];
 						pvu_skip = 0;
 					}
 				}

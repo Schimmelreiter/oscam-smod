@@ -861,7 +861,7 @@ typedef struct s_entitlement            // contains entitlement Info
 	uint32_t        class;              // the class needed for some systems
 	time_t          start;              // startdate
 	time_t          end;                // enddate
-#ifdef WITH_EMU	
+#ifdef WITH_EMU
 	bool            isKey;
 	bool            isData;
 	char            name[8];
@@ -1730,6 +1730,7 @@ struct s_reader                                     //contains device info, read
 #endif
 #ifdef WITH_EMU
 	FTAB            emu_auproviders;                // AU providers for Emu reader
+	int8_t          emu_datecodedenabled;           // date-coded keys for BISS
 	char            *extee36;                       // path to "ee36.bin" - Set by the user via the webif
 	char            *extee56;                       // path to "ee56.bin" - Set by the user via the webif
 	uint8_t         dre36_force_group;

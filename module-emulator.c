@@ -212,15 +212,15 @@ static int32_t emu_card_info(struct s_reader *rdr)
 
 	// Read keys built in the OSCam-Emu binary
 #if !defined(__APPLE__) && !defined(__ANDROID__)
-	read_emu_keymemory();
+	read_emu_keymemory(rdr);
 #endif
 
 	// Read keys from SoftCam.Key file
 	set_emu_keyfile_path(cs_confdir);
 
-	if (!read_emu_keyfile(cs_confdir))
+	if (!read_emu_keyfile(rdr, cs_confdir))
 	{
-		if (read_emu_keyfile("/var/keys/"))
+		if (read_emu_keyfile(rdr, "/var/keys/"))
 		{
 			set_emu_keyfile_path("/var/keys/");
 		}

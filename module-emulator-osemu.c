@@ -32,7 +32,7 @@ void hdSurEncPhase2_D2_13_15(uint8_t *cws);
 // Version info
 uint32_t GetOSemuVersion(void)
 {
-	return atoi("$Version: 757 $"+10);
+	return atoi("$Version: 765 $"+10);
 }
 
 /*
@@ -123,6 +123,35 @@ static KeyDataContainer *GetKeyContainer(char identifier)
 	}
 }
 
+static void Date2Str(char *dateStr, uint8_t len, int8_t offset, uint8_t format)
+{
+	// Creates a formatted date string for use in various functions.
+	// A positive or negative time offset (in hours) can be set as well
+	// as the format of the output string.
+
+	time_t rawtime;
+	struct tm timeinfo;
+
+	time(&rawtime);
+	rawtime += (time_t) offset * 60 * 60; // Add a positive or negative offset
+	localtime_r(&rawtime, &timeinfo);
+
+	switch (format)
+	{
+		case 1: // Use in WriteKeyToFile()
+			strftime(dateStr, len, "%c", &timeinfo);
+			break;
+
+		case 2: // Used in BissAnnotate()
+			strftime(dateStr, len, "added: %F @ %R", &timeinfo);
+			break;
+
+		case 3: // Used in SetKey(), BissECM()
+			strftime(dateStr, len, "%y%m%d%H", &timeinfo);
+			break;
+	}
+}
+
 static void WriteKeyToFile(char identifier, uint32_t provider, const char *keyName, uint8_t *key, uint32_t keyLength, char* comment)
 {
 	char line[1200], dateText[100];
@@ -132,8 +161,6 @@ static void WriteKeyToFile(char identifier, uint32_t provider, const char *keyNa
 	char *path, *filepath, filename[EMU_KEY_FILENAME_MAX_LEN+1], *keyValue;
 	FILE *file = NULL;
 	uint8_t fileNameLen = strlen(EMU_KEY_FILENAME);
-	time_t now;
-	struct tm t;
 
 	pathLength = strlen(emu_keyfile_path);
 	path = (char*)malloc(pathLength+1);
@@ -190,9 +217,7 @@ static void WriteKeyToFile(char identifier, uint32_t provider, const char *keyNa
 		return;
 	}
 
-	now = time(NULL);
-	localtime_r(&now, &t);
-	strftime(dateText, sizeof(dateText)-1, "%c", &t);
+	Date2Str(dateText, sizeof(dateText), 0, 1);
 
 	keyValue = (char*)malloc((keyLength*2)+1);
 	if(keyValue == NULL) {
@@ -218,8 +243,8 @@ static void WriteKeyToFile(char identifier, uint32_t provider, const char *keyNa
 	fclose(file);
 }
 
-int32_t SetKey(char identifier, uint32_t provider, char *keyName, uint8_t *orgKey,
-					  uint32_t keyLength, uint8_t writeKey, char *comment)
+int32_t SetKey(char identifier, uint32_t provider, char *keyName, uint8_t *orgKey, uint32_t keyLength,
+				uint8_t writeKey, char *comment, struct s_reader *rdr)
 {
 	uint32_t i, j;
 	uint8_t *tmpKey = NULL;
@@ -234,9 +259,38 @@ int32_t SetKey(char identifier, uint32_t provider, char *keyName, uint8_t *orgKe
 
 	keyName = strtoupper(keyName);
 
-	// fix checksum for biss keys with a length of 6
-	if(identifier == 'F' && keyLength == 6) {
+	if (identifier == 'F') // Prepare BISS keys before saving to the db
+	{
+		// Convert legacy BISS "00" & "01" keynames
+		if (0 == strcmp(keyName, "00") || 0 == strcmp(keyName, "01"))
+		{
+			keyName = "00000000";
+		}
 
+		// All keyNames should have a length of 8 after converting
+		if (strlen(keyName) != 8)
+		{
+			cs_log("WARNING: Wrong key format in %s: F %08X %s", EMU_KEY_FILENAME, provider, keyName);
+			return 0;
+		}
+
+		// Verify date-coded keyName (if enabled), ignoring old (expired) keys
+		if (rdr->emu_datecodedenabled)
+		{
+			char timeStr[9];
+			Date2Str(timeStr, sizeof(timeStr), 0, 3);
+
+			// Reject old date-coded keys, but allow our "00000000" evergreen label
+			if (strcmp("00000000", keyName) != 0 && strcmp(timeStr, keyName) >= 0)
+			{
+				return 0;
+			}
+		}
+	}
+
+	// fix checksum for BISS keys with a length of 6
+	if (identifier == 'F' && keyLength == 6)
+	{
 		tmpKey = (uint8_t*)malloc(8*sizeof(uint8_t));
 		if(tmpKey == NULL) {
 			return 0;
@@ -250,16 +304,16 @@ int32_t SetKey(char identifier, uint32_t provider, char *keyName, uint8_t *orgKe
 		tmpKey[5] = orgKey[4];
 		tmpKey[6] = orgKey[5];
 		tmpKey[7] = ((orgKey[3] + orgKey[4] + orgKey[5]) & 0xff);
-		
+
 		keyLength = 8;
 	}
-	else
-	{	
+	else // All keys with a length of 8, including BISS
+	{
 		tmpKey = (uint8_t*)malloc(keyLength*sizeof(uint8_t));
 		if(tmpKey == NULL) {
 			return 0;
 		}
-		
+
 		memcpy(tmpKey, orgKey, keyLength);
 	}
 
@@ -275,7 +329,8 @@ int32_t SetKey(char identifier, uint32_t provider, char *keyName, uint8_t *orgKe
 			continue;
 		}
 
-		if(strcmp(KeyDB->EmuKeys[i].keyName, keyName)) {
+		// Don't match keyName (i.e. expiration date) for BISS
+		if(identifier != 'F' && strcmp(KeyDB->EmuKeys[i].keyName, keyName)) {
 			continue;
 		}
 	
@@ -339,6 +394,11 @@ int32_t SetKey(char identifier, uint32_t provider, char *keyName, uint8_t *orgKe
 			KeyDB->EmuKeys[i].key = tmpKey;
 			KeyDB->EmuKeys[i].keyLength = keyLength;
 
+			if (identifier == 'F') // Update keyName (i.e. expiration date) for BISS
+			{
+				strncpy(KeyDB->EmuKeys[i].keyName, keyName, EMU_MAX_CHAR_KEYNAME);
+			}
+
 			if(writeKey) {
 				WriteKeyToFile(identifier, provider, keyName, tmpKey, keyLength, comment);
 			}
@@ -392,8 +452,8 @@ int32_t SetKey(char identifier, uint32_t provider, char *keyName, uint8_t *orgKe
 	return 1;
 }
 
-int32_t FindKey(char identifier, uint32_t provider, uint32_t providerIgnoreMask, const char *keyName, uint8_t *key, 
-										uint32_t maxKeyLength, uint8_t isCriticalKey, uint32_t keyRef, uint8_t matchLength, uint32_t *getProvider)
+int32_t FindKey(char identifier, uint32_t provider, uint32_t providerIgnoreMask, char *keyName, uint8_t *key,
+				uint32_t maxKeyLength, uint8_t isCriticalKey, uint32_t keyRef, uint8_t matchLength, uint32_t *getProvider)
 {
 	uint32_t i;
 	uint16_t j;
@@ -412,7 +472,8 @@ int32_t FindKey(char identifier, uint32_t provider, uint32_t providerIgnoreMask,
 			continue;
 		}
 
-		if(strcmp(KeyDB->EmuKeys[i].keyName, keyName)) {
+		// Don't match keyName (i.e. expiration date) for BISS
+		if(identifier != 'F' && strcmp(KeyDB->EmuKeys[i].keyName, keyName)) {
 			continue;
 		}
 
@@ -446,6 +507,12 @@ int32_t FindKey(char identifier, uint32_t provider, uint32_t providerIgnoreMask,
 			if(tmpKeyData->keyLength < maxKeyLength) {
 				memset(key+tmpKeyData->keyLength, 0, maxKeyLength - tmpKeyData->keyLength);
 			}
+
+			if (identifier == 'F') // Report the keyName of found key back to BissGetKey()
+			{
+				strncpy(keyName, tmpKeyData->keyName, EMU_MAX_CHAR_KEYNAME);
+			}
+
 			if(getProvider != NULL) {
 				(*getProvider) = tmpKeyData->provider;
 			}
@@ -458,17 +525,9 @@ int32_t FindKey(char identifier, uint32_t provider, uint32_t providerIgnoreMask,
 
 	if (isCriticalKey)
 	{
-		switch (identifier)
-		{
-			case 'F': // BISS keys
-				cs_log("Key not found: F %08X %s", provider, keyName);
-				break;
-
-			default:
-				cs_log("Key not found: %c %X %s", identifier, provider, keyName);
-				break;
-		}
+		cs_log("Key not found: %c %X %s", identifier, provider, keyName);
 	}
+
 	return 0;
 }
 
@@ -493,7 +552,7 @@ static int32_t UpdateKey(char identifier, uint32_t provider, char *keyName, uint
 	}
 
 	free(tmpKey);
-	return SetKey(identifier, provider, keyName, key, keyLength, writeKey, comment);
+	return SetKey(identifier, provider, keyName, key, keyLength, writeKey, comment, NULL);
 }
 
 static int32_t UpdateKeysByProviderMask(char identifier, uint32_t provider, uint32_t providerIgnoreMask, char *keyName, uint8_t *key, 
@@ -517,7 +576,7 @@ static int32_t UpdateKeysByProviderMask(char identifier, uint32_t provider, uint
 			continue;
 		}
 		
-		if(SetKey(identifier, foundProvider, keyName, key, keyLength, 1, comment))
+		if(SetKey(identifier, foundProvider, keyName, key, keyLength, 1, comment, NULL))
 		{
 			ret = 1;
 		}
@@ -599,7 +658,7 @@ void clear_emu_keydata(void)
 	}
 }
 
-uint8_t read_emu_keyfile(const char *opath)
+uint8_t read_emu_keyfile(struct s_reader *rdr, const char *opath)
 {
 	char line[1200], keyName[EMU_MAX_CHAR_KEYNAME], keyString[1026];
 	uint32_t pathLength, provider, keyLength;
@@ -682,8 +741,21 @@ uint8_t read_emu_keyfile(const char *opath)
 			return 0;
 		}
 
-		CharToBin(key, keyString, strlen(keyString));
-		SetKey(identifier, provider, keyName, key, keyLength, 0, NULL);
+		if (CharToBin(key, keyString, strlen(keyString))) // Conversion OK
+		{
+			SetKey(identifier, provider, keyName, key, keyLength, 0, NULL, rdr);
+		}
+		else // Non-hex characters in keyString
+		{
+			if ((identifier != ';' && identifier != '#' && // Skip warning for comments, etc.
+				 identifier != '=' && identifier != '-' &&
+				 identifier != ' ') &&
+				!(identifier == 'F' && 0 == strncmp(keyString, "XXXXXXXXXXXX", 12))) // Skip warning for BISS 'Example key' lines
+			{
+				// Alert user regarding faulty line
+				cs_log("WARNING: non-hex value in %s at %c %04X %s %s", EMU_KEY_FILENAME, identifier, provider, keyName, keyString);
+			}
+		}
 		free(key);
 	}
 	fclose(file);
@@ -695,7 +767,7 @@ uint8_t read_emu_keyfile(const char *opath)
 extern uint8_t SoftCamKey_Data[]    __asm__("_binary_SoftCam_Key_start");
 extern uint8_t SoftCamKey_DataEnd[] __asm__("_binary_SoftCam_Key_end");
 
-void read_emu_keymemory(void)
+void read_emu_keymemory(struct s_reader *rdr)
 {
 	char *keyData, *line, *saveptr, keyName[EMU_MAX_CHAR_KEYNAME], keyString[1026];
 	uint32_t provider, keyLength;
@@ -722,8 +794,21 @@ void read_emu_keymemory(void)
 			return;
 		}
 
-		CharToBin(key, keyString, strlen(keyString));
-		SetKey(identifier, provider, keyName, key, keyLength, 0, NULL);
+		if (CharToBin(key, keyString, strlen(keyString))) // Conversion OK
+		{
+			SetKey(identifier, provider, keyName, key, keyLength, 0, NULL, rdr);
+		}
+		else // Non-hex characters in keyString
+		{
+			if ((identifier != ';' && identifier != '#' && // Skip warning for comments, etc.
+				 identifier != '=' && identifier != '-' &&
+				 identifier != ' ') &&
+				!(identifier == 'F' && 0 == strncmp(keyString, "XXXXXXXXXXXX", 12))) // Skip warning for BISS 'Example key' lines
+			{
+				// Alert user regarding faulty line
+				cs_log("WARNING: non-hex value in internal keyfile at %c %04X %s %s", identifier, provider, keyName, keyString);
+			}
+		}
 		free(key);
 		line = strtok_r(NULL, "\n", &saveptr);
 	}
@@ -775,7 +860,7 @@ void read_emu_eebin(const char *path, const char *name)
 	// Save keys to db
 	memset(dummy[0], 0x00, 32);
 	memset(dummy[1], 0xFF, 32);
-	prvid = (strcmp(name, "ee36.bin") == 0) ? 0x4AE111 : 0x4AE114;
+	prvid = (strncmp(name, "ee36.bin", 9) == 0) ? 0x4AE111 : 0x4AE114;
 
 	for (i = 0; i < 32; i++) // Set "3B" type keys
 	{
@@ -783,7 +868,7 @@ void read_emu_eebin(const char *path, const char *name)
 		if ((memcmp(buffer[i], dummy[0], 32) !=0) && (memcmp(buffer[i], dummy[1], 32) != 0))
 		{
 			snprintf(tmp, 5, "3B%02X", i);
-			SetKey('D', prvid, tmp, buffer[i], 32, 0, NULL);
+			SetKey('D', prvid, tmp, buffer[i], 32, 0, NULL, NULL);
 		}
 	}
 
@@ -793,7 +878,7 @@ void read_emu_eebin(const char *path, const char *name)
 		if ((memcmp(buffer[32 + i], dummy[0], 32) !=0) && (memcmp(buffer[32 + i], dummy[1], 32) != 0))
 		{
 			snprintf(tmp, 5, "56%02X", i);
-			SetKey('D', prvid, tmp, buffer[32 + i], 32, 0, NULL);
+			SetKey('D', prvid, tmp, buffer[32 + i], 32, 0, NULL, NULL);
 		}
 	}
 }
@@ -808,7 +893,7 @@ void read_emu_deskey(uint8_t *dreOverKey, uint8_t len)
 
 		for (i = 0; i < 16; i++)
 		{
-			SetKey('D', i, "OVER", dreOverKey + (i * 8), 8, 0, NULL);
+			SetKey('D', i, "OVER", dreOverKey + (i * 8), 8, 0, NULL, NULL);
 		}
 	}
 	else if ((len != 0 && len < 128) || len > 128)
@@ -2791,11 +2876,7 @@ static void BissAnnotate(char *buf, uint8_t len, const uint8_t *ecm, uint16_t ec
 	uint32_t ens;
 	char compass, polarisation, timeStr[32];
 
-	time_t rawtime;
-	struct tm timeinfo;
-	time(&rawtime);
-	localtime_r(&rawtime, &timeinfo);
-	strftime(timeStr, sizeof(timeStr), "added: %F @ %R", &timeinfo);
+	Date2Str(timeStr, sizeof(timeStr), 0, 2);
 
 	if (isNamespaceHash) // Namespace hash
 	{
@@ -2838,7 +2919,7 @@ static void BissAnnotate(char *buf, uint8_t len, const uint8_t *ecm, uint16_t ec
 	}
 }
 
-static uint8_t BissIsCommonHash(uint32_t hash)
+static int8_t BissIsCommonHash(uint32_t hash)
 {
 	// Check universal hash against a number of commnon universal
 	// hashes in order to warn users about potential key clashes
@@ -2872,7 +2953,7 @@ static uint8_t BissIsCommonHash(uint32_t hash)
 	}
 }
 
-static uint8_t BissIsValidNamespace(uint32_t namespace)
+static int8_t BissIsValidNamespace(uint32_t namespace)
 {
 	// Note to developers:
 	// If we ever have a satellite at 0.0E, edit to allow stripped namespace
@@ -2893,8 +2974,52 @@ static uint8_t BissIsValidNamespace(uint32_t namespace)
 	return 0;
 }
 
-static int8_t BissECM(uint16_t UNUSED(caid), const uint8_t *ecm, int16_t ecmDataLen,
-					  uint8_t *dw, uint16_t srvid, uint16_t ecmpid)
+static int8_t BissGetKey(uint32_t provider, uint8_t *key, int8_t dateCoded, int8_t printMsg)
+{
+	// If date-coded keys are enabled in the webif, this function evaluates the expiration date
+	// of the keys found. Expired keys are not sent to BissECM(). If date-coded keys are disabled,
+	// then all keys found are sent without any evaluation. It takes the "provider" as input and
+	// outputs the "key". Returns 0 (Key not found, or expired) or 1 (Key found).
+
+	// printMsg: 0 => No message
+	// printMsg: 1 => Print message only if key is found
+	// printMsg: 2 => Always print message, regardless if key is found or not
+
+	char keyExpDate[9] = "00000000";
+
+	if (FindKey('F', provider, 0, keyExpDate, key, 8, 0, 0, 0, NULL)) // Key found
+	{
+		if (dateCoded) // Date-coded keys are enabled, evaluate expiration date
+		{
+			char currentDate[9];
+			Date2Str(currentDate, sizeof(currentDate), 0, 3);
+
+			if (strncmp("00000000", keyExpDate, 9) == 0 || strncmp(currentDate, keyExpDate, 9) < 0) // Evergreen or not expired
+			{
+				if (printMsg == 1 || printMsg == 2) cs_log("Key found: F %08X %s", provider, keyExpDate);
+				return 1;
+			}
+			else // Key expired
+			{
+				key = NULL; // Make sure we don't send any expired key
+				if (printMsg == 2) cs_log("Key expired: F %08X %s", provider, keyExpDate);
+				return 0;
+			}
+		}
+		else // Date-coded keys are disabled, don't evaluate expiration date
+		{
+			if (printMsg == 1 || printMsg == 2) cs_log("Key found: F %08X %s", provider, keyExpDate);
+			return 1;
+		}
+	}
+	else // Key not found
+	{
+		if (printMsg == 2) cs_log("Key not found: F %08X", provider);
+		return 0;
+	}
+}
+
+static int8_t BissECM(struct s_reader *rdr, const uint8_t *ecm, int16_t ecmDataLen, uint8_t *dw, uint16_t srvid, uint16_t ecmpid)
 {
 	// Oscam's fake ecm consists of [sid] [pmtpid] [pid1] [pid2] ... [pidx] [tsid] [onid] [namespace]
 	//
@@ -2917,15 +3042,20 @@ static int8_t BissECM(uint16_t UNUSED(caid), const uint8_t *ecm, int16_t ecmData
 	//
 	// 1st: namespace hash (only on enigma boxes)
 	// 2nd: universal hash (all box types with emu r752+)
-	// 3rd: faulty ecmpid (other than 0x1FFF)
-	// 4th: reverse order pid (audio, video, pmt pids)
-	// 5th: standard BISS ecmpid (0x1FFF)
-	// 6th: default "All Feeds" key
+	// 3rd: valid tsid, onid combination
+	// 4th: faulty ecmpid (other than 0x1FFF)
+	// 5th: reverse order pid (audio, video, pmt pids)
+	// 6th: standard BISS ecmpid (0x1FFF)
+	// 7th: default "All Feeds" key
+
+	// If enabled in the webif, a date based key search can be performed. If the expiration
+	// date has passed, the key is not sent from BissGetKey(). This search method is only
+	// used in the namespace hash, universal hash and the default "All Feeds" key.
 
 	uint8_t ecmCopy[EMU_MAX_ECM_LEN];
 	uint16_t ecmLen = 0, pid = 0;
 	uint32_t i, ens, hash;
-	char tbuf[64], keyValue[17];
+	char tmpBuffer1[17], tmpBuffer2[64];
 
 	if (ecmDataLen >= 3)
 	{
@@ -2933,7 +3063,7 @@ static int8_t BissECM(uint16_t UNUSED(caid), const uint8_t *ecm, int16_t ecmData
 	}
 
 	// First try using the unique namespace hash (enigma only)
-	if (ecmLen >= 13 && ecmLen <= ecmDataLen) // ecmLen >= 13, allow allow patching the ecmLen for r749 ecms
+	if (ecmLen >= 13 && ecmLen <= ecmDataLen) // ecmLen >= 13, allow patching the ecmLen for r749 ecms
 	{
 		memcpy(ecmCopy, ecm, ecmLen);
 		ens = b2i(4, ecm + ecmLen - 4); // Namespace will be the last 4 bytes
@@ -2958,17 +3088,25 @@ static int8_t BissECM(uint16_t UNUSED(caid), const uint8_t *ecm, int16_t ecmData
 					hash = crc32(0x2600, ecmCopy + ecmLen - 10, 10);
 				}
 
-				if (FindKey('F', hash, 0, "00", dw, 8, (i == 0 ? 1 : 0), 0, 0, NULL)) // Do not print "key not found" for frequency off by 1, 2
+				if (BissGetKey(hash, dw, rdr->emu_datecodedenabled, i == 0 ? 2 : 1)) // Do not print "key not found" for frequency off by 1, 2
 				{
 					memcpy(dw + 8, dw, 8);
-					cs_log("Key found: F %08X 00", hash);
 					return 0;
 				}
 
 				if (i == 0) // No key found matching our hash: put example SoftCam.Key BISS line in the live log
 				{
-					BissAnnotate(tbuf, sizeof(tbuf), ecmCopy, ecmLen, 1);
-					cs_log("Example key based on namespace hash: F %08X 00 XXXXXXXXXXXXXXXX ; %s", hash, tbuf);
+					if (rdr->emu_datecodedenabled)
+					{
+						Date2Str(tmpBuffer1, sizeof(tmpBuffer1), 4, 3);
+					}
+					else
+					{
+						snprintf(tmpBuffer1, sizeof(tmpBuffer1), "00000000");
+					}
+
+					BissAnnotate(tmpBuffer2, sizeof(tmpBuffer2), ecmCopy, ecmLen, 1);
+					cs_log("Example key based on namespace hash: F %08X %s XXXXXXXXXXXXXXXX ; %s", hash, tmpBuffer1, tmpBuffer2);
 				}
 
 				if (0 == (ens & 0xFFFF)) // Namespace without frequency - Do not iterate
@@ -2997,24 +3135,47 @@ static int8_t BissECM(uint16_t UNUSED(caid), const uint8_t *ecm, int16_t ecmData
 			memcpy(ecmCopy, ecm, ecmLen - 8); // Make a new ecmCopy from the original ecm as the old ecmCopy may be altered in namespace hash (skip [tsid] [onid] [namespace])
 			hash = crc32(0x2600, ecmCopy + 3, ecmLen - 3 - 8); // ecmCopy doesn't have [tsid] [onid] [namespace] part
 
-			if (FindKey('F', hash, 0, "00", dw, 8, 1, 0, 0, NULL))
+			if (BissGetKey(hash, dw, rdr->emu_datecodedenabled, 2)) // Key found
 			{
 				memcpy(dw + 8, dw, 8);
-				cs_log("Key found: F %08X 00", hash);
 				return 0;
 			}
 			else // No key found matching our hash: put example SoftCam.Key BISS line in the live log
 			{
-				BissAnnotate(tbuf, sizeof(tbuf), ecmCopy, ecmLen, 0);
-				cs_log("Example key based on universal hash: F %08X 00 XXXXXXXXXXXXXXXX ; %s", hash, tbuf);
+				if (rdr->emu_datecodedenabled)
+				{
+					Date2Str(tmpBuffer1, sizeof(tmpBuffer1), 4, 3);
+				}
+				else
+				{
+					snprintf(tmpBuffer1, sizeof(tmpBuffer1), "00000000");
+				}
+
+				BissAnnotate(tmpBuffer2, sizeof(tmpBuffer2), ecmCopy, ecmLen, 0);
+				cs_log("Example key based on universal hash: F %08X %s XXXXXXXXXXXXXXXX ; %s", hash, tmpBuffer1, tmpBuffer2);
 			}
 
 			if (BissIsCommonHash(hash)) // Check if hash is common and warn user
 			{
 				cs_log("Feed has commonly used pids, universal hash clashes in SoftCam.Key are likely!");
 			}
+		}
+	}
 
-			// Strip [tsid] [onid] [namespace]
+	// Try using only [tsid][onid] (useful when many channels on a transpoder use the same key)
+	if (ecmLen >= 17 && ecmLen <= ecmDataLen) // ecmLen >= 17, length of r749 ecms has been patched to match r752+ ecms
+	{
+		ens = b2i(4, ecmCopy + ecmLen - 4); // Namespace will be last 4 bytes
+
+		// We have an r752+ style ecm with stripped namespace, thus a valid [tsid][onid] combo to use as provider
+		if ((ens & 0xE000FFFF) == 0xA0000000 && BissGetKey(b2i(4, ecm + ecmLen - 8), dw, 0, 2))
+		{
+			memcpy(dw + 8, dw, 8);
+			return 0;
+		}
+
+		if ((ens & 0xE0000000) == 0xA0000000) // Strip [tsid] [onid] [namespace] on r752+ ecms
+		{
 			ecmLen -= 8;
 			ecmDataLen -= 8;
 		}
@@ -3023,18 +3184,9 @@ static int8_t BissECM(uint16_t UNUSED(caid), const uint8_t *ecm, int16_t ecmData
 	// Try using ecmpid if it seems to be faulty (should be 0x1FFF always for BISS)
 	if (ecmpid != 0x1FFF && ecmpid != 0)
 	{
-		if (FindKey('F', (srvid << 16) | ecmpid, 0, "00", dw, 8, 1, 0, 0, NULL))
+		if (BissGetKey((srvid << 16) | ecmpid, dw, 0, 2))
 		{
 			memcpy(dw + 8, dw, 8);
-			cs_log("Key found: F %04X%04X 00", srvid, ecmpid);
-			return 0;
-		}
-
-		if (FindKey('F', (srvid << 16) | ecmpid, 0, "01", dw, 8, 0, 0, 0, NULL))
-		{
-			memcpy(dw + 8, dw, 8);
-			cs_log("Key found: F %04X%04X 01 <-- Support for '01' keys will be dropped in the future", srvid, ecmpid);
-			cs_log("Convert your key to the '00' equivalent: F %04X%04X 00", srvid, ecmpid);
 			return 0;
 		}
 	}
@@ -3048,18 +3200,9 @@ static int8_t BissECM(uint16_t UNUSED(caid), const uint8_t *ecm, int16_t ecmData
 		{
 			pid = b2i(2, ecm + i);
 
-			if (FindKey('F', (srvid << 16) | pid, 0, "00", dw, 8, 1, 0, 0, NULL))
+			if (BissGetKey((srvid << 16) | pid, dw, 0, 2))
 			{
 				memcpy(dw + 8, dw, 8);
-				cs_log("Key found: F %04X%04X 00", srvid, pid);
-				return 0;
-			}
-
-			if (FindKey('F', (srvid << 16) | pid, 0, "01", dw, 8, 0, 0, 0, NULL))
-			{
-				memcpy(dw + 8, dw, 8);
-				cs_log("Key found: F %04X%04X 01 <-- Support for '01' keys will be dropped in the future", srvid, pid);
-				cs_log("Convert your key to the '00' equivalent: F %04X%04X 00", srvid, pid);
 				return 0;
 			}
 		}
@@ -3068,28 +3211,19 @@ static int8_t BissECM(uint16_t UNUSED(caid), const uint8_t *ecm, int16_t ecmData
 	// Try using the standard BISS ecm pid
 	if (ecmpid == 0x1FFF || ecmpid == 0)
 	{
-		if (FindKey('F', (srvid << 16) | 0x1FFF, 0, "00", dw, 8, 1, 0, 0, NULL))
+		if (BissGetKey((srvid << 16) | 0x1FFF, dw, 0, 2))
 		{
 			memcpy(dw + 8, dw, 8);
-			cs_log("Key found: F %04X1FFF 00", srvid);
-			return 0;
-		}
-
-		if (FindKey('F', (srvid << 16) | 0x1FFF, 0, "01", dw, 8, 0, 0, 0, NULL))
-		{
-			memcpy(dw + 8, dw, 8);
-			cs_log("Key found: F %04X1FFF 01 <-- Support for '01' keys will be dropped in the future", srvid);
-			cs_log("Convert your key to the '00' equivalent: F %04X1FFF 00", srvid);
 			return 0;
 		}
 	}
 
 	// Default BISS key for events with many feeds sharing same key
-	if (ecmpid != 0 && FindKey('F', 0xA11FEED5, 0, "00", dw, 8, 1, 0, 0, NULL)) // Limit to local ecms, block netwotk ecms
+	if (ecmpid != 0 && BissGetKey(0xA11FEED5, dw, rdr->emu_datecodedenabled, 2)) // Limit to local ecms, block netwotk ecms
 	{
 		memcpy(dw + 8, dw, 8);
-		cs_hexdump(0, dw, 8, keyValue, sizeof(keyValue));
-		cs_log("No specific match found. Using default key: F A11FEED5 00 %s", keyValue); // "All Feeds"
+		cs_hexdump(0, dw, 8, tmpBuffer1, sizeof(tmpBuffer1));
+		cs_log("No specific match found. Using 'All Feeds' key: %s", tmpBuffer1);
 		return 0;
 	}
 
@@ -3382,6 +3516,38 @@ static void PowervuHashMode03(uint8_t *data, uint8_t *hash)
 	}
 }
 
+uint8_t table04[] = { 0x02, 0x03, 0x07, 0x0B, 0x0D, 0x08, 0x00, 0x01, 0x2B, 0x2D, 0x28, 0x20, 0x21, 0x0A, 0x0C, 0x0E,
+					  0x22, 0x36, 0x23, 0x27, 0x29, 0x24, 0x25, 0x26, 0x2A, 0x3C, 0x3E, 0x3F, 0x0F, 0x2C, 0x2E, 0x2F,
+					  0x12, 0x13, 0x17, 0x1B, 0x1C, 0x18, 0x10, 0x11, 0x19, 0x14, 0x15, 0x16, 0x1A, 0x09, 0x04, 0x05,
+					  0x32, 0x33, 0x37, 0x3B, 0x06, 0x1C, 0x1E, 0x1F, 0x3D, 0x38, 0x30, 0x31, 0x39, 0x34, 0x35, 0x3A };
+
+uint8_t table06[] = { 0x00, 0x01, 0x02, 0x06, 0x07, 0x08, 0x03, 0x2A, 0x2B, 0x2C, 0x2E, 0x2F, 0x04, 0x05, 0x09, 0x0D,
+					  0x20, 0x21, 0x22, 0x26, 0x27, 0x3A, 0x3B, 0x3C, 0x3E, 0x3F, 0x10, 0x11, 0x12, 0x16, 0x17, 0x28,
+					  0x18, 0x13, 0x14, 0x15, 0x19, 0x1C, 0x1A, 0x1B, 0x1C, 0x1E, 0x1F, 0x23, 0x24, 0x25, 0x29, 0x2D,
+					  0x30, 0x31, 0x32, 0x36, 0x37, 0x38, 0x33, 0x34, 0x0A, 0x0B, 0x0C, 0x0E, 0x0F, 0x35, 0x39, 0x3D };
+
+uint8_t table09[] = { 0x20, 0x21, 0x24, 0x22, 0x23, 0x2A, 0x2B, 0x33, 0x35, 0x38, 0x39, 0x36, 0x2D, 0x2C, 0x2E, 0x2F,
+					  0x00, 0x01, 0x04, 0x02, 0x25, 0x28, 0x08, 0x09, 0x06, 0x07, 0x0A, 0x0B, 0x0D, 0x0C, 0x0E, 0x0F,
+					  0x10, 0x11, 0x14, 0x12, 0x13, 0x15, 0x19, 0x16, 0x29, 0x26, 0x03, 0x17, 0x1A, 0x1C, 0x1C, 0x1E,
+					  0x30, 0x31, 0x34, 0x32, 0x37, 0x3A, 0x3B, 0x3D, 0x3C, 0x3E, 0x3F, 0x1B, 0x05, 0x18, 0x27, 0x1F };
+
+static void PowervuHashModes04to0ATables(uint8_t *data, uint8_t *hash, uint8_t *table)
+{
+	int i;
+
+	for (i = 0; i < 0x10; i++)
+	{
+		hash[i] = table[i];
+		hash[i] ^= data[table[i]];
+		hash[i] ^= table[0x10 + i];
+		hash[i] ^= data[table[0x10 + i]];
+		hash[i] ^= table[0x20 + i];
+		hash[i] ^= data[table[0x20 + i]];
+		hash[i] ^= table[0x30 + i];
+		hash[i] ^= data[table[0x30 + i]];
+	}
+}
+
 static void PowervuCreateHash(uint8_t *data, int len, uint8_t *hash, int mode)
 {
 	uint8_t dataPadded[0x40];
@@ -3400,6 +3566,18 @@ static void PowervuCreateHash(uint8_t *data, int len, uint8_t *hash, int mode)
 
 		case 3:
 			PowervuHashMode03(dataPadded, hash);
+			break;
+
+		case 4:
+			PowervuHashModes04to0ATables(dataPadded, hash, table04);
+			break;
+
+		case 6:
+			PowervuHashModes04to0ATables(dataPadded, hash, table06);
+			break;
+
+		case 9:
+			PowervuHashModes04to0ATables(dataPadded, hash, table09);
 			break;
 
 		default:
@@ -3460,16 +3638,19 @@ static uint8_t PowervuUnmaskEcm(uint8_t *ecm, uint8_t *seedEcmCw)
 	// Create seed for CW decryption
 	memset(seedEcmCw, 0, 0x10);
 	
-	for(i = 0; i < 0x0B; i++)
+	int extraBytesLen = ecm[9];
+	int startOffset = extraBytesLen + 0x0A;
+
+	for (i = 0; i < 0x0B; i++)
 	{
-		seedEcmCw[i] = ecm[0x0A + seedCwPos[i]];
+		seedEcmCw[i] = ecm[startOffset + seedCwPos[i]];
 	}
 	
 	// Read hash mode CW
-	hashModeCw = ecm[28] ^ PowervuCrc8Calc(seedEcmCw, 0x10);
+	hashModeCw = ecm[28 + extraBytesLen] ^ PowervuCrc8Calc(seedEcmCw, 0x10);
 	
 	// Create mask for ECM decryption
-	PowervuCreateDataEcmEmm(ecm, sourcePos, 0x0A, 0x18, data);
+	PowervuCreateDataEcmEmm(ecm, sourcePos, startOffset, 0x18, data);
 	
 	hashModeEcm = ecm[8] ^ PowervuCrc8Calc(data, 0x18);
 	
@@ -3479,12 +3660,12 @@ static uint8_t PowervuUnmaskEcm(uint8_t *ecm, uint8_t *seedEcmCw)
 	ecm[3] &= 0x0F;
 	ecm[3] |= 0x30;
 	ecm[8]  = 0x00;
-	ecm[28] = 0x00;
+	ecm[28 + extraBytesLen] = 0x00;
 	
 	// Unmask body
-	for(i = 0; i < 0x10; i++)
+	for (i = 0; i < 0x10; i++)
 	{
-		ecm[0x0A + destPos[i]] ^= mask[i & 0x0F];
+		ecm[startOffset + destPos[i]] ^= mask[i & 0x0F];
 	}
 	
 	// Fix CRC (optional)
@@ -4014,7 +4195,9 @@ int8_t PowervuECM(uint8_t *ecm, uint8_t *dw, emu_stream_client_key_data *cdata)
 			{
 				break;
 			}
-			
+
+			i += ecm[i + 3]; // Extra Data Length
+
 			csaUsed = GetBit(ecm[i+7], 7);
 			fixedKey = !GetBit(ecm[i+6], 5);
 			oddKey = GetBit(ecm[i+6], 4);
@@ -4530,7 +4713,7 @@ static uint16_t TandbergChecksum(uint8_t *data, uint8_t length)
 	return checksum;
 }
 
-static int8_t GetTandbergKey(uint32_t keyIndex, const char *keyName, uint8_t *key, uint32_t keyLength)
+static int8_t GetTandbergKey(uint32_t keyIndex, char *keyName, uint8_t *key, uint32_t keyLength)
 {
 	// keyIndex: ecm keys --> entitlementId
 	//			 emm keys --> aeskeyIndex
@@ -4799,10 +4982,10 @@ const char* GetProcessECMErrorReason(int8_t result)
 9  ICG error
 */
 #ifdef WITH_EMU
-int8_t ProcessECM(struct s_reader *UNUSED(rdr), int16_t ecmDataLen, uint16_t caid, uint32_t provider, const uint8_t *ecm,
+int8_t ProcessECM(struct s_reader *rdr, int16_t ecmDataLen, uint16_t caid, uint32_t provider, const uint8_t *ecm,
 				  uint8_t *dw, uint16_t srvid, uint16_t ecmpid, EXTENDED_CW* cw_ex)
 #else
-int8_t ProcessECM(struct s_reader *UNUSED(rdr), int16_t ecmDataLen, uint16_t caid, uint32_t provider, const uint8_t *ecm,
+int8_t ProcessECM(struct s_reader *rdr, int16_t ecmDataLen, uint16_t caid, uint32_t provider, const uint8_t *ecm,
 				  uint8_t *dw, uint16_t srvid, uint16_t ecmpid)
 #endif
 {
@@ -4845,7 +5028,7 @@ int8_t ProcessECM(struct s_reader *UNUSED(rdr), int16_t ecmDataLen, uint16_t cai
 		result = Irdeto2ECM(caid, ecmCopy, dw);
 	}
 	else if((caid >> 8) == 0x26 || caid == 0xFFFF) {
-		result = BissECM(caid, ecm, ecmDataLen, dw, srvid, ecmpid);
+		result = BissECM(rdr, ecm, ecmDataLen, dw, srvid, ecmpid);
 	}
 	else if((caid >> 8) == 0x0E) {
 #ifdef WITH_EMU
@@ -5061,12 +5244,12 @@ static int8_t ViaccessEMM(uint8_t *emm, uint32_t *keysAdded)
 
 			if(haveNewD0) {
 				
-				SetKey('V', ecmProvider, "D0", keyD0, 2, 1, NULL);
+				SetKey('V', ecmProvider, "D0", keyD0, 2, 1, NULL, NULL);
 				
 				for(j=0; j<ecmKeyCount; j++) {
 					
 					snprintf(keyName, EMU_MAX_CHAR_KEYNAME, "E%X", ecmKeyIndex[j]);
-					SetKey('V', ecmProvider, keyName, ecmKeys[j], 16, 1, NULL);
+					SetKey('V', ecmProvider, keyName, ecmKeys[j], 16, 1, NULL, NULL);
 					
 					(*keysAdded)++;
 					cs_hexdump(0, ecmKeys[j], 16, keyValue, sizeof(keyValue));
@@ -5130,7 +5313,7 @@ static int8_t Irdeto2DoEMMTypeOP(uint32_t ident, uint8_t *emm, uint8_t *keySeed,
 				if(l==0x13 && i<=startOffset+length-9-l) {
 					
 					snprintf(keyName, EMU_MAX_CHAR_KEYNAME, "%02X", emm[i+2]>>2);
-					SetKey('I', ident, keyName, &emm[i+3], 16, 1, NULL);
+					SetKey('I', ident, keyName, &emm[i+3], 16, 1, NULL, NULL);
 					
 					(*keysAdded)++;
 					cs_hexdump(0, &emm[i+3], 16, keyValue, sizeof(keyValue));
@@ -5196,7 +5379,7 @@ static int8_t Irdeto2DoEMMTypePMK(uint32_t ident, uint8_t *emm, uint8_t *keySeed
 					for(j=0; j<2; j++) {
 						
 						snprintf(keyName, EMU_MAX_CHAR_KEYNAME, "M%01X", 3+j);
-						SetKey('I', ident, keyName, &emm[i+3+j*16], 16, 1, NULL);
+						SetKey('I', ident, keyName, &emm[i+3+j*16], 16, 1, NULL, NULL);
 						
 						(*keysAdded)++;
 						cs_hexdump(0, &emm[i+3+j*16], 16, keyValue, sizeof(keyValue));
@@ -5566,52 +5749,95 @@ static int8_t DrecryptGetEmmKey(uint8_t *buf, uint32_t keyIdent, uint16_t keyNam
 	snprintf(keyStr, EMU_MAX_CHAR_KEYNAME, "MK%04X", keyName);
 	return FindKey('D', keyIdent, 0, keyStr, buf, 32, isCriticalKey, 0, 0, NULL);
 }
-/*
-static void DrecryptWriteEEToFile(uint8_t ident)
+
+static void DrecryptWriteEebin(const char *path, const char *name)
 {
+	char tmp[256];
 	FILE *file = NULL;
-	opkeys_t *ee = ident == 0x11 ? idata->ee36 : idata->ee56;
-	char *path = ident == 0x11 ? idata->extee36 : idata->extee56;
-	
-	if(ee == NULL) return;
-	
-	if((file = fopen(path,"wb")) == NULL) return;
-	fwrite(ee,1,sizeof(opkeys_t),file);
+	uint8_t i, buffer[64][32];
+	uint32_t prvid;
+
+	// Set path
+	if (path != NULL)
+	{
+		snprintf(tmp, 256, "%s%s", path, name);
+	}
+	else // No path set, use SoftCam.Keys's path
+	{
+		snprintf(tmp, 256, "%s%s", emu_keyfile_path, name);
+	}
+
+	if ((file = fopen(tmp, "wb")) != NULL)
+	{
+		cs_log("Writing key file: %s", tmp);
+	}
+	else
+	{
+		cs_log("Error writing key file: %s", tmp);
+		return;
+	}
+
+	// Load keys from db to buffer
+	prvid = (strncmp(name, "ee36.bin", 9) == 0) ? 0x4AE111 : 0x4AE114;
+
+	for (i = 0; i < 32; i++) // Load "3B" type keys
+	{
+		snprintf(tmp, 5, "3B%02X", i);
+		if (!FindKey('D', prvid, 0, tmp, buffer[i], 32, 0, 0, 0, NULL))
+		{
+			memset(buffer[i], 0xFF, 32);
+		}
+	}
+
+	for (i = 0; i < 32; i++) // Load "56" type keys
+	{
+		snprintf(tmp, 5, "56%02X", i);
+		if (!FindKey('D', prvid, 0, tmp, buffer[32 + i], 32, 0, 0, 0, NULL))
+		{
+			memset(buffer[32 + i], 0xFF, 32);
+		}
+	}
+
+	// Write buffer to ee.bin file
+	fwrite(buffer, 1, sizeof(buffer), file);
 	fclose(file);
 }
-*/
-static int8_t DrecryptProcessEMM(uint16_t caid, uint32_t provId, uint8_t *emm, uint32_t *keysAdded)
+
+static int8_t DrecryptProcessEMM(struct s_reader *rdr, uint32_t provId, uint8_t *emm, uint32_t *keysAdded)
 {
-	uint16_t emmLen = ((emm[1] & 0xF) << 8) | emm[2];
-	uint32_t keyIdent;
+	uint16_t emmLen, emmDataLen;
+	uint32_t i, keyIdent;
 	uint16_t keyName;
 	uint8_t emmKey[32];
-	int32_t i;
 	uint8_t *curECMkey3B = NULL, *curECMkey56 = NULL;
 	uint8_t keynum =0, keyidx = 0, keyclass = 0, key1offset, key2offset;
 	char newKeyName[EMU_MAX_CHAR_KEYNAME], curKeyName[EMU_MAX_CHAR_KEYNAME], keyValue[100];
 	
-	if(emmLen < 1 || caid != 0x4AE1)
+	emmDataLen = GetEcmLen(emm);
+	emmLen = ((emm[1] & 0xF) << 8) | emm[2];
+
+	if (emmDataLen < emmLen + 3)
 	{
-		return 1;
+		return 4; // Corrupt data
 	}
 
-	if(emm[0] == 0x91)
+	if (emm[0] == 0x91)
 	{
 		Drecrypt2OverEMM(emm);
 		return 0;
 	}
-	else if(emm[0] == 0x82)
+	else if (emm[0] == 0x82)
 	{
 		ReasmEMM82(emm);
 		return 0;
 	}
-	else if(emm[0] != 0x86) 
+	else if (emm[0] != 0x86)
 	{
-		return 1;
+		return 1; // Not supported
 	}
-	
-	switch(emm[4])
+
+	// Emm type 0x86 only
+	switch (emm[4])
 	{
 		case 0x02:
 			keynum = 0x2C;
@@ -5620,7 +5846,7 @@ static int8_t DrecryptProcessEMM(uint16_t caid, uint32_t provId, uint8_t *emm, u
 			key1offset = 0x35;
 			key2offset = 0x6D;
 			break;
-			
+
 		case 0x4D:
 			keynum = 0x61;
 			keyidx = 0x60;
@@ -5628,19 +5854,19 @@ static int8_t DrecryptProcessEMM(uint16_t caid, uint32_t provId, uint8_t *emm, u
 			key1offset = 0x62;
 			key2offset = 0x8B;
 			break;
-			
+
 		default:
-			return 1;
+			return 1; // Not supported
 	}
 	
 	switch (provId & 0xFF)
 	{
 		case 0x11:
 		{
-			snprintf(curKeyName, EMU_MAX_CHAR_KEYNAME, "3B%02X", keyclass);
+			snprintf(curKeyName, EMU_MAX_CHAR_KEYNAME, "3B%02X", emm[keyclass]);
 			FindKey('D', 0x4AE111, 0, curKeyName, curECMkey3B, 32, 0, 0, 0, NULL);
 
-			snprintf(curKeyName, EMU_MAX_CHAR_KEYNAME, "56%02X", keyclass);
+			snprintf(curKeyName, EMU_MAX_CHAR_KEYNAME, "56%02X", emm[keyclass]);
 			FindKey('D', 0x4AE111, 0, curKeyName, curECMkey56, 32, 0, 0, 0, NULL);
 
 			break;
@@ -5648,46 +5874,49 @@ static int8_t DrecryptProcessEMM(uint16_t caid, uint32_t provId, uint8_t *emm, u
 
 		case 0x14:
 		{
-			snprintf(curKeyName, EMU_MAX_CHAR_KEYNAME, "3B%02X", keyclass);
+			snprintf(curKeyName, EMU_MAX_CHAR_KEYNAME, "3B%02X", emm[keyclass]);
 			FindKey('D', 0x4AE114, 0, curKeyName, curECMkey3B, 32, 0, 0, 0, NULL);
 
-			snprintf(curKeyName, EMU_MAX_CHAR_KEYNAME, "56%02X", keyclass);
+			snprintf(curKeyName, EMU_MAX_CHAR_KEYNAME, "56%02X", emm[keyclass]);
 			FindKey('D', 0x4AE114, 0, curKeyName, curECMkey56, 32, 0, 0, 0, NULL);
 
 			break;
 		}
 
 		default:
-			return 9;
+			return 9; // Wrong provider
 	}
 	
-	keyIdent = caid<<8 | provId;
-	keyName = emm[0x3]<<8 | emm[keynum];
+	keyIdent = (0x4AE1 << 8) | provId;
+	keyName = (emm[3] << 8) | emm[keynum];
 
-	if(!DrecryptGetEmmKey(emmKey, keyIdent, keyName, 1))
+	if (!DrecryptGetEmmKey(emmKey, keyIdent, keyName, 1))
 	{
-		return 2; 
+		return 2;
 	}
 	
-	//key #1
-	for(i=0; i<4; i++)
+	// Key #1
+	for (i = 0; i < 4; i++)
 	{
-		DrecryptDecrypt(&emm[key1offset+(i*8)], emmKey);
+		DrecryptDecrypt(&emm[key1offset + (i * 8)], emmKey);
 	}
 
-	//key #2
-	for(i=0; i<4; i++)
+	// Key #2
+	for (i = 0; i < 4; i++)
 	{
-		DrecryptDecrypt(&emm[key2offset+(i*8)], emmKey);
+		DrecryptDecrypt(&emm[key2offset + (i * 8)], emmKey);
 	}
-	
-	//key #1
-	keyName = emm[keyidx]<<8 | emm[keyclass];
+
+	// Key #1
+	keyName = emm[keyidx] << 8 | emm[keyclass];
 	snprintf(newKeyName, EMU_MAX_CHAR_KEYNAME, "%.4X", keyName);
-	if(memcmp(&emm[key1offset], emm[keyidx] == 0x3b ? curECMkey3B : curECMkey56, 32) != 0)
+
+	if (memcmp(&emm[key1offset], emm[keyidx] == 0x3b ? curECMkey3B : curECMkey56, 32) != 0)
 	{
 		memcpy(emm[keyidx] == 0x3b ? curECMkey3B : curECMkey56, &emm[key1offset], 32);
+		SetKey('D', keyIdent, newKeyName, &emm[key1offset], 32, 0, NULL, NULL);
 		(*keysAdded)++;
+
 		cs_hexdump(0, &emm[key1offset], 32, keyValue, sizeof(keyValue));
 		cs_log("Key found in EMM: D %.6X %s %s class %02X", keyIdent, newKeyName, keyValue, emm[keyclass]);
 	}
@@ -5696,13 +5925,16 @@ static int8_t DrecryptProcessEMM(uint16_t caid, uint32_t provId, uint8_t *emm, u
 		cs_log("Key %.6X %s already exists", keyIdent, newKeyName);
 	}
 
-	//key #2
+	// Key #2
 	keyName = (emm[keyidx] == 0x56 ? 0x3B00 : 0x5600) | emm[keyclass];
 	snprintf(newKeyName, EMU_MAX_CHAR_KEYNAME, "%.4X", keyName);
-	if(memcmp(&emm[key2offset], emm[keyidx] == 0x3b ? curECMkey56 : curECMkey3B, 32) != 0)
+
+	if (memcmp(&emm[key2offset], emm[keyidx] == 0x3b ? curECMkey56 : curECMkey3B, 32) != 0)
 	{
 		memcpy(emm[keyidx] == 0x3b ? curECMkey56 : curECMkey3B, &emm[key2offset], 32);
+		SetKey('D', keyIdent, newKeyName, &emm[key2offset], 32, 0, NULL, NULL);
 		(*keysAdded)++;
+
 		cs_hexdump(0, &emm[key2offset], 32, keyValue, sizeof(keyValue));
 		cs_log("Key found in EMM: D %.6X %s %s class %02X", keyIdent, newKeyName, keyValue, emm[keyclass]);
 	}
@@ -5710,81 +5942,114 @@ static int8_t DrecryptProcessEMM(uint16_t caid, uint32_t provId, uint8_t *emm, u
 	{
 		cs_log("Key %.6X %s already exists", keyIdent, newKeyName);
 	}
-	
-	//if(*keysAdded > 0) DrecryptWriteEEToFile(provId & 0xFF);
-	
+
+	if (*keysAdded > 0) // Write new ecm keys to ee.bin file
+	{
+		switch (provId & 0xFF)
+		{
+			case 0x11:
+				DrecryptWriteEebin(rdr->extee36, "ee36.bin");
+				break;
+
+			case 0x14:
+				DrecryptWriteEebin(rdr->extee56, "ee56.bin");
+				break;
+
+			default:
+				cs_log("Provider %02X doesn't have a matching ee.bin file", provId & 0xFF);
+				break;
+		}
+	}
+
 	return 0;
 }
 
-static int8_t Drecrypt2EMM(struct s_reader *rdr, uint16_t caid, uint32_t provId, uint8_t *emm, uint32_t *keysAdded)
+static int8_t Drecrypt2EMM(struct s_reader *rdr, uint32_t provId, uint8_t *emm, uint32_t *keysAdded)
 {
-	int8_t result = DrecryptProcessEMM(caid, provId, emm, keysAdded);
+	int8_t result = DrecryptProcessEMM(rdr, provId, emm, keysAdded);
 
-	if(result == 2)
+	if (result == 2)
 	{
 		uint8_t keynum = 0, emmkey;
-		uint32_t i, len;
-		KeyDataContainer *KeyDB;
-		
-		emmkey = emm[4] == 0x4D ? emm[0x61] : emm[0x2c];
-		
-		if((KeyDB = GetKeyContainer('D')) != NULL)
+		uint32_t i;
+		KeyDataContainer *KeyDB = GetKeyContainer('D');
+
+		if (KeyDB == NULL)
 		{
-			for(i=0; i<KeyDB->keyCount; i++)
+			return result;
+		}
+
+		for (i = 0; i < KeyDB->keyCount; i++)
+		{
+			if (KeyDB->EmuKeys[i].provider != ((0x4AE1 << 8) | provId))
 			{
-				if(KeyDB->EmuKeys[i].provider != ((caid << 8) | provId)) 
-					{ continue; }
-				
-				len = strlen(KeyDB->EmuKeys[i].keyName);
-				
-				if(len < 6)
-					{ continue; }
-					
-				if(memcmp(KeyDB->EmuKeys[i].keyName, "MK", 2))
-					{ continue; }
-				
-				CharToBin(&keynum, KeyDB->EmuKeys[i].keyName+4, 2);
-				if(keynum == emmkey)
+				continue;
+			}
+
+			if (strlen(KeyDB->EmuKeys[i].keyName) < 6)
+			{
+				continue;
+			}
+
+			if (memcmp(KeyDB->EmuKeys[i].keyName, "MK", 2))
+			{
+				continue;
+			}
+
+			CharToBin(&keynum, KeyDB->EmuKeys[i].keyName + 4, 2);
+			emmkey = (emm[4] == 0x4D) ? emm[0x61] : emm[0x2C];
+
+			if (keynum == emmkey)
+			{
+				if (provId == 0x11)
 				{
-					if(provId == 0x11) CharToBin(&rdr->dre36_force_group, KeyDB->EmuKeys[i].keyName+2, 2);
-					else CharToBin(&rdr->dre56_force_group, KeyDB->EmuKeys[i].keyName+2, 2);
-					break;
+					CharToBin(&rdr->dre36_force_group, KeyDB->EmuKeys[i].keyName + 2, 2);
 				}
+				else
+				{
+					CharToBin(&rdr->dre56_force_group, KeyDB->EmuKeys[i].keyName + 2, 2);
+				}
+
+				break;
 			}
 		}
 	}
-	
+
 	return result;
 }
 
 int32_t GetDrecryptHexserials(uint16_t caid, uint32_t provid, uint8_t *hexserials, int32_t length, int32_t *count)
 {
 	uint32_t i;
-	int32_t len;
-	KeyDataContainer *KeyDB;
+	KeyDataContainer *KeyDB = GetKeyContainer('D');
 
-	KeyDB = GetKeyContainer('D');
-	if(KeyDB == NULL)
-		{ return 0; }
-	
+	if (KeyDB == NULL)
+	{
+		return 0;
+	}
+
 	(*count) = 0;
 
-	for(i=0; i<KeyDB->keyCount && (*count)<length ; i++)
+	for (i = 0; i < KeyDB->keyCount && (*count) < length; i++)
 	{
 
-		if(KeyDB->EmuKeys[i].provider != ((caid << 8) | provid))
-			{ continue; }
-		
-		len = strlen(KeyDB->EmuKeys[i].keyName);
-		
-		if(len < 6)
-			{ continue; }
-			
-		if(memcmp(KeyDB->EmuKeys[i].keyName, "MK", 2))
-			{ continue; }
-		
-		CharToBin(&hexserials[(*count)], KeyDB->EmuKeys[i].keyName+2, 2);
-	
+		if (KeyDB->EmuKeys[i].provider != ((caid << 8) | provid))
+		{
+			continue;
+		}
+
+		if (strlen(KeyDB->EmuKeys[i].keyName) < 6)
+		{
+			continue;
+		}
+
+		if (memcmp(KeyDB->EmuKeys[i].keyName, "MK", 2))
+		{
+			continue;
+		}
+
+		CharToBin(&hexserials[(*count)], KeyDB->EmuKeys[i].keyName + 2, 2);
+
 		(*count)++;
 	}
 
@@ -5909,7 +6174,7 @@ static int8_t TandbergParseEMMNanoTags(uint8_t* data, uint32_t length, uint8_t k
 						
 						for(i = 0; i < 0x10; i++)
 						{
-							SetKey('T', (blockIndex << 4) + i, "MK01", tagDataDecrypted[i], 8, 0, NULL);
+							SetKey('T', (blockIndex << 4) + i, "MK01", tagDataDecrypted[i], 8, 0, NULL, NULL);
 						}
 					}
 					break;
@@ -5938,7 +6203,7 @@ static int8_t TandbergParseEMMNanoTags(uint8_t* data, uint32_t length, uint8_t k
 						
 						for(i = 0; i < 0x10; i++)
 						{
-							SetKey('T', (blockIndex << 4) + i, "MK", tagData + 2 + (i*8), 8, 0, NULL);
+							SetKey('T', (blockIndex << 4) + i, "MK", tagData + 2 + (i*8), 8, 0, NULL, NULL);
 						}
 					}
 					break;
@@ -6181,7 +6446,7 @@ int8_t ProcessEMM(struct s_reader *rdr, uint16_t caid, uint32_t provider, const 
 		result = PowervuEMM(emmCopy, keysAdded);
 	}
 	else if(caid==0x4AE1) {
-		result = Drecrypt2EMM(rdr, caid, provider, emmCopy, keysAdded);
+		result = Drecrypt2EMM(rdr, provider, emmCopy, keysAdded);
 	}
 	else if((caid>>8)==0x10) {
 		result = TandbergEMM(emmCopy, keysAdded);

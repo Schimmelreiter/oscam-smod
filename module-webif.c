@@ -2713,11 +2713,21 @@ static char *send_oscam_reader_config(struct templatevars *vars, struct uriparam
 	value = mk_t_ftab(&rdr->emu_auproviders);
 	tpl_addVar(vars, TPLADD, "EMUAUPROVIDERS", value);
 	free_mk_t(value);
-	
+
+	// Date-coded BISS keys
+	if(!apicall)
+	{
+		tpl_addVar(vars, TPLADD, "EMUDATECODEDENABLED", (rdr->emu_datecodedenabled == 1) ? "checked" : "");
+	}
+	else
+	{
+		tpl_addVar(vars, TPLADD, "EMUDATECODEDENABLED", (rdr->emu_datecodedenabled == 1) ? "1" : "0");
+	}
+
 	//extee
 	tpl_addVar(vars, TPLADD, "EXTEE36", rdr->extee36);
 	tpl_addVar(vars, TPLADD, "EXTEE56", rdr->extee56);
-	
+
 	//dre force group
 	tpl_printf(vars, TPLADD, "DRE36FORCEGROUP","%02X", rdr->dre36_force_group);
 	tpl_printf(vars, TPLADD, "DRE56FORCEGROUP","%02X", rdr->dre56_force_group);
