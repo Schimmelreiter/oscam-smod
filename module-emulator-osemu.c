@@ -32,7 +32,7 @@ void hdSurEncPhase2_D2_13_15(uint8_t *cws);
 // Version info
 uint32_t GetOSemuVersion(void)
 {
-	return atoi("$Version: 765 $"+10);
+	return atoi("$Version: 769 $"+10);
 }
 
 /*
@@ -143,10 +143,10 @@ static void Date2Str(char *dateStr, uint8_t len, int8_t offset, uint8_t format)
 			break;
 
 		case 2: // Used in BissAnnotate()
-			strftime(dateStr, len, "added: %F @ %R", &timeinfo);
+			strftime(dateStr, len, "%F @ %R", &timeinfo);
 			break;
 
-		case 3: // Used in SetKey(), BissECM()
+		case 3: // Used in SetKey(), BissAnnotate()
 			strftime(dateStr, len, "%y%m%d%H", &timeinfo);
 			break;
 	}
@@ -2850,7 +2850,7 @@ static void BissUnifyOrbitals(uint32_t *namespace)
 	*namespace = (*namespace & 0xF000FFFF) | (pos << 16);
 }
 
-static void BissAnnotate(char *buf, uint8_t len, const uint8_t *ecm, uint16_t ecmLen, uint8_t isNamespaceHash)
+static void BissAnnotate(char *buf, uint8_t len, const uint8_t *ecm, uint16_t ecmLen, uint32_t hash, int8_t isNamespaceHash, int8_t datecoded)
 {
 	// Extract useful information to append to the "Example key ..." message.
 	//
@@ -2863,20 +2863,28 @@ static void BissAnnotate(char *buf, uint8_t len, const uint8_t *ecm, uint16_t ec
 	// from our namespace. See https://github.com/openatv/enigma2/blob/master/lib/dvb/scan.cpp#L59
 	// In that case, our annotation contains the onid:tsid:sid triplet in lieu of frequency.
 	//
-	// For the universal case, we print the number of es pids & pmtpid.
+	// For the universal case, we print the number of elementary stream pids & pmtpid.
 	// The sid and current time are included for all. Examples:
 	//
-	// 110.5W 12345H sid:0001 added: 2017-10-17 @ 13:14:15 // namespace
-	//  33.5E  ABCD:9876:1234 added: 2017-10-17 @ 13:14:15 // stripped namespace
-	// av:5 pmt:0134 sid:0001 added: 2017-10-17 @ 13:14:15 // universal
+	// F 1A2B3C4D 00000000 XXXXXXXXXXXXXXXX ; 110.5W 12345H sid:0001 added: 2017-10-17 @ 13:14:15 // namespace
+	// F 1A2B3C4D 20180123 XXXXXXXXXXXXXXXX ;  33.5E  ABCD:9876:1234 added: 2017-10-17 @ 13:14:15 // stripped namespace
+	// F 1A2B3C4D 20180123 XXXXXXXXXXXXXXXX ; av:5 pmt:0134 sid:0001 added: 2017-10-17 @ 13:14:15 // universal
 
-	uint16_t frequency, degrees;
-	uint16_t pmtpid, srvid, tsid, onid;
 	uint8_t pidcount;
+	uint16_t frequency, degrees, pmtpid, srvid, tsid, onid;
 	uint32_t ens;
-	char compass, polarisation, timeStr[32];
+	char compass, polarisation, timeStr1[9], timeStr2[19];
 
-	Date2Str(timeStr, sizeof(timeStr), 0, 2);
+	if (datecoded)
+	{
+		Date2Str(timeStr1, sizeof(timeStr1), 4, 3);
+	}
+	else
+	{
+		snprintf(timeStr1, sizeof(timeStr1), "00000000");
+	}
+
+	Date2Str(timeStr2, sizeof(timeStr2), 0, 2);
 
 	if (isNamespaceHash) // Namespace hash
 	{
@@ -2899,7 +2907,8 @@ static void BissAnnotate(char *buf, uint8_t len, const uint8_t *ecm, uint16_t ec
 			tsid = b2i(2, ecm + ecmLen - 8);
 			onid = b2i(2, ecm + ecmLen - 6);
 			// Printing degree sign "\u00B0" requires c99 standard
-			snprintf(buf, len, "%5.1f%c  %04X:%04X:%04X %s", degrees / 10.0, compass, onid, tsid, srvid, timeStr);
+			snprintf(buf, len, "F %08X %s XXXXXXXXXXXXXXXX ; %5.1f%c  %04X:%04X:%04X added: %s",
+								hash, timeStr1, degrees / 10.0, compass, onid, tsid, srvid, timeStr2);
 		}
 		else // Full namespace hash
 		{
@@ -2907,7 +2916,8 @@ static void BissAnnotate(char *buf, uint8_t len, const uint8_t *ecm, uint16_t ec
 			frequency = ens & 0x7FFF; // Remove polarity bit
 			polarisation = ens & 0x8000 ? 'V' : 'H';
 			// Printing degree sign "\u00B0" requires c99 standard
-			snprintf(buf, len, "%5.1f%c %5d%c sid:%04X %s", degrees / 10.0, compass, frequency, polarisation, srvid, timeStr);
+			snprintf(buf, len, "F %08X %s XXXXXXXXXXXXXXXX ; %5.1f%c %5d%c sid:%04X added: %s",
+								hash, timeStr1, degrees / 10.0, compass, frequency, polarisation, srvid, timeStr2);
 		}
 	}
 	else // Universal hash
@@ -2915,7 +2925,8 @@ static void BissAnnotate(char *buf, uint8_t len, const uint8_t *ecm, uint16_t ec
 		srvid = b2i(2, ecm + 3);
 		pmtpid = b2i(2, ecm + 5);
 		pidcount = (ecmLen - 15) / 2; // video + audio pids count
-		snprintf(buf, len, "av:%d pmt:%04X sid:%04X %s", pidcount, pmtpid, srvid, timeStr);
+		snprintf(buf, len, "F %08X %s XXXXXXXXXXXXXXXX ; av:%d pmt:%04X sid:%04X added: %s",
+							hash, timeStr1, pidcount, pmtpid, srvid, timeStr2);
 	}
 }
 
@@ -3054,8 +3065,8 @@ static int8_t BissECM(struct s_reader *rdr, const uint8_t *ecm, int16_t ecmDataL
 
 	uint8_t ecmCopy[EMU_MAX_ECM_LEN];
 	uint16_t ecmLen = 0, pid = 0;
-	uint32_t i, ens, hash;
-	char tmpBuffer1[17], tmpBuffer2[64];
+	uint32_t i, ens = 0, hash = 0;
+	char tmpBuffer1[17], tmpBuffer2[90] = "0", tmpBuffer3[90] = "0";
 
 	if (ecmDataLen >= 3)
 	{
@@ -3094,19 +3105,9 @@ static int8_t BissECM(struct s_reader *rdr, const uint8_t *ecm, int16_t ecmDataL
 					return 0;
 				}
 
-				if (i == 0) // No key found matching our hash: put example SoftCam.Key BISS line in the live log
+				if (i == 0) // No key found matching our hash: create example SoftCam.Key BISS line for the live log
 				{
-					if (rdr->emu_datecodedenabled)
-					{
-						Date2Str(tmpBuffer1, sizeof(tmpBuffer1), 4, 3);
-					}
-					else
-					{
-						snprintf(tmpBuffer1, sizeof(tmpBuffer1), "00000000");
-					}
-
-					BissAnnotate(tmpBuffer2, sizeof(tmpBuffer2), ecmCopy, ecmLen, 1);
-					cs_log("Example key based on namespace hash: F %08X %s XXXXXXXXXXXXXXXX ; %s", hash, tmpBuffer1, tmpBuffer2);
+					BissAnnotate(tmpBuffer2, sizeof(tmpBuffer2), ecmCopy, ecmLen, hash, 1, rdr->emu_datecodedenabled);
 				}
 
 				if (0 == (ens & 0xFFFF)) // Namespace without frequency - Do not iterate
@@ -3140,25 +3141,9 @@ static int8_t BissECM(struct s_reader *rdr, const uint8_t *ecm, int16_t ecmDataL
 				memcpy(dw + 8, dw, 8);
 				return 0;
 			}
-			else // No key found matching our hash: put example SoftCam.Key BISS line in the live log
-			{
-				if (rdr->emu_datecodedenabled)
-				{
-					Date2Str(tmpBuffer1, sizeof(tmpBuffer1), 4, 3);
-				}
-				else
-				{
-					snprintf(tmpBuffer1, sizeof(tmpBuffer1), "00000000");
-				}
-
-				BissAnnotate(tmpBuffer2, sizeof(tmpBuffer2), ecmCopy, ecmLen, 0);
-				cs_log("Example key based on universal hash: F %08X %s XXXXXXXXXXXXXXXX ; %s", hash, tmpBuffer1, tmpBuffer2);
-			}
-
-			if (BissIsCommonHash(hash)) // Check if hash is common and warn user
-			{
-				cs_log("Feed has commonly used pids, universal hash clashes in SoftCam.Key are likely!");
-			}
+			
+			// No key found matching our hash: create example SoftCam.Key BISS line for the live log
+			BissAnnotate(tmpBuffer3, sizeof(tmpBuffer3), ecmCopy, ecmLen, hash, 0, rdr->emu_datecodedenabled);
 		}
 	}
 
@@ -3227,6 +3212,13 @@ static int8_t BissECM(struct s_reader *rdr, const uint8_t *ecm, int16_t ecmDataL
 		return 0;
 	}
 
+	// Print example key lines for available hash search methods, if no key is found
+	if (strncmp(tmpBuffer2, "0", 2)) cs_log("Example key based on namespace hash: %s", tmpBuffer2);
+	if (strncmp(tmpBuffer3, "0", 2)) cs_log("Example key based on universal hash: %s", tmpBuffer3);
+
+	// Check if universal hash is common and warn user
+	if (BissIsCommonHash(hash)) cs_log("Feed has commonly used pids, universal hash clashes in SoftCam.Key are likely!");
+
 	return 2;
 }
 
@@ -3288,7 +3280,7 @@ static void PowervuPadData(uint8_t *data, int len, uint8_t *dataPadded)
 static void PowervuHashMode01CustomMD5(uint8_t *data, uint8_t *hash)
 {
 	int i, j, s;
-	uint32_t a, b, c, d, f, g;
+	uint32_t a, b, c, d, f = 0, g;
 	
 	uint32_t T[] = {0x783E16F6, 0xC267AC13, 0xA2B17F12, 0x6B8A31A4, 0xF910654D, 0xB702DBCB, 0x266CEF60, 0x5145E47C,
 					0xB92E00D6, 0xE80A4A64, 0x8A07FA77, 0xBA7D89A9, 0xEBED8022, 0x653AAF2B, 0xF118B03B, 0x6CC16544,
@@ -3307,7 +3299,7 @@ static void PowervuHashMode01CustomMD5(uint8_t *data, uint8_t *hash)
 	uint32_t h[] = {0xEAD81D2E, 0xCE4DC6E9, 0xF9B5C301, 0x10325476}; // CUSTOM h0, h1, h2  STANDARD h3
 	uint32_t dataLongs[0x10];
 	
-	for(i = 0; i < 0x10; i++)
+	for (i = 0; i < 0x10; i++)
 	{
 		dataLongs[i] = (data[4 * i + 0] << 0) + (data[4 * i + 1] << 8) + (data[4 * i + 2] << 16) + (data[4 * i + 3] << 24);
 	}
@@ -3317,21 +3309,21 @@ static void PowervuHashMode01CustomMD5(uint8_t *data, uint8_t *hash)
 	c = h[2];
 	d = h[3];
 	
-	for(i = 0; i < 4; i++)
+	for (i = 0; i < 4; i++)
 	{
 		g = tIdxInit[i];
 		
-		for(j = 0; j < 16; j++)
+		for (j = 0; j < 16; j++)
 		{
-			if(i == 0)
+			if (i == 0)
 			{
 				f = (b & c) | (~b & d);
 			}
-			else if(i == 1)
+			else if (i == 1)
 			{
 				f = (b & d) | (~d & c);
 			}
-			else if(i == 2)
+			else if (i == 2)
 			{
 				f = (b ^ c ^ d);
 			}
@@ -3359,7 +3351,7 @@ static void PowervuHashMode01CustomMD5(uint8_t *data, uint8_t *hash)
 	h[2] += c;
 	h[3] += d;
 	
-	for(i = 0; i < 4; i++)
+	for (i = 0; i < 4; i++)
 	{
 		hash[4 * i + 0] = h[i] >> 0;
 		hash[4 * i + 1] = h[i] >> 8;
@@ -3371,7 +3363,7 @@ static void PowervuHashMode01CustomMD5(uint8_t *data, uint8_t *hash)
 static void PowervuHashMode02(uint8_t *data, uint8_t *hash)
 {
 	int i;
-	uint32_t a, b, c, d, e, f, tmp;
+	uint32_t a, b, c, d, e, f = 0, tmp;
 	uint32_t h[] = {0x81887F3A, 0x36CCA480, 0x99056FB1, 0x79705BAE};
 	uint32_t dataLongs[0x50];
 
@@ -3426,8 +3418,8 @@ static void PowervuHashMode02(uint8_t *data, uint8_t *hash)
 static void PowervuHashMode03(uint8_t *data, uint8_t *hash)
 {
 	int i, j, k, s, s2, tmp;
-	uint32_t a, b, c, d, f, g;
-	uint32_t a2, b2, c2, d2, f2, g2;
+	uint32_t a, b, c, d, f = 0, g;
+	uint32_t a2, b2, c2, d2, f2 = 0, g2;
 
 	uint32_t T[] = { 0xC88F3F2E, 0x967506BA, 0xDA877A7B, 0x0DECCDFE };
 	uint32_t T2[] = { 0x01F42668, 0x39C7CDA5, 0xD490E2FE, 0x9965235D };
@@ -3521,15 +3513,35 @@ uint8_t table04[] = { 0x02, 0x03, 0x07, 0x0B, 0x0D, 0x08, 0x00, 0x01, 0x2B, 0x2D
 					  0x12, 0x13, 0x17, 0x1B, 0x1C, 0x18, 0x10, 0x11, 0x19, 0x14, 0x15, 0x16, 0x1A, 0x09, 0x04, 0x05,
 					  0x32, 0x33, 0x37, 0x3B, 0x06, 0x1C, 0x1E, 0x1F, 0x3D, 0x38, 0x30, 0x31, 0x39, 0x34, 0x35, 0x3A };
 
+uint8_t table05[] = { 0x08, 0x09, 0x0A, 0x03, 0x04, 0x3F, 0x27, 0x28, 0x29, 0x2A, 0x05, 0x0B, 0x1B, 0x1C, 0x1C, 0x1E,
+					  0x20, 0x0C, 0x0D, 0x22, 0x23, 0x24, 0x00, 0x01, 0x02, 0x06, 0x07, 0x25, 0x26, 0x0E, 0x0F, 0x21,
+					  0x10, 0x11, 0x12, 0x2E, 0x2F, 0x13, 0x14, 0x15, 0x2B, 0x2C, 0x2D, 0x16, 0x17, 0x18, 0x19, 0x1A,
+					  0x30, 0x31, 0x37, 0x3B, 0x3C, 0x3D, 0x3E, 0x1F, 0x38, 0x39, 0x32, 0x33, 0x34, 0x35, 0x36, 0x3A };
+
 uint8_t table06[] = { 0x00, 0x01, 0x02, 0x06, 0x07, 0x08, 0x03, 0x2A, 0x2B, 0x2C, 0x2E, 0x2F, 0x04, 0x05, 0x09, 0x0D,
 					  0x20, 0x21, 0x22, 0x26, 0x27, 0x3A, 0x3B, 0x3C, 0x3E, 0x3F, 0x10, 0x11, 0x12, 0x16, 0x17, 0x28,
 					  0x18, 0x13, 0x14, 0x15, 0x19, 0x1C, 0x1A, 0x1B, 0x1C, 0x1E, 0x1F, 0x23, 0x24, 0x25, 0x29, 0x2D,
 					  0x30, 0x31, 0x32, 0x36, 0x37, 0x38, 0x33, 0x34, 0x0A, 0x0B, 0x0C, 0x0E, 0x0F, 0x35, 0x39, 0x3D };
 
+uint8_t table07[] = { 0x10, 0x11, 0x12, 0x17, 0x1C, 0x1E, 0x0E, 0x38, 0x39, 0x3A, 0x13, 0x14, 0x29, 0x2A, 0x16, 0x1F,
+					  0x00, 0x01, 0x02, 0x3C, 0x3D, 0x3E, 0x3F, 0x07, 0x08, 0x09, 0x03, 0x04, 0x05, 0x06, 0x3B, 0x0A,
+					  0x20, 0x21, 0x22, 0x19, 0x1A, 0x1B, 0x1C, 0x0B, 0x0C, 0x15, 0x23, 0x24, 0x25, 0x26, 0x18, 0x0F,
+					  0x30, 0x31, 0x2B, 0x33, 0x34, 0x35, 0x36, 0x37, 0x27, 0x28, 0x2C, 0x2D, 0x2E, 0x2F, 0x32, 0x0D };
+
+uint8_t table08[] = { 0x10, 0x11, 0x1E, 0x17, 0x18, 0x19, 0x12, 0x13, 0x14, 0x1C, 0x1C, 0x15, 0x0D, 0x05, 0x06, 0x0A,
+					  0x00, 0x01, 0x0E, 0x07, 0x08, 0x09, 0x02, 0x2D, 0x25, 0x26, 0x2A, 0x2B, 0x2F, 0x03, 0x04, 0x0C,
+					  0x20, 0x21, 0x2E, 0x27, 0x28, 0x29, 0x30, 0x31, 0x3E, 0x37, 0x38, 0x39, 0x22, 0x23, 0x24, 0x2C,
+					  0x32, 0x33, 0x34, 0x3C, 0x3D, 0x35, 0x36, 0x3A, 0x3B, 0x0B, 0x0F, 0x16, 0x1A, 0x1B, 0x1F, 0x3F };
+
 uint8_t table09[] = { 0x20, 0x21, 0x24, 0x22, 0x23, 0x2A, 0x2B, 0x33, 0x35, 0x38, 0x39, 0x36, 0x2D, 0x2C, 0x2E, 0x2F,
 					  0x00, 0x01, 0x04, 0x02, 0x25, 0x28, 0x08, 0x09, 0x06, 0x07, 0x0A, 0x0B, 0x0D, 0x0C, 0x0E, 0x0F,
 					  0x10, 0x11, 0x14, 0x12, 0x13, 0x15, 0x19, 0x16, 0x29, 0x26, 0x03, 0x17, 0x1A, 0x1C, 0x1C, 0x1E,
 					  0x30, 0x31, 0x34, 0x32, 0x37, 0x3A, 0x3B, 0x3D, 0x3C, 0x3E, 0x3F, 0x1B, 0x05, 0x18, 0x27, 0x1F };
+
+uint8_t table0A[] = { 0x00, 0x04, 0x05, 0x0B, 0x0C, 0x06, 0x09, 0x0A, 0x0E, 0x0D, 0x0F, 0x25, 0x15, 0x1B, 0x1C, 0x16,
+					  0x10, 0x11, 0x01, 0x02, 0x03, 0x07, 0x08, 0x12, 0x13, 0x17, 0x18, 0x14, 0x23, 0x27, 0x28, 0x24,
+					  0x30, 0x31, 0x32, 0x33, 0x37, 0x38, 0x34, 0x35, 0x3B, 0x3C, 0x20, 0x21, 0x22, 0x2B, 0x2C, 0x26,
+					  0x36, 0x39, 0x3A, 0x3E, 0x3D, 0x19, 0x1A, 0x1E, 0x1C, 0x1F, 0x3F, 0x29, 0x2A, 0x2E, 0x2D, 0x2F };
 
 static void PowervuHashModes04to0ATables(uint8_t *data, uint8_t *hash, uint8_t *table)
 {
@@ -3572,12 +3584,28 @@ static void PowervuCreateHash(uint8_t *data, int len, uint8_t *hash, int mode)
 			PowervuHashModes04to0ATables(dataPadded, hash, table04);
 			break;
 
+		case 5:
+			PowervuHashModes04to0ATables(dataPadded, hash, table05);
+			break;
+
 		case 6:
 			PowervuHashModes04to0ATables(dataPadded, hash, table06);
 			break;
 
+		case 7:
+			PowervuHashModes04to0ATables(dataPadded, hash, table07);
+			break;
+
+		case 8:
+			PowervuHashModes04to0ATables(dataPadded, hash, table08);
+			break;
+
 		case 9:
 			PowervuHashModes04to0ATables(dataPadded, hash, table09);
+			break;
+
+		case 10:
+			PowervuHashModes04to0ATables(dataPadded, hash, table0A);
 			break;
 
 		default:
