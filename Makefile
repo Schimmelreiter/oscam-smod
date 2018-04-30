@@ -51,7 +51,7 @@ ifeq ($(uname_S),FreeBSD)
 LIB_DL :=
 endif
 
-override STD_LIBS := $(LIB_PTHREAD) $(LIB_DL) $(LIB_RT)
+override STD_LIBS := -lm $(LIB_PTHREAD) $(LIB_DL) $(LIB_RT)
 override STD_DEFS := -D'CS_SVN_VERSION="$(SVN_REV)"'
 override STD_DEFS += -D'CS_GIT_VERSION="$(GIT_REV)"'
 override STD_DEFS += -D'CS_CONFDIR="$(CONF_DIR)"'
@@ -310,6 +310,7 @@ SRC-$(CONFIG_HAVE_DVBAPI) += module-dvbapi-chancache.c
 SRC-$(CONFIG_HAVE_DVBAPI) += module-dvbapi.c
 SRC-$(CONFIG_MODULE_GBOX) += module-gbox-helper.c
 SRC-$(CONFIG_MODULE_GBOX) += module-gbox-sms.c
+SRC-$(CONFIG_MODULE_GBOX) += module-gbox-remm.c
 SRC-$(CONFIG_MODULE_GBOX) += module-gbox-cards.c
 SRC-$(CONFIG_MODULE_GBOX) += module-gbox.c
 SRC-$(CONFIG_IRDETO_GUESSING) += module-ird-guess.c

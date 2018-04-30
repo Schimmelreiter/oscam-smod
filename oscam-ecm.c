@@ -795,10 +795,10 @@ int32_t send_dcw(struct s_client *client, ECM_REQUEST *er)
 		{ snprintf(schaninfo, sizeof(schaninfo) - 1, " - %s", channame); }
 
 	if(er->msglog[0])
-		{ snprintf(sreason, sizeof(sreason) - 1, " (%s)", er->msglog); }
+		{ snprintf(sreason, sizeof(sreason) - 1, " (%.26s)", er->msglog); }
 #ifdef CW_CYCLE_CHECK
 	if(er->cwc_msg_log[0])
-		{ snprintf(scwcinfo, sizeof(scwcinfo) - 1, " (%s)", er->cwc_msg_log); }
+		{ snprintf(scwcinfo, sizeof(scwcinfo) - 1, " (%.26s)", er->cwc_msg_log); }
 #endif
 
 	cs_ftime(&tpe);
@@ -1028,7 +1028,7 @@ int32_t send_dcw(struct s_client *client, ECM_REQUEST *er)
 	}
 #endif
 
-	if(cfg.double_check && er->rc == E_FOUND && er->selected_reader && is_double_check_caid(er))
+	if(cfg.double_check && er->rc < E_NOTFOUND && er->selected_reader && is_double_check_caid(er))
 	{
 		if(er->checked == 0)   //First CW, save it and wait for next one
 		{
@@ -1042,11 +1042,12 @@ int32_t send_dcw(struct s_client *client, ECM_REQUEST *er)
 			if(memcmp(er->cw_checked, er->cw, sizeof(er->cw)) == 0)
 			{
 				er->checked++;
-				cs_log("DOUBLE CHECKED! %d. CW by %s idx %d cpti %d", er->checked, er->selected_reader->label, er->idx, er->msgid);
+				cs_log("CW matched by %s total matches %d idx %d cpti %d", er->selected_reader->label, er->checked, er->idx, er->msgid);
 			}
 			else
 			{
-				cs_log("DOUBLE CHECKED NONMATCHING! %d. CW by %s idx %d cpti %d", er->checked, er->selected_reader->label, er->idx, er->msgid);
+				er->checked--;
+				cs_log("CW mismatch by %s total matches %d idx %d cpti %d", er->selected_reader->label, er->checked, er->idx, er->msgid);
 			}
 		}
 		if(er->checked < 2)    //less as two same cw? mark as pending!
