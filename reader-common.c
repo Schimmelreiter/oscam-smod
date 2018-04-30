@@ -331,11 +331,11 @@ bool cardreader_init(struct s_reader *reader)
 		reader->enable = 0;
 		return false;
 	}
-	else 
+	else
 	{
 		if(reader->typ == R_INTERNAL)
 		{
-			if(boxtype_is("dm8000") || boxtype_is("dm800") || boxtype_is("dm800se"))
+			if(boxtype_is("dm8000") || boxtype_is("dm800") || boxtype_is("dm800se") || boxtype_is("dm7080") || boxtype_is("dm525") || boxtype_is("dm520") || boxtype_is("dm820") || boxtype_is("dm900") || boxtype_is("dm920"))
 				{reader->cardmhz = 2700;}
 			if(boxtype_is("dm500") || boxtype_is("dm600pvr"))
 				{reader->cardmhz = 3150;}
