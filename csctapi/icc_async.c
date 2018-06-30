@@ -152,6 +152,7 @@ uint32_t calc_ccitt32(uint8_t *buf, uint8_t count)
     return(crc);
 }
 
+/* Unused for now
 static void calculate_changerom_cmd(struct s_reader *reader, const ATR *atr, uint8_t *cmd)
 {
 	mbedtls_sha256_context ctx_sha256;
@@ -250,8 +251,9 @@ static void calculate_changerom_cmd(struct s_reader *reader, const ATR *atr, uin
 	MDC2_Final(&(mdc_hash[0]), &c);
 	rdr_log_dump_dbg(reader, D_READER, mdc_hash, sizeof(mdc_hash), "mdc_hash is:");
 }
+*/
 
- int32_t ICC_Async_Device_Init(struct s_reader *reader)
+int32_t ICC_Async_Device_Init(struct s_reader *reader)
 {
 	const struct s_cardreader *crdr_ops = reader->crdr;
 	if (!crdr_ops) return ERROR;
