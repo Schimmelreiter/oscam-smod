@@ -2,7 +2,7 @@
 
 git stash
 
-TRUNK=1531
+TRUNK=1532
 SUCCESS=true
 
 while [ $SUCCESS == true ]; do
