@@ -4577,20 +4577,11 @@ static char *send_oscam_entitlement(struct templatevars *vars, struct uriparams 
 
 				int8_t i, j;
 				for(i = 0; i < 15; i++) { tpl_printf(vars, TPLAPPEND, "READERROM", "%c", rdr->rom[i]); }
-				for(i = 0; i < 15; i++) { tpl_printf(vars, TPLAPPEND, "READERROM2", "%c", rdr->rom2[i]); }
-
 				if(rdr->hexserial[0] || rdr->hexserial[1]) { i = 0; }
 				else { i = 2; }
 				if(rdr->hexserial[6] || rdr->hexserial[7]) { j = 8; }
 				else { j = 6; }
 				for(; i < j; i++)   { tpl_printf(vars, TPLAPPEND, "READERSERIAL", "%02X%s", rdr->hexserial[i], i < j - 1 ? " " : ""); }
-
-				if(rdr->hexserial2[0] || rdr->hexserial2[1]) { i = 0; }
-				else { i = 2; }
-				if(rdr->hexserial2[6] || rdr->hexserial2[7]) { j = 8; }
-				else { j = 6; }
-				for(; i < j; i++)   { tpl_printf(vars, TPLAPPEND, "READERSERIAL2", "%02X%s", rdr->hexserial2[i], i < j - 1 ? " " : ""); }
-
 				for(i = 0; i < rdr->nprov; i++)
 				{
 					for(j = 0; j < 4; j++)  { tpl_printf(vars, TPLAPPEND, "READERPROVIDS", "%02X ", rdr->prid[i][j]); }
@@ -4680,9 +4671,6 @@ static char *send_oscam_entitlement(struct templatevars *vars, struct uriparams 
 
 				if(rdr->card_atr_length)
 					for(i = 0; i < rdr->card_atr_length; i++) { tpl_printf(vars, TPLAPPEND, "READERATR", "%02X ", rdr->card_atr[i]); }
-
-				if(rdr->card_atr_length2)
-					for(i = 0; i < rdr->card_atr_length2; i++) { tpl_printf(vars, TPLAPPEND, "READERATR2", "%02X ", rdr->card_atr2[i]); }
 
 				if(caid_is_seca(rdr->caid) || caid_is_viaccess(rdr->caid))
 				{

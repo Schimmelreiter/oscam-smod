@@ -137,12 +137,6 @@ int32_t Protocol_T1_Command(struct s_reader *reader, unsigned char *command, uin
 	int32_t ret, timeout;
 	bool more;
 	uint32_t block_length = 0;
-	
-	if(block_nad == 0)
-	{
-		block_nad = T1_BLOCK_NAD;
-	}
-	
 
 	if(block_nad == 0)
 	{

@@ -1403,6 +1403,9 @@ int32_t init_config(void)
 #endif
 		NULLFREE(cfg.logfile);
 		cfg.logtostdout = 0;
+#ifdef HAVE_DVBAPI
+		cfg.dvbapi_enabled = 1;
+#endif
 		return 0;
 	}
 

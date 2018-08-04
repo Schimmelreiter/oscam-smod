@@ -2134,6 +2134,7 @@ int32_t dvbapi_start_descrambling(int32_t demux_id, int32_t pid, int8_t checked,
 			er->ecm[0] = 0x80; // to pass the cache check it must be 0x80 or 0x81
 			er->ecm[1] = 0x00;
 			er->ecm[2] = 0x04;
+			i2b_buf(2, er->srvid, er->ecm + 3);
 			i2b_buf(2, er->pmtpid, er->ecm + 5);
 
 			for(j = 0, n = 7; j < demux[demux_id].STREAMpidcount; j++, n += 2)
@@ -3230,12 +3231,12 @@ int32_t dvbapi_parse_capmt(unsigned char *buffer, uint32_t length, int32_t connf
 	if(!is_real_pmt)
 	{
 
-#define LIST_MORE 0x00    //CA application should append a 'MORE' CAPMT object to the list and start receiving the next object
-#define LIST_FIRST 0x01   //CA application should clear the list when a 'FIRST' CAPMT object is received, and start receiving the next object
-#define LIST_LAST 0x02   //CA application should append a 'LAST' CAPMT object to the list and start working with the list
-#define LIST_ONLY 0x03   //CA application should clear the list when an 'ONLY' CAPMT object is received, and start working with the object
-#define LIST_ADD 0x04    //CA application should append an 'ADD' CAPMT object to the current list and start working with the updated list
-#define LIST_UPDATE 0x05 //CA application should replace an entry in the list with an 'UPDATE' CAPMT object, and start working with the updated list
+#define LIST_MORE 0x00    //*CA application should append a 'MORE' CAPMT object to the list and start receiving the next object
+#define LIST_FIRST 0x01   //*CA application should clear the list when a 'FIRST' CAPMT object is received, and start receiving the next object
+#define LIST_LAST 0x02   //*CA application should append a 'LAST' CAPMT object to the list and start working with the list
+#define LIST_ONLY 0x03   //*CA application should clear the list when an 'ONLY' CAPMT object is received, and start working with the object
+#define LIST_ADD 0x04    //*CA application should append an 'ADD' CAPMT object to the current list and start working with the updated list
+#define LIST_UPDATE 0x05 //*CA application should replace an entry in the list with an 'UPDATE' CAPMT object, and start working with the updated list
 
 #if defined WITH_COOLAPI || defined WITH_COOLAPI2
 		int32_t ca_pmt_list_management = LIST_ONLY;
@@ -3446,17 +3447,10 @@ int32_t dvbapi_parse_capmt(unsigned char *buffer, uint32_t length, int32_t connf
 		}
 	}
 
-	if(is_real_pmt)
+	if(!is_real_pmt)
 	{
-		cs_log_dbg(D_DVBAPI,"Demuxer %d found %d ECMpids and %d STREAMpids in PMT", demux_id, demux[demux_id].ECMpidcount, demux[demux_id].STREAMpidcount);
-		ca_mask = demux[demux_id].ca_mask;
-		demux_index = demux[demux_id].demux_index;
-		adapter_index = demux[demux_id].adapter_index;
-		connfd = demux[demux_id].socket_fd;
-	}
-	else
-	{
-		cs_log_dbg(D_DVBAPI,"Demuxer %d found %d ECMpids and %d STREAMpids in caPMT", demux_id, demux[demux_id].ECMpidcount, demux[demux_id].STREAMpidcount);
+		cs_log("Demuxer %d found %d ECMpids and %d STREAMpids in caPMT", demux_id, demux[demux_id].ECMpidcount, demux[demux_id].STREAMpidcount);
+
 		getDemuxOptions(demux_id, buffer, &ca_mask, &demux_index, &adapter_index, &pmtpid);
 		demux[demux_id].adapter_index = adapter_index;
 		demux[demux_id].ca_mask = ca_mask;
@@ -3464,6 +3458,7 @@ int32_t dvbapi_parse_capmt(unsigned char *buffer, uint32_t length, int32_t connf
 		demux[demux_id].demux_index = demux_index;
 		demux[demux_id].socket_fd = connfd;
 		demux[demux_id].client_proto_version = client_proto_version;
+
 		if(demux[demux_id].STREAMpidcount == 0) // encrypted PMT
 		{
 			demux[demux_id].STREAMpids[demux[demux_id].STREAMpidcount] = pmtpid;
@@ -3471,6 +3466,15 @@ int32_t dvbapi_parse_capmt(unsigned char *buffer, uint32_t length, int32_t connf
 			demux[demux_id].STREAMpidcount++;
 			vpid = pmtpid;
 		}
+	}
+	else
+	{
+		cs_log("Demuxer %d found %d ECMpids and %d STREAMpids in PMT", demux_id, demux[demux_id].ECMpidcount, demux[demux_id].STREAMpidcount);
+
+		ca_mask = demux[demux_id].ca_mask;
+		demux_index = demux[demux_id].demux_index;
+		adapter_index = demux[demux_id].adapter_index;
+		connfd = demux[demux_id].socket_fd;
 	}
 
 	for(j = 0; j < demux[demux_id].ECMpidcount; j++)
@@ -4437,12 +4441,11 @@ void dvbapi_process_input(int32_t demux_id, int32_t filter_num, uchar *buffer, i
 			if(curpid->CAID >> 8 == 0x0E)
 			{
 				pvu_skip = 1;
-
+				
 				if(sctlen - 11 > buffer[9])
 				{
 					if(buffer[11 + buffer[9]] > curpid->pvu_counter || (curpid->pvu_counter == 255 && buffer[11 + buffer[9]] == 0)
 							|| ((curpid->pvu_counter - buffer[11 + buffer[9]]) > 5))
-
 					{
 						curpid->pvu_counter = buffer[11 + buffer[9]];
 						pvu_skip = 0;
@@ -4452,6 +4455,7 @@ void dvbapi_process_input(int32_t demux_id, int32_t filter_num, uchar *buffer, i
 			
 			if((curpid->table == buffer[0] && !caid_is_irdeto(curpid->CAID)) || pvu_skip)  // wait for odd / even ecm change (only not for irdeto!)
 			{
+				
 				if(!(er = get_ecmtask()))
 				{
 					return;

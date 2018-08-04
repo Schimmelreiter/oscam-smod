@@ -146,14 +146,11 @@ static void show_class(struct s_reader *reader, const char *p, uint32_t provid, 
 					tm.tm_mon = vd.month_s - 1; // january is 0 in tm_mon
 					tm.tm_mday = vd.day_s;
 					start_t = cs_timegm(&tm);
-					start_t += (23*60*60+59); // add almost one day, 1 second less!
 
 					tm.tm_year = vd.year_e + 80; //via year starts in 1980, tm_year starts in 1900
 					tm.tm_mon = vd.month_e - 1; // january is 0 in tm_mon
 					tm.tm_mday = vd.day_e;
 					end_t = cs_timegm(&tm);
-					end_t += (23*60*60+59); // add almost one day, 1 second less!
-
 					cs_add_entitlement(reader, reader->caid, provid, cls, cls, start_t, end_t, 5, 1);
 				}
 			}
@@ -195,14 +192,12 @@ static int8_t add_find_class(struct s_reader *reader, uint32_t provid, const uch
 					tm.tm_mon = vd.month_s - 1; // january is 0 in tm_mon
 					tm.tm_mday = vd.day_s;
 					start_t = cs_timegm(&tm);
-					start_t += (23*60*60+59); // add almost one day, 1 second less!
-
+					
 					tm.tm_year = vd.year_e + 80; //via year starts in 1980, tm_year starts in 1900
 					tm.tm_mon = vd.month_e - 1; // january is 0 in tm_mon
 					tm.tm_mday = vd.day_e;
 					end_t = cs_timegm(&tm);
-					end_t += (23*60*60+59); // add almost one day, 1 second less!
-
+					
 					if(cs_add_entitlement(reader, reader->caid, provid, cls, cls, start_t, end_t, 5, add) != NULL)
 					{
 						if(!add)

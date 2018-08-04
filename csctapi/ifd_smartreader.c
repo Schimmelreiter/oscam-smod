@@ -1687,6 +1687,7 @@ static int32_t SR_Close(struct s_reader *reader)
 		{
 			init_count--;
 		}
+		reader->seca_nagra_card = 0;
 		cs_writelock(__func__, &sr_lock);
 		libusb_release_interface(crdr_data->usb_dev_handle, crdr_data->interface);
 #if defined(__linux__)
@@ -1739,7 +1740,14 @@ static int32_t SR_FastReset_With_ATR(struct s_reader *reader, ATR *atr)
 	int32_t ret = 0;
 	int32_t atr_ok = ERROR;
 	int8_t atr_len = 0;
-	atr_len = reader->card_atr_length + 2; // data buffer has atr lenght + 2 bytes
+	if(reader->seca_nagra_card == 1)
+	{
+		atr_len = reader->card_atr_length; // this is a special case the data buffer has only the atr lenght.
+	}
+	else
+	{
+		atr_len = reader->card_atr_length + 2; // data buffer has atr lenght + 2 bytes 
+	}
 
 	smart_fastpoll(reader, 1);
 	//Set the DTR HIGH and RTS HIGH

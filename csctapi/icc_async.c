@@ -5,14 +5,8 @@
 #include "icc_async.h"
 #include "protocol_t0.h"
 #include "io_serial.h"
-#include "../cscrypt/sha256.h"
-#include "../cscrypt/aescbc.h"
-#include "../cscrypt/mdc2.h"
-#include "../cscrypt/idea.h" 
-#include "../cscrypt/bn.h"
 #include "ifd_phoenix.h"
 #include "../oscam-time.h"
-
 #include "../cardlist.h"
 #include "../oscam-work.h"
 #ifdef READER_NAGRA_MERLIN
@@ -157,186 +151,6 @@ static void calculate_changerom_cmd(struct s_reader *reader, const ATR *atr, uin
 	calculate_cas7_cmd(reader,cmd_data,sizeof(cmd_data),cmd);
 }
 #endif
-
-static uint32_t crctab[256] = {
-    0x00000000, 0x04c11db7, 0x09823b6e, 0x0d4326d9,
-    0x130476dc, 0x17c56b6b, 0x1a864db2, 0x1e475005,
-    0x2608edb8, 0x22c9f00f, 0x2f8ad6d6, 0x2b4bcb61,
-    0x350c9b64, 0x31cd86d3, 0x3c8ea00a, 0x384fbdbd,
-    0x4c11db70, 0x48d0c6c7, 0x4593e01e, 0x4152fda9,
-    0x5f15adac, 0x5bd4b01b, 0x569796c2, 0x52568b75,
-    0x6a1936c8, 0x6ed82b7f, 0x639b0da6, 0x675a1011,
-    0x791d4014, 0x7ddc5da3, 0x709f7b7a, 0x745e66cd,
-    0x9823b6e0, 0x9ce2ab57, 0x91a18d8e, 0x95609039,
-    0x8b27c03c, 0x8fe6dd8b, 0x82a5fb52, 0x8664e6e5,
-    0xbe2b5b58, 0xbaea46ef, 0xb7a96036, 0xb3687d81,
-    0xad2f2d84, 0xa9ee3033, 0xa4ad16ea, 0xa06c0b5d,
-    0xd4326d90, 0xd0f37027, 0xddb056fe, 0xd9714b49,
-    0xc7361b4c, 0xc3f706fb, 0xceb42022, 0xca753d95,
-    0xf23a8028, 0xf6fb9d9f, 0xfbb8bb46, 0xff79a6f1,
-    0xe13ef6f4, 0xe5ffeb43, 0xe8bccd9a, 0xec7dd02d,
-    0x34867077, 0x30476dc0, 0x3d044b19, 0x39c556ae,
-    0x278206ab, 0x23431b1c, 0x2e003dc5, 0x2ac12072,
-    0x128e9dcf, 0x164f8078, 0x1b0ca6a1, 0x1fcdbb16,
-    0x018aeb13, 0x054bf6a4, 0x0808d07d, 0x0cc9cdca,
-    0x7897ab07, 0x7c56b6b0, 0x71159069, 0x75d48dde,
-    0x6b93dddb, 0x6f52c06c, 0x6211e6b5, 0x66d0fb02,
-    0x5e9f46bf, 0x5a5e5b08, 0x571d7dd1, 0x53dc6066,
-    0x4d9b3063, 0x495a2dd4, 0x44190b0d, 0x40d816ba,
-    0xaca5c697, 0xa864db20, 0xa527fdf9, 0xa1e6e04e,
-    0xbfa1b04b, 0xbb60adfc, 0xb6238b25, 0xb2e29692,
-    0x8aad2b2f, 0x8e6c3698, 0x832f1041, 0x87ee0df6,
-    0x99a95df3, 0x9d684044, 0x902b669d, 0x94ea7b2a,
-    0xe0b41de7, 0xe4750050, 0xe9362689, 0xedf73b3e,
-    0xf3b06b3b, 0xf771768c, 0xfa325055, 0xfef34de2,
-    0xc6bcf05f, 0xc27dede8, 0xcf3ecb31, 0xcbffd686,
-    0xd5b88683, 0xd1799b34, 0xdc3abded, 0xd8fba05a,
-    0x690ce0ee, 0x6dcdfd59, 0x608edb80, 0x644fc637,
-    0x7a089632, 0x7ec98b85, 0x738aad5c, 0x774bb0eb,
-    0x4f040d56, 0x4bc510e1, 0x46863638, 0x42472b8f,
-    0x5c007b8a, 0x58c1663d, 0x558240e4, 0x51435d53,
-    0x251d3b9e, 0x21dc2629, 0x2c9f00f0, 0x285e1d47,
-    0x36194d42, 0x32d850f5, 0x3f9b762c, 0x3b5a6b9b,
-    0x0315d626, 0x07d4cb91, 0x0a97ed48, 0x0e56f0ff,
-    0x1011a0fa, 0x14d0bd4d, 0x19939b94, 0x1d528623,
-    0xf12f560e, 0xf5ee4bb9, 0xf8ad6d60, 0xfc6c70d7,
-    0xe22b20d2, 0xe6ea3d65, 0xeba91bbc, 0xef68060b,
-    0xd727bbb6, 0xd3e6a601, 0xdea580d8, 0xda649d6f,
-    0xc423cd6a, 0xc0e2d0dd, 0xcda1f604, 0xc960ebb3,
-    0xbd3e8d7e, 0xb9ff90c9, 0xb4bcb610, 0xb07daba7,
-    0xae3afba2, 0xaafbe615, 0xa7b8c0cc, 0xa379dd7b,
-    0x9b3660c6, 0x9ff77d71, 0x92b45ba8, 0x9675461f,
-    0x8832161a, 0x8cf30bad, 0x81b02d74, 0x857130c3,
-    0x5d8a9099, 0x594b8d2e, 0x5408abf7, 0x50c9b640,
-    0x4e8ee645, 0x4a4ffbf2, 0x470cdd2b, 0x43cdc09c,
-    0x7b827d21, 0x7f436096, 0x7200464f, 0x76c15bf8,
-    0x68860bfd, 0x6c47164a, 0x61043093, 0x65c52d24,
-    0x119b4be9, 0x155a565e, 0x18197087, 0x1cd86d30,
-    0x029f3d35, 0x065e2082, 0x0b1d065b, 0x0fdc1bec,
-    0x3793a651, 0x3352bbe6, 0x3e119d3f, 0x3ad08088,
-    0x2497d08d, 0x2056cd3a, 0x2d15ebe3, 0x29d4f654,
-    0xc5a92679, 0xc1683bce, 0xcc2b1d17, 0xc8ea00a0,
-    0xd6ad50a5, 0xd26c4d12, 0xdf2f6bcb, 0xdbee767c,
-    0xe3a1cbc1, 0xe760d676, 0xea23f0af, 0xeee2ed18,
-    0xf0a5bd1d, 0xf464a0aa, 0xf9278673, 0xfde69bc4,
-    0x89b8fd09, 0x8d79e0be, 0x803ac667, 0x84fbdbd0,
-    0x9abc8bd5, 0x9e7d9662, 0x933eb0bb, 0x97ffad0c,
-    0xafb010b1, 0xab710d06, 0xa6322bdf, 0xa2f33668,
-    0xbcb4666d, 0xb8757bda, 0xb5365d03, 0xb1f740b4,
-};
-
-uint32_t calc_ccitt32(uint8_t *buf, uint8_t count)
-{
-	#define M1 0xffffffff
-	#define M2 0xffffff00
-	uint32_t crc = M1;
-    while(count--)
-	{
-		crc=((crc<<8)&M2)^crctab[((crc>>24)&0xff)^*buf++];
-    }
-    return(crc);
-}
-
-/* Unused for now
-static void calculate_changerom_cmd(struct s_reader *reader, const ATR *atr, uint8_t *cmd)
-{
-	mbedtls_sha256_context ctx_sha256;
-	uint8_t aes_key[32];
-	const uint8_t aes_iv[] = { 0x4E, 0x61, 0x67, 0x72, 0x61, 0x63, 0x61, 0x72, 0x64, 0x28, 0x63, 0x29, 0x32, 0x30, 0x30, 0x36 };
-	uint8_t cmd_data[] = { 0xCC, 0xCC, 0xCC, 0xCC, 0x00, 0x00, 0x01, 0x01, 0x01, 0x95, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC, 0xCC };
-	
-	mbedtls_sha256_init(&ctx_sha256);
-	mbedtls_sha256_starts(&ctx_sha256, 0);
-	mbedtls_sha256_update(&ctx_sha256, atr->hb, atr->hbn);
-	mbedtls_sha256_finish(&ctx_sha256, aes_key);	
-	mbedtls_sha256_free(&ctx_sha256);
-	rdr_log_dump_dbg(reader, D_READER, atr->hb, atr->hbn, "sha256key create from:");
-	rdr_log_dump_dbg(reader, D_READER, &aes_key[16], 16, "aeskey:");
-	rdr_log_dump_dbg(reader, D_READER, cmd_data+4, 3, "seq counter:");
-	rdr_log_dump_dbg(reader, D_READER, cmd_data+4+3, 1, "command:");
-	rdr_log_dump_dbg(reader, D_READER, cmd_data+4+3+1, 1, "command data length:");
-	rdr_log_dump_dbg(reader, D_READER, cmd_data+4+3+2, cmd_data[4+3+1], "command data:");
-	rdr_log_dump_dbg(reader, D_READER, cmd_data+4, sizeof(cmd_data)-4, "plain cmd including cc padding:");
-	uint32_t crc = calc_ccitt32(cmd_data+4, sizeof(cmd_data)-4);
-	i2b_buf(4, crc, cmd_data);
-	rdr_log_dump_dbg(reader, D_READER, cmd_data, sizeof(cmd_data), "crc + plain cmd:");
-	//AES128_CBC_encrypt_buffer(uint8_t* output, uint8_t* input, uint32_t length, const uint8_t* key, const uint8_t* iv);
-	//AES128_CBC_decrypt_buffer(cmd, handshake, sizeof(handshake), &aes_key[16], aes_iv);
-	AES128_CBC_encrypt_buffer(cmd, cmd_data, sizeof(cmd_data), &aes_key[16], aes_iv);
-	rdr_log_dump_dbg(reader, D_READER, cmd, sizeof(cmd_data), "encrypted crc + plain cmd:");
-	
-	const unsigned char rsacard[] = 	{	0x51, 0x33, 0xBA, 0xE4, 0x32, 0x6E, 0x52, 0x0D, 0xE5, 0x94, 0xB9, 0xFB, 0x79, 0xFC, 0x7C, 0x1C,
-											0xC3, 0x9C, 0xFC, 0x03, 0x8F, 0x4C, 0xB0, 0x1D, 0xC9, 0x43, 0x6A, 0x6A, 0x69, 0x14, 0xCE, 0x76,
-											0xB0, 0x69, 0xEE, 0x18, 0xCE, 0x4A, 0xBB, 0x20, 0x52, 0x99, 0x77, 0xB2, 0xDF, 0x3C, 0x0C, 0xA9,
-											0x36, 0x39, 0x84, 0xDA, 0x77, 0xF4, 0xD0, 0xF6, 0x78, 0xC3, 0xA3, 0x2B, 0xB1, 0xCB, 0x67, 0x6C,
-											0x0E, 0x01, 0xCB, 0x27, 0x3A, 0x4E, 0x3E, 0x21, 0x70, 0x66, 0x62, 0x87, 0x34, 0x8D, 0x01, 0xE3,
-											0xAB, 0x3A, 0x34, 0xD1, 0xA2, 0x24, 0x93, 0x67, 0x76, 0x7B, 0x1E, 0x0C, 0xF3, 0x75, 0x65, 0xB7,
-											0x24, 0x9A, 0x07, 0xB9, 0x90, 0xDC, 0x6B, 0xDB, 0x43, 0x08, 0xEA, 0x0A, 0x82, 0x5C, 0xAC, 0xCF
-										};
-						
-	const unsigned char rsacam[] = 		{	0x9D, 0xF5, 0xD6, 0x0B, 0x66, 0xA6, 0xF8, 0x39, 0xCD, 0xA4, 0x48, 0xC9, 0xAC, 0x59, 0xE5, 0xAF,
-											0xE9, 0xFF, 0xA6, 0xBF, 0xB2, 0xAB, 0x14, 0x10, 0x03, 0xFA, 0xDD, 0x94, 0xD4, 0x7F, 0x2E, 0xB0,
-											0x47, 0x76, 0x4F, 0xCE, 0x1A, 0x62, 0xF3, 0x2B, 0x51, 0xF1, 0xE8, 0x92, 0x17, 0x18, 0x94, 0x55,
-											0x8B, 0x63, 0xF5, 0x5C, 0x00, 0x96, 0xFA, 0x36, 0xD4, 0x21, 0x0B, 0x63, 0x43, 0x58, 0xA3, 0xC1,
-											0x13, 0x23, 0xA3, 0x22, 0xDC, 0x3B, 0xC6, 0x04, 0x0E, 0x09, 0xE5, 0x79, 0x46, 0x6C, 0xF3, 0x84,
-											0x59, 0x8C, 0x35, 0x79, 0x45, 0xFE, 0x32, 0xC7, 0x71, 0x1D, 0x1F, 0x59, 0xEB, 0xA9, 0xC4, 0x41,
-											0x94, 0xEC, 0x02, 0xDF, 0x56, 0x1C, 0x17, 0x82, 0xB1, 0x4A, 0x6F, 0x04, 0x3B, 0xA8, 0x1E, 0x63
-										};
-
-	const unsigned char exponent[] = 	{ 	0x01, 0x00, 0x01 };
-	const unsigned char Block3[] = { 0x6b, 0x64, 0x5b, 0x4f, 0x9d, 0xea, 0x72, 0xf1 };
-	uchar result[112];
-	
-	BN_CTX *ctx = BN_CTX_new();
-#ifdef WITH_LIBCRYPTO
-	BN_CTX_start(ctx);
-#endif
-	BIGNUM *bnN = BN_CTX_get(ctx);
-	BIGNUM *bnE = BN_CTX_get(ctx);
-	BIGNUM *bnCT = BN_CTX_get(ctx);
-	BIGNUM *bnPT = BN_CTX_get(ctx);
-	BN_bin2bn(&rsacam[0], 112, bnN);    // rsa mod1 block cam
-	BN_bin2bn(&exponent[0], 3, bnE);    // rsa exponent cam
-	BN_bin2bn(&rsacard[0], 112, bnCT);  // rsa dt05 block card
-	BN_mod_exp(bnPT, bnCT, bnE, bnN, ctx);
-	memset(result, 0, 112);
-	BN_bn2bin(bnPT, result + (112 - BN_num_bytes(bnPT)));
-	BN_CTX_end(ctx);
-	BN_CTX_free(ctx);
-	rdr_log_dump_dbg(reader, D_READER, result, sizeof(result), "decrypted rsa:");
-	
-	unsigned char Idea_Key1[0x10];
-	memcpy(Idea_Key1, result, 0x10);
-	rdr_log_dump_dbg(reader, D_READER, Idea_Key1, sizeof(Idea_Key1), "Idea_Key1:");
-	
-	
-	
-	//init IdeaKey1
-	IDEA_KEY_SCHEDULE key;
-	unsigned char iv[8]; 
-	memset(iv, 0, sizeof(iv));
-	idea_set_encrypt_key(Idea_Key1, &key);
-	
-	unsigned char ideadata3[]=	{ 0x2F, 0x43, 0x1D, 0x55, 0xCB, 0xD7, 0x22, 0x35};
-	rdr_log_dump_dbg(reader, D_READER, Block3, sizeof(Block3), "Block3:");
-	idea_cbc_encrypt(Block3, ideadata3, 8, &key, iv, IDEA_ENCRYPT);
-	rdr_log_dump_dbg(reader, D_READER, ideadata3, sizeof(ideadata3), "Idea Encrypted Block3:");
-	const unsigned char data2[] =		{ 0x98, 0x30, 0x3D, 0xDD, 0xA0, 0x5F };
-	
-	unsigned char tmp[sizeof(result) + sizeof(data2) + sizeof(ideadata3)];
-	memcpy(tmp,result,sizeof(result));
-	memset(tmp,0x00,0x12);
-	memcpy(tmp+sizeof(result), data2, sizeof(data2));
-	memcpy(tmp+sizeof(result)+sizeof(data2), ideadata3, sizeof(ideadata3));
-	rdr_log_dump_dbg(reader, D_READER, tmp, sizeof(tmp), "mdc_hash this:");
-	unsigned char mdc_hash[MDC2_DIGEST_LENGTH]; 
-	MDC2_CTX c;
-	MDC2_Init(&c);
-	MDC2_Update(&c, &tmp[0], sizeof(tmp));
-	MDC2_Final(&(mdc_hash[0]), &c);
-	rdr_log_dump_dbg(reader, D_READER, mdc_hash, sizeof(mdc_hash), "mdc_hash is:");
-}
-*/
 
 int32_t ICC_Async_Device_Init(struct s_reader *reader)
 {
@@ -500,7 +314,7 @@ int32_t ICC_Async_Activate(struct s_reader *reader, ATR *atr, uint16_t deprecate
 			return ERROR;
 		}
 	}
-
+	
 #ifdef READER_NAGRA_MERLIN
 
 	char tmp[atr_size * 3 + 1];
@@ -536,8 +350,8 @@ int32_t ICC_Async_Activate(struct s_reader *reader, ATR *atr, uint16_t deprecate
 		}
 
 		//rdr_log_dbg(reader, D_READER, "try to init nagra layer");
-		rdr_log(reader,"try to init nagra layer");
-
+		 rdr_log(reader,"try to init nagra layer");
+ 
 		//rdr_log_dump_dbg(reader, D_READER, changerom_handshake, sizeof(changerom_handshake), "changerom_handshake data:");
 
 		if(!ICC_Async_CardWrite(reader, changerom_handshake, sizeof(changerom_handshake), cta_res, &cta_lr, block_nad))
@@ -581,11 +395,11 @@ int32_t ICC_Async_Activate(struct s_reader *reader, ATR *atr, uint16_t deprecate
 		reader->card_atr_length = atr_size;
 		memcpy(reader->rom, atr->hb, (atr->hbn>15)?15:atr->hbn);// get historical bytes from atr
 	}
-#endif
+#endif	
 	rdr_log_dbg(reader, D_READER, "Card succesfully activated");
-
+	
 	return OK;
-}
+} 
 
 int32_t ICC_Async_CardWrite(struct s_reader *reader, unsigned char *command, uint16_t command_len, unsigned char *rsp, uint16_t *lr, uint8_t block_nad)
 {

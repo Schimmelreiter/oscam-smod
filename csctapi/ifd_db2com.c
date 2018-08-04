@@ -5,7 +5,6 @@
 #include "icc_async.h"
 #include "ifd_phoenix.h"
 #include "io_serial.h"
-#include <sys/sysmacros.h>
 
 // Multicam defines
 #define DEV_MULTICAM       "/dev/multicam"

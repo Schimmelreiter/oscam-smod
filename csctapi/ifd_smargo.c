@@ -146,7 +146,14 @@ static int32_t smargo_fast_reset_by_atr(struct s_reader *reader, ATR *atr)
 	int32_t n = 0;
 	int8_t atr_len = 0;
 
-	atr_len = reader->card_atr_length + 2; // data buffer has atr lenght + 2 bytes
+	if(reader->seca_nagra_card == 1)
+	{
+		atr_len = reader->card_atr_length; // this is a special case the data buffer has only the atr lenght.
+	}
+	else
+	{
+		atr_len = reader->card_atr_length + 2; // data buffer has atr lenght + 2 bytes 
+	}
 
 	IO_Serial_Read(reader, 0, 500000, atr_len, buf);
 

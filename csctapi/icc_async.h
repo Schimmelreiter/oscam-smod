@@ -58,3 +58,4 @@ void do_cas7_cmd(struct s_reader *reader,unsigned char *cta_res, uint16_t *p_cta
 
 #endif /* _ICC_ASYNC_ */
 
+
