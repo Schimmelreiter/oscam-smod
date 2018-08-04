@@ -1,5 +1,7 @@
+#ifndef _CSCTAPI_CARDLIST_H_
+#define _CSCTAPI_CARDLIST_H_
+
 struct known_cards {
-//custom name output on webif log
 	char providername[32];
 	/*
 	EMM_UNIQUE: 1
@@ -22,7 +24,7 @@ struct known_cards {
 }
 
 mtv      =      { "MTV UNLIMITED", 0, 8,"3B 24 00 30 42 30 30",20,0, "", "", "", "" },
-srg      =      { "SRG v5", 0, 8,"3F 77 18 00 00 C2 7A 44 02 68 90 00",20,0, "", "", "", "" },
+srg      =      { "SRG v5", 0, 8,"3F 77 18 00 00 C2 7A 44 02 68 90 00",35,0, "", "", "", "" },
 orfice	 =	{ "ORF ICE CW-Mode", 0, 12, "3B 78 12 00 00 54 C4 03 00 8F F1 90 00",        38, 0, "", "", "", "" },
 cdnl	 =	{ "CANAL DIGITAAL (NL)", 3, 12, "3B F7 11 00 01 40 96 70 70 0A 0E 6C B6 D6", 42, 0, "", "", "", "" },
 vf_d02   =	{ "Vodafone D0x Ix2", 0, 12,"3B 9F 21 0E 49 52 44 45 54 4F 20 41 43 53 03 84 55 FF 80 6D",                    59, 0, "\x66\x60\xA9\xAE\x55\xA4\x84\x7B", "\x8A\x54\x46\x88\x67\x15\x9C\x11\x88\xD1\x3A\xCE\x7D\xF3\x48\xFA\x08\xBD\xF8\xBE\x33\xF1\xB2\xF7\x2F\x74\xFB\xCD\x18\x4C\x82\x55\x19\xE5\x17\xE3\x49\x4A\x6D\xD8\xCF\x04\x66\x30\x45\x61\x11\xF9\x52\x97\x9D\xEC\xCF\xF5\x17\x6D\x89\x0A\xE9\x3F\x4E\x26\x77\x11", "", "" },
@@ -34,7 +36,11 @@ unity_01 =	{ "Unitymedia 01", 0, 12, "3F FF 95 00 FF 91 81 71 FE 47 00 44 4E 41 
 unity_02 =	{ "Unitymedia 02", 0, 12, "3F FF 95 00 FF 91 81 71 FE 47 00 44 4E 41 53 50 31 34 32 20 52 65 76 47 30 36 12", 80, 0, "\xA7\x64\x2F\x57\xBC\x96\xD3\x7C", "\xB5\x5E\x0E\xB0\x56\x28\x05\xF1\x78\x8B\xDA\x0C\xD8\xB8\x56\xBF\x69\x6C\xFF\x1C\xBF\x4E\xD6\x2B\x85\xE6\x43\xF3\x85\xB0\xF8\x89\x92\x75\xDE\xA6\x69\xAC\x77\xBD\xA4\x3A\x20\xCC\xB8\x44\xA3\xAF\x5A\x2B\xE0\x62\x27\x79\xFA\xB1\x53\xD1\x56\x95\x7D\xF3\x67\xFF", "", "" },
 hdplus01 =	{ "HD-Plus 01", 0, 12, "3F FF 95 00 FF 91 81 71 FE 47 00 44 4E 41 53 50 31 34 32 20 52 65 76 47 43 36 61",    80, 0, "\xA7\x64\x2F\x57\xBC\x96\xD3\x7C", "\xBF\x35\x8B\x54\x61\x86\x31\x30\x68\x6F\xC9\x33\xFB\x54\x1F\xFC\xED\x68\x2F\x36\x80\xF0\x9D\xBC\x1A\x23\x82\x9F\xB3\xB2\xF7\x66\xB9\xDD\x1B\xF3\xB3\xEC\xC9\xAD\x66\x61\xB7\x53\xDC\xC3\xA9\x62\x41\x56\xF9\xEB\x64\xE8\x16\x8E\xF0\x9E\x4D\x9C\x5C\xCA\x4D\xD5", "", "" },
 hdplus02 =	{ "HD-Plus 02", 0, 12, "3F FF 95 00 FF 91 81 71 A0 47 00 44 4E 41 53 50 31 38 30 20 4D 65 72 30 30 30 28",    80, 0, "\xA7\x64\x2F\x57\xBC\x96\xD3\x7C", "\xBF\x35\x8B\x54\x61\x86\x31\x30\x68\x6F\xC9\x33\xFB\x54\x1F\xFC\xED\x68\x2F\x36\x80\xF0\x9D\xBC\x1A\x23\x82\x9F\xB3\xB2\xF7\x66\xB9\xDD\x1B\xF3\xB3\xEC\xC9\xAD\x66\x61\xB7\x53\xDC\xC3\xA9\x62\x41\x56\xF9\xEB\x64\xE8\x16\x8E\xF0\x9E\x4D\x9C\x5C\xCA\x4D\xD5", "", "" },
-hdplus03 =	{ "HD-Plus 03", 0, 12, "3F FF 95 00 FF 91 81 71 A0 47 00 44 4E 41 53 50 31 39 30 20 4D 65 72 51 32 35 4F",    80, 0, "\xA7\x64\x2F\x57\xBC\x96\xD3\x7C", "\x90\x1E\x59\x51\x52\xE6\x7D\xFD\x5B\x13\x4E\x1D\x19\x5C\x41\x41\xB3\xBB\x13\x94\xA8\xAF\x4D\x6B\xF1\xD1\x08\x5D\xCC\x4D\x9C\xBA\x5C\x73\xA0\x6E\xD2\x1F\xC3\x55\x6B\x68\x54\x98\x03\x0B\xB1\x18\x57\x66\x11\x75\x65\xE3\x99\x95\xEF\xBF\x72\x13\x5C\x28\x17\xB7", "", "" },
+hdplus03 =      { "HD-Plus 03", 0, 12, "3F FF 95 00 FF 91 81 71 A0 47 00 44 4E 41 53 50 31 39 30 20 4D 65 72 51 32 35 4F",    80, 0, "\xA7\x64\x2F\x57\xBC\x96\xD3\x7C", "\x90\x1E\x59\x51\x52\xE6\x7D\xFD\x5B\x13\x4E\x1D\x19\x5C\x41\x41\xB3\xBB\x13\x94\xA8\xAF\x4D\x6B\xF1\xD1\x08\x5D\xCC\x4D\x9C\xBA\x5C\x73\xA0\x6E\xD2\x1F\xC3\x55\x6B\x68\x54\x98\x03\x0B\xB1\x18\x57\x66\x11\x75\x65\xE3\x99\x95\xEF\xBF\x72\x13\x5C\x28\x17\xB7", "", "" },
+hdplus03a =     { "HD-Plus 3A", 0, 12, "3F FF 95 00 FF 91 81 71 FE 57 00 44 4E 41 53 50 34 31 30 20 52 65 76 51 32 35 17",    80, 0, "", "", "", "" },
+hdplus03b =     { "HD-Plus 03", 0, 12, "3F FF 95 00 FF 91 81 71 FE 57 00 44 4E 41 53 50 34 32 30 20 52 65 76 51 32 35 17",    80, 0, "", "", "", "" },
+hdplus04  =     { "HD-Plus 04", 0, 12, "3F FF 95 00 FF 91 81 71 FE 57 00 44 4E 41 53 50 34 32 30 20 52 65 76 53 36 30 17",    80, 0, "", "", "", "" },
+hdplus04a =     { "HD-Plus 04", 0, 12, "3F FF 95 00 FF 91 81 71 FE 57 00 44 4E 41 53 50 34 32 30 20 52 65 76 53 36 34 13",    80, 0, "", "", "", "" },
 redlight =	{ "Redlight Mega Elite", 0, 12, "3F 77 18 00 00 C2 EB 41 02 6C 90 00",                                        35, 0, "\x01\x4D\x90\x2F", "\x00", "\x22\xD6\x0F\x37\x56\x7B\xAB\x12\xF5\x05\xD8\xC8\xC7\x1A\x22\xE3", "" },
 tivusatd =	{ "Tivusat 183D", 0, 8,"3F FF 95 00 FF 91 81 71 FF 47 00 54 49 47 45 52 30 30 33 20 52 65 76 32 35 30 64",    80, 0, "", "\xA9\x2D\xA7\x2F\xEE\xAC\xF2\x94\x7B\x00\x3E\xD6\x52\x15\x3B\x18\x9E\x40\x43\xB0\x13\x8C\x36\x8B\xDF\x6B\x9E\xD7\x7D\xDA\xD6\xC0\x76\x1A\x21\x98\xAE\xB3\xFC\x97\xA1\x9C\x9D\x01\xCA\x76\x9B\x3F\xFF\xE4\xF6\xE7\x0F\xA4\xE0\x69\x6A\x89\x80\xE1\x8D\x8C\x58\xE1\x1D\x81\x71\x21\x34\x6E\x3E\x66\x45\x7F\xDD\x84\xCF\xA7\x25\x89\xB2\x5B\x53\x8E\xFC\x30\x43\x61\xB5\x48\x45\xF3\x9E\x9E\xFA\x52\xD8\x05\xE5\xFD\x86\xB5\x95\xB3\x66\xC3\x57\x16\xAB\xC9\x1F\xA3\xDC\x15\x9C\x9F\x4D\x81\x64\xB5", "", ""},
 tivusate =	{ "Tivusat 183E", 0, 8,"3F FF 95 00 FF 91 81 71 FE 47 00 54 49 47 45 52 36 30 31 20 52 65 76 4D 38 37 14",    80, 0, "", "\xA9\x2D\xA7\x2F\xEE\xAC\xF2\x94\x7B\x00\x3E\xD6\x52\x15\x3B\x18\x9E\x40\x43\xB0\x13\x8C\x36\x8B\xDF\x6B\x9E\xD7\x7D\xDA\xD6\xC0\x76\x1A\x21\x98\xAE\xB3\xFC\x97\xA1\x9C\x9D\x01\xCA\x76\x9B\x3F\xFF\xE4\xF6\xE7\x0F\xA4\xE0\x69\x6A\x89\x80\xE1\x8D\x8C\x58\xE1\x1D\x81\x71\x21\x34\x6E\x3E\x66\x45\x7F\xDD\x84\xCF\xA7\x25\x89\xB2\x5B\x53\x8E\xFC\x30\x43\x61\xB5\x48\x45\xF3\x9E\x9E\xFA\x52\xD8\x05\xE5\xFD\x86\xB5\x95\xB3\x66\xC3\x57\x16\xAB\xC9\x1F\xA3\xDC\x15\x9C\x9F\x4D\x81\x64\xB5", "", ""},
@@ -44,12 +50,17 @@ ziggo_nl =	{ "Ziggo NL", 0, 12, "3B 9F 21 0E 49 52 44 45 54 4F 20 41 43 53 20 56
 
 struct atrlist {
 	int found;
+	int ishd03;
+	int badcard;
+	int ishd04;
 	char providername[32];
 	char atr[80];
-} current = { 0, "\0", "\0" };
+} current = { 0, 0, 0, 0, "\0", "\0" };
 
 void findatr(struct s_reader *reader) {
-	current.found = 0;
+	current.found  = 0;
+	current.ishd03 = 0;
+	current.ishd04 = 0;
 	memset(current.providername, 0, 32);
 	if ( strncmp(current.atr, hdplus01.atr, hdplus01.atrsize) == 0 ) {
 		memcpy(current.providername, hdplus01.providername, strlen(hdplus01.providername));
@@ -74,13 +85,29 @@ void findatr(struct s_reader *reader) {
 		current.found = 1;
 		return;
 	} else if ( strncmp(current.atr, hdplus03.atr, hdplus03.atrsize) == 0 ) {
+		current.ishd03=1;
 		memcpy(current.providername, hdplus03.providername, strlen(hdplus03.providername));
-		memcpy(reader->boxkey, hdplus03.boxkey, 8);
-		memcpy(reader->rsa_mod, hdplus03.rsakey, 64);
-		reader->saveemm = hdplus03.saveemm;
-		reader->blockemm = hdplus03.blockemm;
-		reader->boxkey_length = 8;
-		reader->rsa_mod_length = 64;
+		current.found = 1;
+		return;
+	} else if ( strncmp(current.atr, hdplus03a.atr, hdplus03a.atrsize) == 0 ) {
+		current.ishd03=1;
+		current.badcard=1;
+		memcpy(current.providername, hdplus03a.providername, strlen(hdplus03a.providername));
+		current.found = 1;
+		return;
+	} else if ( strncmp(current.atr, hdplus03b.atr, hdplus03b.atrsize) == 0 ) {
+		current.ishd03=1;
+		memcpy(current.providername, hdplus03b.providername, strlen(hdplus03b.providername));
+		current.found = 1;
+		return;
+	} else if ( strncmp(current.atr, hdplus04.atr, hdplus04.atrsize) == 0 ) {
+		current.ishd04=1;
+		memcpy(current.providername, hdplus04.providername, strlen(hdplus04.providername));
+		current.found = 1;
+		return;
+	} else if ( strncmp(current.atr, hdplus04a.atr, hdplus04a.atrsize) == 0 ) {
+		current.ishd04=1;
+		memcpy(current.providername, hdplus04a.providername, strlen(hdplus04a.providername));
 		current.found = 1;
 		return;
 	} else if ( strncmp(current.atr, vf_d02.atr, vf_d02.atrsize) == 0 ) {
@@ -129,6 +156,14 @@ void findatr(struct s_reader *reader) {
 		memcpy(current.providername, mtv.providername, strlen(mtv.providername));
 		reader->saveemm = mtv.saveemm;
 		reader->blockemm = mtv.blockemm;
+		current.found = 1;
+		return;
+	} else if ( strncmp(current.atr, orfice.atr, orfice.atrsize) == 0 ) {
+		memcpy(current.providername, orfice.providername, strlen(orfice.providername));
+		current.found = 1;
+		return;
+	} else if ( strncmp(current.atr, cdnl.atr, cdnl.atrsize) == 0 ) {
+		memcpy(current.providername, cdnl.providername, strlen(cdnl.providername));
 		current.found = 1;
 		return;
 	} else if ( strncmp(current.atr, tntviav5.atr, tntviav5.atrsize) == 0 ) {
@@ -188,14 +223,16 @@ void findatr(struct s_reader *reader) {
 		current.found = 1;
 		return;
 	}
+
 	/* test ATR for ins7e11 12,13,14,15 */
 	if ( current.found == 0 ) {
 		int i;
 		char buf[66];
-		for( i = 12; i < 16; i++ ) {
+		for( i = 11; i < 16; i++ ) {
 			snprintf(buf, skyDEv13.atrsize+1, "3F FF %i 25 03 10 80 41 B0 07 69 FF 4A 50 70 00 00 50 31 01 00 %i", i, i);
 			if ( strncmp(current.atr, buf, skyDEv13.atrsize) == 0 ) {
 				memcpy(current.providername, skyDEv13.providername, strlen(skyDEv13.providername));
+				reader->caid = 0x09C4;
 				reader->saveemm = skyDEv13.saveemm;
 				reader->blockemm = skyDEv13.blockemm;
 				reader->boxid = skyDEv13.boxid;
@@ -205,6 +242,7 @@ void findatr(struct s_reader *reader) {
 			snprintf(buf, skyDEv14.atrsize+1, "3F FD %i 25 02 50 80 0F 41 B0 0A 69 FF 4A 50 F0 00 00 50 31 03", i);
 			if ( strncmp(current.atr, buf, skyDEv14.atrsize) == 0 ) {
 				memcpy(current.providername, skyDEv14.providername, strlen(skyDEv14.providername));
+				reader->caid = 0x098C;
 				reader->saveemm = skyDEv14.saveemm;
 				reader->blockemm = skyDEv14.blockemm;
 				reader->boxid = skyDEv14.boxid;
@@ -223,6 +261,7 @@ void findatr(struct s_reader *reader) {
 			snprintf(buf, vf_g09.atrsize+1, "3F FD %i 25 02 50 00 03 33 B0 15 69 FF 4A 50 F0 80 03 4B 4C 03", i);
 			if ( strncmp(current.atr, buf, vf_g09.atrsize) == 0 ) {
 				memcpy(current.providername, vf_g09.providername, strlen(vf_g09.providername));
+				reader->deprecated = 1;
 				reader->saveemm = vf_g09.saveemm;
 				reader->blockemm = vf_g09.blockemm;
 				reader->boxid = vf_g09.boxid;
@@ -233,4 +272,4 @@ void findatr(struct s_reader *reader) {
 	}
 }
 
-
+#endif

@@ -16,6 +16,7 @@
 //#include "csctapi/atr.h"
 #include "csctapi/icc_async.h"
 #include "readers.h"
+#include "readers.h"
 
 extern const struct s_cardsystem *cardsystems[];
 extern char *RDR_CD_TXT[];
