@@ -66,7 +66,7 @@
 #define CARDREADER_DRECAS 1
 
 #ifdef WITH_PCSC
-//#define CARDREADER_PCSC 1
+#define CARDREADER_PCSC 1
 #endif
 
 #ifdef WITH_LIBUSB
@@ -90,7 +90,7 @@
 #endif
 
 #ifdef WITH_STAPI5
-//#define CARDREADER_STAPI5 1
+#define CARDREADER_STAPI5 1
 #endif
 
 #ifdef READER_DRE
