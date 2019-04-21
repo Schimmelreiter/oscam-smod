@@ -1,0 +1,11 @@
+Index: /trunk/reader-common.c
+===================================================================
+--- /trunk/reader-common.c	(revision 11513)
++++ /trunk/reader-common.c	(revision 11514)
+@@ -508,6 +508,4 @@
+ void cardreader_process_ecm(struct s_reader *reader, struct s_client *cl, ECM_REQUEST *er)
+ {
+-	cs_log_dump_dbg(D_ATR, er->ecm, er->ecmlen, "ecm:");
+-
+ 	struct timeb tps, tpe;
+ 	struct s_ecm_answer ea;

@@ -15,7 +15,7 @@ enum actions
 	ACTION_READER_RESET_FAST   = 10,    // wr10
 	ACTION_READER_CHECK_HEALTH = 11,    // wr11
 	ACTION_READER_CAPMT_NOTIFY = 12,    // wr12
-	ACTION_READER_POLL_STATUS  = 13,	// wr13
+	ACTION_READER_POLL_STATUS  = 13,    // wr13
 	// Client actions
 	ACTION_CLIENT_UDP          = 22,    // wc22
 	ACTION_CLIENT_TCP          = 23,    // wc23
@@ -30,7 +30,8 @@ enum actions
 	ACTION_ECM_ANSWER_READER   = 32,    // wc32
 	ACTION_ECM_ANSWER_CACHE    = 33,    // wc33
 	ACTION_CACHEEX1_DELAY      = 34,    // wc34
-	ACTION_PEER_IDLE           = 35     // wc35
+	ACTION_PEER_IDLE           = 35,    // wc35
+	ACTION_CLIENT_HIDECARDS    = 36     // wc36
 };
 
 #define ACTION_CLIENT_FIRST 20 // This just marks where client actions start

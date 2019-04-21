@@ -1,0 +1,11 @@
+Index: /trunk/oscam-ecm.c
+===================================================================
+--- /trunk/oscam-ecm.c	(revision 11515)
++++ /trunk/oscam-ecm.c	(revision 11516)
+@@ -1649,5 +1649,5 @@
+ 				c = ((cw[i] + cw[i + 1] + cw[i + 2]) & 0xff);
+ 
+-				if((i!=12) && selectedForIgnChecksum && (cw[i + 3] != c))
++				if(selectedForIgnChecksum && (cw[i + 3] != c))
+ 				{
+ 					cs_log_dbg(D_TRACE, "notice: CW checksum check disabled for %04X:%06X", er->caid, er->prid);

@@ -1,0 +1,29 @@
+Index: /trunk/Makefile
+===================================================================
+--- /trunk/Makefile	(revision 11514)
++++ /trunk/Makefile	(revision 11515)
+@@ -276,5 +276,5 @@
+ SRC-$(CONFIG_WITH_AZBOX) += module-dvbapi-azbox.c
+ SRC-$(CONFIG_WITH_MCA) += module-dvbapi-mca.c
+-### SRC-$(CONFIG_WITH_COOLAPI) += module-dvbapi-coolapi.c 
++### SRC-$(CONFIG_WITH_COOLAPI) += module-dvbapi-coolapi.c
+ ### experimental reversed API
+ SRC-$(CONFIG_WITH_COOLAPI) += module-dvbapi-coolapi-legacy.c
+Index: /trunk/module-dvbapi.c
+===================================================================
+--- /trunk/module-dvbapi.c	(revision 11514)
++++ /trunk/module-dvbapi.c	(revision 11515)
+@@ -1080,5 +1080,5 @@
+ static int32_t dvbapi_get_descrambler_info(void)
+ {
+-	// In enigma2 all ca devices are listed under adpter0. In adition we only
++	// In enigma2 all ca devices are listed under adapter0. In addition we only
+ 	// need to ask one ca device to get the total number of descramblers. In
+ 	// PC installations, there are no ca devices, so we use a predefined value.
+@@ -1110,5 +1110,5 @@
+ 	strncat(device_path, device_path2, sizeof(device_path) - strlen(device_path));
+ 
+-	if((fd = open(device_path, O_RDONLY | O_NONBLOCK)) < 0)
++	if((fd = open(device_path, O_RDWR | O_NONBLOCK)) < 0)
+ 	{
+ 		cs_log("ERROR: Can't open device %s (errno=%d %s)", device_path, errno, strerror(errno));

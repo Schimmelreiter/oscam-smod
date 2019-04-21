@@ -1,4 +1,3 @@
-
 #include "../globals.h"
 #include "../oscam-string.h"
 #include "mdc2.h"
@@ -9,8 +8,6 @@
 //#include <openssl/crypto.h>
 //#include <openssl/des.h>
 //#include <openssl/mdc2.h>
-
-
 
 #undef c2l
 #define c2l(c,l)        (l =((DES_LONG)(*((c)++)))    , \
@@ -24,8 +21,6 @@
                         *((c)++)=(unsigned char)(((l)>>16L)&0xff), \
                         *((c)++)=(unsigned char)(((l)>>24L)&0xff))
 
-
-
 # define FP(l,r) \
         { \
         register DES_LONG tt; \
@@ -36,8 +31,8 @@
         PERM_OP(l,r,tt, 4,0x0f0f0f0fL); \
         }
 
-
-OPENSSL_GLOBAL const DES_LONG DES_SPtrans[8][64] =
+//OPENSSL_GLOBAL const DES_LONG DES_SPtrans[8][64] =
+const DES_LONG DES_SPtrans[8][64] =
 {
 	{
 		/* nibble 0 */
