@@ -1,6 +1,6 @@
 include oscam-schimmelreiter.inc
 
-BINFILE = "oscam-schimmelreiter"
+BINFILE = "oscam-smod"
 
 EXTRA_OECMAKE += "\
 	-DIPV6SUPPORT=1 \

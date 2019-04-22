@@ -17,7 +17,7 @@ readlink $0 > /dev/null 2>&1 && CAM=$(basename $(readlink $0) | sed s#^softcam\.
 
 if [ -z "$CAM" -o "$CAM" == "softcam" ]; then
 	unset CAM
-	for TESTCAM in oscam oscam-schimmelreiter oscam-schimmelreiter-ipv4 oscam-atv
+	for TESTCAM in oscam oscam-smod oscam-smod-ipv4only oscam-atv
 	do
 		[ -x /usr/bin/$TESTCAM ] && CAM=$TESTCAM && break
 	done
