@@ -6,7 +6,25 @@ oscam-ostype.h
 
 # generated binaries
 Distribution/oscam-*
+Distribution/list_smargo-*
 
 # backup/swap file for vi
 *~
 *.swp
+
+# IDE resources
+.vscode
+
+# build directories
+/build/
+
+# Currently enabled config items
+webif/is_defined.txt
+
+# Testing program
+tests.bin
+tests.bin.debug
+
+# Emu files
+*.patch
+SoftCam.*
