@@ -6,6 +6,7 @@
 #include "protocol_t0.h"
 #include "io_serial.h"
 #include "ifd_phoenix.h"
+#include "../cardlist.h"
 #include "../oscam-time.h"
 #ifdef READER_NAGRA_MERLIN
 #include "../cscrypt/fast_aes.h"
@@ -218,6 +219,11 @@ int32_t ICC_Async_Activate(struct s_reader *reader, ATR *atr, uint16_t deprecate
 	rdr_log(reader, "ATR: %s", cs_hexdump(1, atrarr, atr_size, tmp, sizeof(tmp)));
 	memcpy(reader->card_atr, atrarr, atr_size);
 	reader->card_atr_length = atr_size;
+	memcpy(current.atr, cs_hexdump(1, atrarr, atr_size, tmp, sizeof(tmp)), atr_size * 3 - 1);
+	findatr(reader);
+	if ( current.found == 1 ) {
+		rdr_log(reader, "%s recognized", current.providername);
+	}
 
 	// Get ICC reader->convention
 	if(ATR_GetConvention(atr, &(reader->convention)) != ATR_OK)
