@@ -163,6 +163,7 @@ void findatr(struct s_reader *reader) {
 		reader->boxkey_length = 4;
 		reader->des_key_length = 16;
 		reader->caid = 0x0500;
+		reader->disablecrccws = 1;
 		current.found = 1;
 		return;
 	} else if ( strncmp(current.atr, mtv.atr, mtv.atrsize) == 0 ) {
@@ -249,6 +250,7 @@ void findatr(struct s_reader *reader) {
 				reader->saveemm = skyDEv13.saveemm;
 				reader->blockemm = skyDEv13.blockemm;
 				reader->boxid = skyDEv13.boxid;
+				reader->disablecrccws = 1;
 				current.found = 1;
 				break;
 			}
@@ -259,6 +261,7 @@ void findatr(struct s_reader *reader) {
 				reader->saveemm = skyDEv14.saveemm;
 				reader->blockemm = skyDEv14.blockemm;
 				reader->boxid = skyDEv14.boxid;
+				reader->disablecrccws = 1;
 				current.found = 1;
 				break;
 			}
