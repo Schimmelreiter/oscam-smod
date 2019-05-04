@@ -89,6 +89,15 @@ void increment_n_request(struct s_client *cl)
 	}
 }
 
+uint8_t checkCWpart(uint8_t *cw, int8_t part)
+{
+	uint8_t eo = part ? 8 : 0;
+	int8_t i;
+	for(i = 0; i < 8; i++)
+		if(cw[i + eo]) { return 1; }
+	return 0;
+}
+
 void update_n_request(void)
 {
 	struct s_client *cl;
@@ -1650,7 +1659,7 @@ int32_t write_ecm_answer(struct s_reader *reader, ECM_REQUEST *er, int8_t rc, ui
 			er->caid != 0x098D && er->prid != 0x000000
 			)
 		) {
-			if(!(chk_if_ignore_checksum(er, &cfg.disablecrccws_only_for) + chk_if_ignore_checksum(er, &reader->disablecrccws_only_for)))
+			if(!chk_if_ignore_checksum(er, &cfg.disablecrccws_only_for) && !chk_if_ignore_checksum(er, &reader->disablecrccws_only_for))
 			{
 				uint8_t i, c;
 				for(i = 0; i < 16; i += 4)
@@ -1703,6 +1712,36 @@ int32_t write_ecm_answer(struct s_reader *reader, ECM_REQUEST *er, int8_t rc, ui
 		else
 		{
 			cs_log_dbg(D_TRACE, "notice: CW checksum check disabled");
+		}
+
+		if(chk_if_ignore_checksum(er, &reader->disablecrccws_only_for) && caid_is_videoguard(er->caid))
+		{
+			uint8_t k, csum;
+			uint8_t hit = 0;
+			uint8_t oe = checkCWpart(cw, 0) ? 0 : 8;
+			for(k = 0; k < 8; k += 4)
+			{
+				csum = ((cw[k + oe] + cw[k + oe + 1] + cw[k + oe + 2]) & 0xff);
+				if(cw[k + oe + 3] == csum)
+				{
+					hit++;
+				}
+			}
+			if(hit > 1)
+			{
+				char ecmd5s[17 * 3];
+				cs_hexdump(0, er->ecmd5, 16, ecmd5s, sizeof(ecmd5s));
+				if(reader->dropbadcws)
+				{
+					rc = E_NOTFOUND;
+					rcEx = E2_WRONG_CHKSUM;
+					cs_log("Probably got bad CW from reader: %s, caid %04X, srvid %04X (%s) - dropping CW", reader->label, er->caid, er->srvid, ecmd5s);
+				}
+				else
+				{
+					cs_log("Probably got bad CW from reader: %s, caid %04X, srvid %04X (%s)", reader->label, er->caid, er->srvid, ecmd5s);
+				}
+			}
 		}
 	}
 
@@ -2783,15 +2822,6 @@ int32_t ecmfmt(char *result, size_t size, uint16_t caid, uint16_t onid, uint32_t
 	}
 
 	return s;
-}
-
-uint8_t checkCWpart(uint8_t *cw, int8_t part)
-{
-	uint8_t eo = part ? 8 : 0;
-	int8_t i;
-	for(i = 0; i < 8; i++)
-		if(cw[i + eo]) { return 1; }
-	return 0;
 }
 
 int32_t format_ecm(ECM_REQUEST *ecm, char *result, size_t size)
