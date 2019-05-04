@@ -641,6 +641,27 @@ static void log_cacheex_cw(ECM_REQUEST *er, char *reason)
 			reason, buf_ecm, er->ecm[0], (checkECMD5(er)?"NO":"YES"), er->from_csp ? "csp" : username((er->cacheex_src?er->cacheex_src:er->client)), ll_count(er->csp_lastnodes), er->csp_lastnodes ? cacheex_node_id(remotenodeid): 0);
 }
 
+// check if sky_ger 64 bit CW has valid checksum bytes and therefore is probably invalid
+uint8_t check_nds_cwex(ECM_REQUEST *er)
+{
+	uint8_t k, csum;
+	uint8_t hit = 0;
+	uint8_t oe = checkCWpart(er->cw, 0) ? 0 : 8;
+	for(k = 0; k < 8; k += 4)
+	{
+		csum = ((er->cw[k + oe] + er->cw[k + oe + 1] + er->cw[k + oe + 2]) & 0xff);
+		if(er->cw[k + oe + 3] == csum)
+		{
+			hit++;
+		}
+	}
+	if(hit > 1)
+	{
+		return 1;
+	}
+	return 0;
+}
+
 static int32_t cacheex_add_to_cache_int(struct s_client *cl, ECM_REQUEST *er, int8_t csp)
 {
 	if(er->rc >= E_NOTFOUND) { return 0; }
@@ -689,6 +710,33 @@ static int32_t cacheex_add_to_cache_int(struct s_client *cl, ECM_REQUEST *er, in
 						{ cl->account->cwcacheexerr++; }
 					return 0;
 				}
+			}
+		}
+	}
+
+	if(caid_is_videoguard(er->caid))
+	{
+		if(cl->typ == 'p' && chk_if_ignore_checksum(er, &cl->reader->disablecrccws_only_for))
+		{
+			if(check_nds_cwex(er))
+			{
+				if(cl->reader->dropbadcws)
+				{
+					cs_log_dbg(D_CACHEEX, "Probably got pushed bad CW to cacheex reader: %s, caid %04X, srvid %04X - dropping CW", cl->reader->label, er->caid, er->srvid);
+					return 0;
+				}
+				else
+				{
+					cs_log_dbg(D_CACHEEX, "Probably got pushed bad CW to cacheex reader: %s, caid %04X, srvid %04X", cl->reader->label, er->caid, er->srvid);				
+				}
+			}
+		}
+	
+		if(cl->typ == 'c' && chk_if_ignore_checksum(er, &cl->account->disablecrccacheex_only_for))
+		{
+			if(check_nds_cwex(er))
+			{
+				cs_log_dbg(D_CACHEEX, "Probably got bad CW from cacheex user: %s, caid %04X, srvid %04X", username(cl), er->caid, er->srvid);
 			}
 		}
 	}
