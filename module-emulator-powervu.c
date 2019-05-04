@@ -1329,12 +1329,18 @@ static void create_cw(uint8_t *seed, uint8_t lenSeed, uint8_t *baseCw, uint8_t v
 static uint32_t create_channel_hash(uint16_t caid, uint16_t tsid, uint16_t onid, uint32_t ens)
 {
 	uint8_t buffer[8];
+	uint32_t channel_hash = 0;
 
-	i2b_buf(2, tsid, buffer);
-	i2b_buf(2, onid, buffer + 2);
-	i2b_buf(4, ens, buffer + 4);
+	if (ens)
+	{
+		i2b_buf(2, tsid, buffer);
+		i2b_buf(2, onid, buffer + 2);
+		i2b_buf(4, ens, buffer + 4);
 
-	return crc32(caid, buffer, sizeof(buffer));
+		channel_hash = crc32(caid, buffer, sizeof(buffer));
+	}
+
+	return channel_hash;
 }
 
 static uint16_t get_channel_group(uint32_t channel_hash)
@@ -1342,7 +1348,7 @@ static uint16_t get_channel_group(uint32_t channel_hash)
 	uint8_t tmp[2];
 	uint16_t group = 0;
 
-	if (emu_find_key('P', channel_hash, 0x00000000, "GROUP", tmp, 2, 0, 0, 0, NULL))
+	if (channel_hash && emu_find_key('P', channel_hash, 0x00000000, "GROUP", tmp, 2, 0, 0, 0, NULL))
 	{
 		group = b2i(2, tmp);
 	}
@@ -1825,7 +1831,8 @@ static void calculate_cw(uint8_t seedType, uint8_t *seed, uint8_t csaUsed, uint8
 	}
 }
 
-int8_t powervu_ecm(uint8_t *ecm, uint8_t *dw, EXTENDED_CW *cw_ex, uint16_t srvid, const ECM_REQUEST *er, emu_stream_client_key_data *cdata)
+int8_t powervu_ecm(uint8_t *ecm, uint8_t *dw, EXTENDED_CW *cw_ex, uint16_t srvid, uint16_t caid,
+					uint16_t tsid, uint16_t onid, uint32_t ens, emu_stream_client_key_data *cdata)
 {
 	uint32_t i, j, k;
 	uint32_t ecmCrc32, keyRef0, keyRef1, keyRef2, channel_hash, group_id = 0;
@@ -1968,13 +1975,10 @@ int8_t powervu_ecm(uint8_t *ecm, uint8_t *dw, EXTENDED_CW *cw_ex, uint16_t srvid
 				cs_log_dbg(D_ATR, "csaUsed: %d, xorMode: %d, ecmSrvid: %04X, hashModeCw: %d, modeCW: %d",
 							csaUsed, xorMode, ecmSrvid, hashModeCw, modeCW);
 
-				if (er != NULL) // "er" does not exist in stream relay
-				{
-					channel_hash = create_channel_hash(er->caid, er->tsid, er->onid, er->ens);
-					group_id = get_channel_group(channel_hash);
+				channel_hash = create_channel_hash(caid, tsid, onid, ens);
+				group_id = get_channel_group(channel_hash);
 
-					cs_log_dbg(D_ATR, "channel hash: %08X, group id: %04X", channel_hash, group_id);
-				}
+				cs_log_dbg(D_ATR, "channel hash: %08X, group id: %04X", channel_hash, group_id);
 
 				decrypt_ok = 0;
 
