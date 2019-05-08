@@ -1,6 +1,6 @@
 #include <string.h>
-#include "globals.h"
-#include "reader-cardlist.h"
+#include "../globals.h"
+#include "cardlist.h"
 
 //
 //
