@@ -360,7 +360,7 @@
 /* ===========================
  *			constants
  * =========================== */
-#define CS_VERSION				"Schimmelreiter"
+#define CS_VERSION				"smod"
 #ifndef CS_GIT_VERSION
 #   define CS_GIT_VERSION "test"
 #endif
@@ -368,10 +368,10 @@
 # define CS_SVN_VERSION			"stable"
 #endif
 #ifndef CS_TARGET
-# define CS_TARGET				"Schimmelreiter"
+# define CS_TARGET				"smod"
 #endif
 #ifndef CS_CONFDIR
-#define CS_CONFDIR				"/usr/local/etc"
+#define CS_CONFDIR				"/etc/tuxbox/config"
 #endif
 #ifndef CS_LOGFILE
 #define CS_LOGFILE				"/var/log/oscam.log"
