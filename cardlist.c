@@ -55,57 +55,57 @@ void findatr(struct s_reader *reader) {
 	int istivu = 0;
 	int istnt = 0;
 	int isum = 0;
+	char provider[32] = "";
 	//memset(providername, 0, 32);
 
 	if ( strncmp(current.atr, "3F FF 95 00 FF 91 81 71 FE 47 00 44 4E 41 53 50 31 34 32 20 52 65 76 47 43 36 61", 80) == 0 ) {
 		// HD+ 01
 		ishdold = 1;
-		memcpy(current.providername, "Astra HD+ 01", strlen("Astra HD+ 01"));
+		strcpy(current.provider,"Astra HD+ HD01\x0");
 	} else if ( strncmp(current.atr, "3F FF 95 00 FF 91 81 71 A0 47 00 44 4E 41 53 50 31 38 30 20 4D 65 72 30 30 30 28", 80) == 0 ) {
 		// HD+ 02
 		ishdold = 1;
-		memcpy(current.providername, "Astra HD+ 02", strlen("Astra HD+ 02"));
+		strcpy(current.provider,"Astra HD+ HD02\x0");
 	} else if ( strncmp(current.atr, "3F FF 95 00 FF 91 81 71 A0 47 00 44 4E 41 53 50 31 39 30 20 4D 65 72 51 32 35 4F", 80) == 0 ) {
 		// HD+ 03
 		ishdnew = 1;
-		memcpy(current.providername, "Astra HD+ 03", strlen("Astra HD+ 03"));
+		strcpy(current.provider,"Astra HD+ HD03\x0");
 	} else if ( strncmp(current.atr, "3F FF 95 00 FF 91 81 71 FE 57 00 44 4E 41 53 50 34 31 30 20 52 65 76 51 32 35 17", 80) == 0 ) {
 		// HD+ 03a
 		ishdnew = 1;
-		memcpy(current.providername, "Astra HD+ 03a", strlen("Astra HD+ 03a"));
+		strcpy(current.provider,"Astra HD+ HD03a\x0");
 	} else if ( strncmp(current.atr, "3F FF 95 00 FF 91 81 71 FE 57 00 44 4E 41 53 50 34 32 30 20 52 65 76 51 32 35 17", 80) == 0 ) {
 		// HD+ 03b
 		ishdnew = 1;
-		memcpy(current.providername, "Astra HD+ 03b", strlen("Astra HD+ 03b"));
+		strcpy(current.provider,"Astra HD+ HD03b\x0");
 	} else if ( strncmp(current.atr, "3F FF 95 00 FF 91 81 71 FE 57 00 44 4E 41 53 50 34 32 30 20 52 65 76 53 36 30 17", 80) == 0 ) {
 		// HD+ 04
 		ishdnew = 1;
-		memcpy(current.providername, "Astra HD+ 04", strlen("Astra HD+ 04"));
+		strcpy(current.provider,"Astra HD+ HD04\x0");
 	} else if ( strncmp(current.atr, "3F FF 95 00 FF 91 81 71 FE 57 00 44 4E 41 53 50 34 32 30 20 52 65 76 53 36 34 13", 80) == 0 ) {
 		// HD+ 04a
 		ishdnew = 1;
-		memcpy(current.providername, "Astra HD+ 04a", strlen("Astra HD+ 04a"));
+		strcpy(current.provider,"Astra HD+ HD04a\x0");
 	} else if ( strncmp(current.atr, "3F FF 95 00 FF 91 81 71 FE 47 00 44 4E 41 53 50 31 31 30 20 52 65 76 41 32 32 15", 80) == 0 ) {
 		// HD+ 04a
 		isum = 1;
-		memcpy(current.providername, "Unitymedia UM01", strlen("Unitymedia UM01"));
+		strcpy(current.provider,"Unitymedia UM01\x0");
 	} else if ( strncmp(current.atr, "3F FF 95 00 FF 91 81 71 FE 47 00 44 4E 41 53 50 31 34 32 20 52 65 76 47 30 36 12", 80) == 0 ) {
 		// HD+ 04a
 		isum = 1;
-		memcpy(current.providername, "Unitymedia UM02", strlen("Unitymedia UM02"));
-
+		strcpy(current.provider,"Unitymedia UM02\x0");
 	} else if ( strncmp(current.atr, "3B 9F 21 0E 49 52 44 45 54 4F 20 41 43 53 03 84 55 FF 80 6D", 59) == 0 ) {
-		memcpy(current.providername, "Vodafone D0x Ix2", strlen("Vodafone D0x Ix2"));
+		strcpy(current.provider,"Vodafone D0x Ix2\x0");
 		if ( !strncmp(vf_rsakey, "0", 1) == 0 ) {
-			memcpy(reader->boxkey, vf_boxkey, 9);
-			memcpy(reader->rsa_mod, vf_rsakey, 65);
+			memcpy(reader->boxkey, vf_boxkey, 8);
+			memcpy(reader->rsa_mod, vf_rsakey, 64);
 			reader->boxkey_length = 8;
 			reader->rsa_mod_length = 64;
 		}
 		reader->saveemm = 0;
 		reader->blockemm = 12;
 	} else if ( strncmp(current.atr, "3F 77 18 00 00 C2 EB 41 02 6C 90 00", 35) == 0 ) {
-		memcpy(current.providername, "Redlight Mega Elite", strlen("Redlight Mega Elite"));
+		strcpy(current.provider,"Redlight Mega Elite\x0");
 		if ( !strncmp(rlme_deskey, "0", 1) == 0 ) {
 			memcpy(reader->boxkey, rlme_boxkey, 4);
 			memcpy(reader->des_key, rlme_deskey, 16);
@@ -118,7 +118,7 @@ void findatr(struct s_reader *reader) {
 		reader->blockemm = 12;
 		return;
 	} else if ( strncmp(current.atr, "3F 77 18 00 00 D3 8A 42 01 64 90 00", 35) == 0 ) {
-		memcpy(current.providername, "Redlight Mega Royale", strlen("Redlight Mega Royale"));
+		strcpy(current.provider,"Redlight Mega Royale\x0");
 		if ( !strncmp(rlmr_deskey, "0", 1) == 0 ) {
 			memcpy(reader->boxkey, rlmr_boxkey, 4);
 			memcpy(reader->des_key, rlmr_deskey, 16);
@@ -130,48 +130,48 @@ void findatr(struct s_reader *reader) {
 		reader->saveemm = 0;
 		reader->blockemm = 12;
 	} else if ( strncmp(current.atr, "3B 24 00 30 42 30 30", 20) == 0 ) {
-		memcpy(current.providername, "MTV Unlimited", strlen("MTV Unlimited"));
+		strcpy(current.provider,"MTV Unlimited\x0");
 		reader->saveemm = 0;
 		reader->blockemm = 8;
 	} else if ( strncmp(current.atr, "3B 78 12 00 00 54 C4 03 00 8F F1 90 00", 38) == 0 ) {
-		memcpy(current.providername, "ORF ICE CW-Mode", strlen("ORF ICE CW-Mode"));
+		strcpy(current.provider,"ORF ICE CW-Mode\x0");
 		reader->saveemm = 0;
 		reader->blockemm = 12;
 	} else if ( strncmp(current.atr, "3B F7 11 00 01 40 96 70 70 0A 0E 6C B6 D6", 42) == 0 ) {
-		memcpy(current.providername, "Canal Digitaal (NL)", strlen("Canal Digitaal (NL)"));
+		strcpy(current.provider,"Canal Digitaal (NL)\x0");
 		reader->caid = 0x0100;
 		reader->ratelimitecm = 4;
 		reader->ratelimittime = 9000;
 		reader->saveemm = 3;
 		reader->blockemm = 12;
 	} else if ( strncmp(current.atr, "3F FF 95 00 FF 91 81 71 FF 47 00 54 49 47 45 52 30 30 33 20 52 65 76 32 35 30 64", 80) == 0 ) {
-		memcpy(current.providername, "Tivusat 183D", strlen("Tivusat 183D"));
+		strcpy(current.provider,"Tivusat 183D\x0");
 		istivu = 1;
 	} else if ( strncmp(current.atr, "3F FF 95 00 FF 91 81 71 FE 47 00 54 49 47 45 52 36 30 31 20 52 65 76 4D 38 37 14", 80) == 0 ) {
-		memcpy(current.providername, "Tivusat 183E", strlen("Tivusat 183E"));
+		strcpy(current.provider,"Tivusat 183E\x0");
 		istivu = 1;
 	} else if ( strncmp(current.atr, "3F 77 18 00 00 C2 7A 41 02 68", 29) == 0 ) {
-		memcpy(current.providername, "SRG v4", strlen("SRG v4"));
+		strcpy(current.provider,"SRG v4\x0");
 		reader->saveemm = 0;
 		reader->blockemm = 8;
 	} else if ( strncmp(current.atr, "3F 77 18 00 00 C2 7A 44 02 68", 29) == 0 ) {
-		memcpy(current.providername, "SRG v5", strlen("SRG v5"));
+		strcpy(current.provider,"SRG v5\x0");
 		reader->saveemm = 0;
 		reader->blockemm = 8;
 		reader->read_old_classes = 0;
 	} else if ( strncmp(current.atr, "3F 77 18 00 00 D3 8A 40 01 64", 29) == 0 ) {
-		memcpy(current.providername, "SRG v6", strlen("SRG v6"));
+		strcpy(current.provider,"SRG v6\x0");
 		reader->saveemm = 0;
 		reader->blockemm = 8;
 		reader->read_old_classes = 0;
 	} else if ( strncmp(current.atr, "3F 77 18 00 00 C2 EB 41 02 6C", 29) == 0 ) {
-		memcpy(current.providername, "TNT Viaccess V5", strlen("TNT Viaccess V5"));
+		strcpy(current.provider,"TNT Viaccess v5\x0");
 		istnt = 1;
 	} else if ( strncmp(current.atr, "3F 77 18 00 00 D3 8A 40 01 64", 29) == 0 ) {
-		memcpy(current.providername, "TNT Viaccess V6", strlen("TNT Viaccess V6"));
+		strcpy(current.provider,"TNT Viaccess v6\x0");
 		istnt = 1;
 	} else if ( strncmp(current.atr, "3B 9F 21 0E 49 52 44 45 54 4F 20 41 43 53 20 56 35 2E 33 9E", 59) == 0 ) {
-		memcpy(current.providername, "Ziggo NL", strlen("Ziggo NL"));
+		strcpy(current.provider,"Ziggo NL\x0");
 		if ( !strncmp(znl_boxkey, "0", 1) == 0 ) {
 			memcpy(reader->boxkey, znl_boxkey, 9);
 			memcpy(reader->rsa_mod, znl_rsakey, 65);
@@ -249,13 +249,13 @@ void findatr(struct s_reader *reader) {
 			// Check for Sky 19.2 E Sat
 			snprintf(buf, 66, "3F FF %i 25 03 10 80 41 B0 07 69 FF 4A 50 70 00 00 50 31 01 00 %i", i, i);
 			if ( strncmp(current.atr, buf, 65) == 0 ) {
-				memcpy(current.providername, "Sky Deutschland V13", strlen("Sky Deutschland V14"));
+				strcpy(current.provider,"Sky Deutschland V13\x0");
 				reader->caid = 0x09C4;
 				current.found = 1;
 			}
 			snprintf(buf, 63, "3F FD %i 25 02 50 80 0F 41 B0 0A 69 FF 4A 50 F0 00 00 50 31 03", i);
 			if ( strncmp(current.atr, buf, 62) == 0 )	{
-				memcpy(current.providername, "Sky Deutschland V14", strlen("Sky Deutschland V14"));
+				strcpy(current.provider,"Sky Deutschland V14\x0");
 				reader->caid = 0x098C;
 				current.found = 1;
 			}
@@ -269,7 +269,7 @@ void findatr(struct s_reader *reader) {
 			}
 			snprintf(buf, 66, "3F FF %i 25 03 10 80 54 B0 01 69 FF 4A 50 70 00 00 4B 57 01 00 00", i);
 			if ( strncmp(current.atr, buf, 65) == 0 ) {
-				memcpy(current.providername, "Sky/Unitymedia V23", strlen("Sky/Unitymedia V23"));
+				strcpy(current.provider,"Sky/Unitymedia V23\x0");
 				reader->saveemm = 0;
 				reader->blockemm = 12;
 				reader->boxid = 0x12345678;
@@ -278,7 +278,7 @@ void findatr(struct s_reader *reader) {
 			}
 			snprintf(buf, 63, "3F FD %i 25 02 50 00 03 33 B0 15 69 FF 4A 50 F0 80 03 4B 4C 03", i);
 			if ( strncmp(current.atr, buf, 62) == 0 ) {
-				memcpy(current.providername, "Vodafone G09", strlen("Vodafone G09"));
+				strcpy(current.provider,"Vodafone G09\x0");
 				reader->saveemm = 0;
 				reader->blockemm = 12;
 				reader->boxid = 0x12345678;
