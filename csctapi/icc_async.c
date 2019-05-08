@@ -1,7 +1,7 @@
 #include "../globals.h"
-#include "../cardlist.h"
-struct atrlist current;
 #ifdef WITH_CARDREADER
+#include "../reader-cardlist.h"
+struct atrlist current;
 #include "../oscam-lock.h"
 #include "../oscam-string.h"
 #include "icc_async.h"
