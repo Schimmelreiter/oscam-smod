@@ -7,6 +7,7 @@
 #include "io_serial.h"
 #include "ifd_phoenix.h"
 #include "../cardlist.h"
+struct atrlist current;
 #include "../oscam-time.h"
 #ifdef READER_NAGRA_MERLIN
 #include "../cscrypt/fast_aes.h"
