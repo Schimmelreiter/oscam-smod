@@ -55,8 +55,6 @@ void findatr(struct s_reader *reader) {
 	int istivu = 0;
 	int istnt = 0;
 	int isum = 0;
-	char provider[32] = "";
-	//memset(providername, 0, 32);
 
 	if ( strncmp(current.atr, "3F FF 95 00 FF 91 81 71 FE 47 00 44 4E 41 53 50 31 34 32 20 52 65 76 47 43 36 61", 80) == 0 ) {
 		// HD+ 01
