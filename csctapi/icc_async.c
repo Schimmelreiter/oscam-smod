@@ -1,4 +1,6 @@
 #include "../globals.h"
+#include "../cardlist.h"
+struct atrlist current;
 #ifdef WITH_CARDREADER
 #include "../oscam-lock.h"
 #include "../oscam-string.h"
@@ -6,8 +8,6 @@
 #include "protocol_t0.h"
 #include "io_serial.h"
 #include "ifd_phoenix.h"
-#include "../cardlist.h"
-struct atrlist current;
 #include "../oscam-time.h"
 #ifdef READER_NAGRA_MERLIN
 #include "../cscrypt/fast_aes.h"
