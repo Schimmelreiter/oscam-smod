@@ -263,7 +263,7 @@ void findatr(struct s_reader *reader) {
 				reader->disablecrccws = 1;
 				reader->saveemm = 1;
 				reader->blockemm = 15;
-				return;
+				break;
 			}
 			snprintf(buf, 66, "3F FF %i 25 03 10 80 54 B0 01 69 FF 4A 50 70 00 00 4B 57 01 00 00", i);
 			if ( strncmp(current.atr, buf, 65) == 0 ) {
@@ -272,7 +272,7 @@ void findatr(struct s_reader *reader) {
 				reader->blockemm = 12;
 				reader->boxid = 0x12345678;
 				current.found = 1;
-				return;
+				break;
 			}
 			snprintf(buf, 63, "3F FD %i 25 02 50 00 03 33 B0 15 69 FF 4A 50 F0 80 03 4B 4C 03", i);
 			if ( strncmp(current.atr, buf, 62) == 0 ) {
@@ -282,9 +282,12 @@ void findatr(struct s_reader *reader) {
 				reader->boxid = 0x12345678;
 				reader->deprecated = 1;
 				current.found = 1;
-				return;
+				break;
 			}
 		}
+	}
+	if ( current.found == 1 ) {
+		if(reader->grp < 1) { reader->grp = 0x1ULL; }
 	}
 	return;
 }
