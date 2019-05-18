@@ -41,7 +41,8 @@
 #define BOXTYPE_PC         11
 #define BOXTYPE_PC_NODMX   12
 #define BOXTYPE_SAMYGO     13
-#define BOXTYPES           13
+#define BOXTYPE_SOGNO      14
+#define BOXTYPES           14
 #define DMXMD5HASHSIZE     16 // use MD5()
 
 // we store the results of remove_streampid_from_list()
