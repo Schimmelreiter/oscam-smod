@@ -1,0 +1,83 @@
+Index: /trunk/module-dvbapi.c
+===================================================================
+--- /trunk/module-dvbapi.c	(revision 11521)
++++ /trunk/module-dvbapi.c	(revision 11522)
+@@ -3904,4 +3904,8 @@
+ 	*adapter_index = 0x00;
+ 	*pmtpid = 0x00;
++	bool is82Parsed = false;
++	bool is83Parsed = false;
++	bool is84Parsed = false;
++	bool is86Parsed = false;
+ 
+ 	uint16_t program_info_length = b2i(2, buffer + 4) & 0x0FFF;
+@@ -3926,4 +3930,9 @@
+ 			case 0x82: // demux, ca_mask, adapter (everyone is using this descriptor differently - what a mess)
+ 			{
++				if(is82Parsed)
++				{
++					break;
++				}
++
+ 				if(descriptor_length == 0x02 && (cfg.dvbapi_boxtype == BOXTYPE_PC ||
+ 					cfg.dvbapi_boxtype == BOXTYPE_PC_NODMX || cfg.dvbapi_boxtype == BOXTYPE_SAMYGO))
+@@ -3932,4 +3941,5 @@
+ 					*adapter_index = buffer[pos + 3]; // adapter index can be 0, 1, 2
+ 					*ca_mask = (1 << *adapter_index); // use adapter_index as ca_mask
++					is82Parsed = true;
+ 				}
+ 				else if(descriptor_length == 0x03 && cfg.dvbapi_boxtype == BOXTYPE_QBOXHD)
+@@ -3939,4 +3949,5 @@
+ 					*adapter_index = buffer[pos + 4]; // with STONE 1.0.4 adapter index can be 0, 1, 2
+ 					*ca_mask = (1 << *adapter_index); // use adapter_index as ca_mask
++					is82Parsed = true;
+ 				}
+ 				else if(descriptor_length == 0x02) // enigma2
+@@ -3955,5 +3966,6 @@
+ 					}
+ 					*demux_index = demux_tmp;
+-				}
++					is82Parsed = true;
++				}				
+ 				break;
+ 			}
+@@ -3961,7 +3973,12 @@
+ 			case 0x83: // adapter
+ 			{
++				if(is83Parsed)
++				{
++					break;
++				}
+ 				if(descriptor_length == 0x01)
+ 				{
+ 					*adapter_index = buffer[pos + 2];
++					is83Parsed = true;
+ 				}
+ 				break;
+@@ -3970,7 +3987,12 @@
+ 			case 0x84: // pmt pid
+ 			{
++				if(is84Parsed)
++				{
++					break;
++				}
+ 				if(descriptor_length == 0x02)
+ 				{
+ 					*pmtpid = b2i(2, buffer + pos + 2);
++					is84Parsed = true;
+ 				}
+ 				break;
+@@ -3982,8 +4004,13 @@
+ 			case 0x86: // demux only (new - added in 2019)
+ 			{
++				if(is86Parsed)
++				{
++					break;
++				}
+ 				if(descriptor_length == 0x01)
+ 				{
+ 					*demux_index = buffer[pos + 2];
+ 					*ca_mask = 1 << *demux_index;
++					is86Parsed = true;
+ 				}
+ 				break;
