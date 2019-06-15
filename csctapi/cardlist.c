@@ -85,11 +85,11 @@ void findatr(struct s_reader *reader) {
 		ishdnew = 1;
 		strcpy(current.providername,"Astra HD+ HD04a\x0");
 	} else if ( strncmp(current.atr, "3F FF 95 00 FF 91 81 71 FE 47 00 44 4E 41 53 50 31 31 30 20 52 65 76 41 32 32 15", 80) == 0 ) {
-		// HD+ 04a
+		// UM01
 		isum = 1;
 		strcpy(current.providername,"Unitymedia UM01\x0");
 	} else if ( strncmp(current.atr, "3F FF 95 00 FF 91 81 71 FE 47 00 44 4E 41 53 50 31 34 32 20 52 65 76 47 30 36 12", 80) == 0 ) {
-		// HD+ 04a
+		// UM02
 		isum = 1;
 		strcpy(current.providername,"Unitymedia UM02\x0");
 	} else if ( strncmp(current.atr, "3B 9F 21 0E 49 52 44 45 54 4F 20 41 43 53 03 84 55 FF 80 6D", 59) == 0 ) {
