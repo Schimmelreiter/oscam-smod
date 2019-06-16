@@ -250,23 +250,38 @@ void findatr(struct s_reader *reader) {
 			snprintf(buf, 66, "3F FF %i 25 03 10 80 41 B0 07 69 FF 4A 50 70 00 00 50 31 01 00 %i", i, i);
 			if ( strncmp(current.atr, buf, 65) == 0 ) {
 				strcpy(current.providername,"Sky Deutschland V13\x0");
-				reader->caid = 0x09C4;
-				current.found = 1;
-			}
-			snprintf(buf, 63, "3F FD %i 25 02 50 80 0F 41 B0 0A 69 FF 4A 50 F0 00 00 50 31 03", i);
-			if ( strncmp(current.atr, buf, 62) == 0 )	{
-				strcpy(current.providername,"Sky Deutschland V14\x0");
-				reader->caid = 0x098C;
-				current.found = 1;
-			}
-
-			if ( current.found == 1 ) {
-				reader->boxid = 0x12345678;
 				reader->disablecrccws = 1;
 				reader->saveemm = 1;
 				reader->blockemm = 15;
+				reader->boxid = 0x12345678;
+				reader->caid = 0x09C4;
+				current.found = 1;
 				break;
 			}
+			snprintf(buf, 63, "3F FD %i 25 02 50 80 0F 41 B0 0A 69 FF 4A 50 F0 00 00 50 31 03", i);
+			if ( strncmp(current.atr, buf, 62) == 0 ) {
+				strcpy(current.providername,"Sky Deutschland V14\x0");
+				reader->saveemm = 1;
+				reader->blockemm = 15;
+				reader->boxid = 0x12345678;
+				reader->disablecrccws = 1;
+				reader->caid = 0x098C;
+				current.found = 1;
+				break;
+			}
+
+			snprintf(buf, 63, "3F FD %i 25 02 50 80 0F 55 B0 02 69 FF 4A 50 F0 80 00 50 31 03", i);
+			if ( strncmp(current.atr, buf, 62) == 0 ) {
+				strcpy(current.providername,"Sky Deutschland V15\x0");
+				reader->saveemm = 1;
+				reader->blockemm = 15;
+				reader->boxid = 0x12345678;
+				reader->disablecrccws = 1;
+				reader->caid = 0x098D;
+				current.found = 1;
+				break;
+			}
+
 			snprintf(buf, 66, "3F FF %i 25 03 10 80 54 B0 01 69 FF 4A 50 70 00 00 4B 57 01 00 00", i);
 			if ( strncmp(current.atr, buf, 65) == 0 ) {
 				strcpy(current.providername,"Sky/Unitymedia V23\x0");
