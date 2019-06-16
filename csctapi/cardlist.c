@@ -202,6 +202,7 @@ void findatr(struct s_reader *reader) {
 				memcpy(reader->exp60,   exp60,  96);
 				memcpy(reader->nuid,     nuid,   4);
 				memcpy(reader->mod1,     mod1, 112);
+				memcpy(reader->cwekey, cwekey,  16);
 
 				reader->data50_length =  80;
 				reader->mod50_length  =  80;
@@ -209,9 +210,10 @@ void findatr(struct s_reader *reader) {
 				reader->exp60_length  =  96;
 				reader->nuid_length   =   4;
 				reader->mod1_length   = 112;
+				reader->cwekey_length =  16;
 			}
 			reader->saveemm = 0;
-			reader->blockemm = 12;
+			reader->blockemm = 8;
 		} else if ( isum == 1 ) {
 			if ( !strncmp(um_rsakey, "0", 1) == 0 ) {
 				memcpy(reader->boxkey, um_boxkey, 9);
