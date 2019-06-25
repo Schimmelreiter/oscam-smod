@@ -8,28 +8,28 @@
 //
 //
 
-static const uint8_t data50[81]       = { "\x00" };
-static const uint8_t mod50[81]        = { "\x00" };
-static const uint8_t key60[97]        = { "\x00" };
-static const uint8_t exp60[97]        = { "\x00" };
-static const uint8_t mod1[113]        = { "\x00" };
-static const uint8_t nuid[5]          = { "\x00" };
-static const uint8_t cwekey[33]       = { "\x00" };
-static const uint8_t vf_boxkey[9]     = { "\x00" };
-static const uint8_t vf_rsakey[129]   = { "\x00" };
-static const uint8_t um_boxkey[9]     = { "\x00" };
-static const uint8_t um_rsakey[129]   = { "\x00" };
-static const uint8_t hd_boxkey[9]     = { "\x00" };
-static const uint8_t hd_rsakey[129]   = { "\x00" };
-static const uint8_t rlme_boxkey[5]   = { "\x00" };
-static const uint8_t rlme_deskey[33]  = { "\x00" };
-static const uint8_t rlmr_boxkey[5]   = { "\x00" };
-static const uint8_t rlmr_deskey[33]  = { "\x00" };
-static const uint8_t tivu_rsakey[121] = { "\x00" };
-static const uint8_t tnt_boxkey[5]    = { "\x00" };
-static const uint8_t tnt_deskey[33]   = { "\x00" };
-static const uint8_t znl_boxkey[9]    = { "\x00" };
-static const uint8_t znl_rsakey[65]   = { "\x00" };
+static const char data50[81]       = { "\x00" };
+static const char mod50[81]        = { "\x00" };
+static const char key60[97]        = { "\x00" };
+static const char exp60[97]        = { "\x00" };
+static const char mod1[113]        = { "\x00" };
+static const char nuid[5]          = { "\x00" };
+static const char cwekey[33]       = { "\x00" };
+static const char vf_boxkey[9]     = { "\x00" };
+static const char vf_rsakey[129]   = { "\x00" };
+static const char um_boxkey[9]     = { "\x00" };
+static const char um_rsakey[129]   = { "\x00" };
+static const char hd_boxkey[9]     = { "\x00" };
+static const char hd_rsakey[129]   = { "\x00" };
+static const char rlme_boxkey[5]   = { "\x00" };
+static const char rlme_deskey[33]  = { "\x00" };
+static const char rlmr_boxkey[5]   = { "\x00" };
+static const char rlmr_deskey[33]  = { "\x00" };
+static const char tivu_rsakey[121] = { "\x00" };
+static const char tnt_boxkey[5]    = { "\x00" };
+static const char tnt_deskey[33]   = { "\x00" };
+static const char znl_boxkey[9]    = { "\x00" };
+static const char znl_rsakey[65]   = { "\x00" };
 
 //
 //
@@ -132,7 +132,7 @@ void findatr(struct s_reader *reader) {
 		reader->saveemm = 0;
 		reader->blockemm = 8;
 	} else if ( strncmp(current.atr, "3B 78 12 00 00 54 C4 03 00 8F F1 90 00", 38) == 0 ) {
-		strcpy(current.providername,"ORF ICE CW-Mode\x0");
+		strcpy(current.providername,"Cryptoworks\x0");
 		reader->saveemm = 0;
 		reader->blockemm = 12;
 	} else if ( strncmp(current.atr, "3B F7 11 00 01 40 96 70 70 0A 0E 6C B6 D6", 42) == 0 ) {
