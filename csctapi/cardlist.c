@@ -15,21 +15,21 @@ static const uint8_t exp60[97]        = { "\x00" };
 static const uint8_t mod1[113]        = { "\x00" };
 static const uint8_t nuid[5]          = { "\x00" };
 static const uint8_t cwekey[33]       = { "\x00" };
-static const char    vf_boxkey[9]     = { "\x00" };
-static const char    vf_rsakey[129]   = { "\x00" };
-static const char    um_boxkey[9]     = { "\x00" };
-static const char    um_rsakey[129]   = { "\x00" };
-static const char    hd_boxkey[9]     = { "\x00" };
-static const char    hd_rsakey[129]   = { "\x00" };
-static const char    rlme_boxkey[5]   = { "\x00" };
-static const char    rlme_deskey[33]  = { "\x00" };
-static const char    rlmr_boxkey[5]   = { "\x00" };
-static const char    rlmr_deskey[33]  = { "\x00" };
-static const char    tivu_rsakey[121] = { "\x00" };
-static const char    tnt_boxkey[5]    = { "\x00" };
-static const char    tnt_deskey[33]   = { "\x00" };
-static const char    znl_boxkey[9]    = { "\x00" };
-static const char    znl_rsakey[65]   = { "\x00" };
+static const uint8_t vf_boxkey[9]     = { "\x00" };
+static const uint8_t vf_rsakey[129]   = { "\x00" };
+static const uint8_t um_boxkey[9]     = { "\x00" };
+static const uint8_t um_rsakey[129]   = { "\x00" };
+static const uint8_t hd_boxkey[9]     = { "\x00" };
+static const uint8_t hd_rsakey[129]   = { "\x00" };
+static const uint8_t rlme_boxkey[5]   = { "\x00" };
+static const uint8_t rlme_deskey[33]  = { "\x00" };
+static const uint8_t rlmr_boxkey[5]   = { "\x00" };
+static const uint8_t rlmr_deskey[33]  = { "\x00" };
+static const uint8_t tivu_rsakey[121] = { "\x00" };
+static const uint8_t tnt_boxkey[5]    = { "\x00" };
+static const uint8_t tnt_deskey[33]   = { "\x00" };
+static const uint8_t znl_boxkey[9]    = { "\x00" };
+static const uint8_t znl_rsakey[65]   = { "\x00" };
 
 //
 //
