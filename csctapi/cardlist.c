@@ -13,23 +13,23 @@ static const char mod50[81]        = { "\x00" };
 static const char key60[97]        = { "\x00" };
 static const char exp60[97]        = { "\x00" };
 static const char mod1[113]        = { "\x00" };
-static const char nuid[5]          = { "\x00" };
-static const char cwekey[33]       = { "\x00" };
-static const char vf_boxkey[9]     = { "\x00" };
-static const char vf_rsakey[129]   = { "\x00" };
-static const char um_boxkey[9]     = { "\x00" };
-static const char um_rsakey[129]   = { "\x00" };
 static const char hd_boxkey[9]     = { "\x00" };
 static const char hd_rsakey[129]   = { "\x00" };
+static const char hd_nuid[5]       = { "\x00" };
+static const char hd_cwpk[17]      = { "\x00" };
 static const char max_nuid[5]      = { "\x00" };
-static const char max_cwpk[33]     = { "\x00" };
+static const char max_cwpk[17]     = { "\x00" };
 static const char rlme_boxkey[5]   = { "\x00" };
-static const char rlme_deskey[33]  = { "\x00" };
+static const char rlme_deskey[17]  = { "\x00" };
 static const char rlmr_boxkey[5]   = { "\x00" };
-static const char rlmr_deskey[33]  = { "\x00" };
+static const char rlmr_deskey[17]  = { "\x00" };
 static const char tivu_rsakey[121] = { "\x00" };
 static const char tnt_boxkey[5]    = { "\x00" };
-static const char tnt_deskey[33]   = { "\x00" };
+static const char tnt_deskey[17]   = { "\x00" };
+static const char um_boxkey[9]     = { "\x00" };
+static const char um_rsakey[129]   = { "\x00" };
+static const char vf_boxkey[9]     = { "\x00" };
+static const char vf_rsakey[129]   = { "\x00" };
 static const char znl_boxkey[9]    = { "\x00" };
 static const char znl_rsakey[65]   = { "\x00" };
 
@@ -180,6 +180,27 @@ void findatr(struct s_reader *reader) {
 		}
 		reader->saveemm = 0;
 		reader->blockemm = 12;
+	} else if ( strncmp(current.atr, "3F FF 95 00 FF 91 81 71 FE 57 00 44 4E 41 53 50 34 38 32 20 52 65 76 52 32 36 1C", 80) == 0 ) {
+		strcpy(current.providername,"Max TV\x0");
+		if ( !strncmp(max_cwpk, "0", 1) == 0 ) {
+			memcpy(reader->data50, data50,  80);
+			memcpy(reader->mod50,  mod50,  80);
+			memcpy(reader->key60,  key60,  96);
+			memcpy(reader->exp60,  exp60,  96);
+			memcpy(reader->mod1,   mod1, 112);
+			memcpy(reader->nuid,   max_nuid,   4);
+			memcpy(reader->cwekey, max_cwpk,  16);
+
+			reader->data50_length =  80;
+			reader->mod50_length  =  80;
+			reader->key60_length  =  96;
+			reader->exp60_length  =  96;
+			reader->mod1_length   = 112;
+			reader->nuid_length   =   4;
+			reader->cwekey_length =  16;
+		}
+		reader->saveemm = 0;
+		reader->blockemm = 8;
 	} else {
 		current.found = 0;
 	}
@@ -197,21 +218,21 @@ void findatr(struct s_reader *reader) {
 			reader->blockemm = 12;
 		} else if ( ishdnew == 1 ) {
 			// Astra HD03 / HD03a / HD03b / HD04 / HD04a
-			if ( !strncmp(data50, "0", 1) == 0 ) {
-				memcpy(reader->data50, data50,  80);
-				memcpy(reader->mod50,   mod50,  80);
-				memcpy(reader->key60,   key60,  96);
-				memcpy(reader->exp60,   exp60,  96);
-				memcpy(reader->nuid,     nuid,   4);
-				memcpy(reader->mod1,     mod1, 112);
-				memcpy(reader->cwekey, cwekey,  16);
+			if ( !strncmp(hd_cwpk, "0", 1) == 0 ) {
+				memcpy(reader->data50, data50,   80);
+				memcpy(reader->mod50,   mod50,   80);
+				memcpy(reader->key60,   key60,   96);
+				memcpy(reader->exp60,   exp60,   96);
+				memcpy(reader->mod1,    mod1,   112);
+				memcpy(reader->nuid,    hd_nuid,  4);
+				memcpy(reader->cwekey,  hd_cwpk, 16);
 
 				reader->data50_length =  80;
 				reader->mod50_length  =  80;
 				reader->key60_length  =  96;
 				reader->exp60_length  =  96;
-				reader->nuid_length   =   4;
 				reader->mod1_length   = 112;
+				reader->nuid_length   =   4;
 				reader->cwekey_length =  16;
 			}
 			reader->saveemm = 0;
