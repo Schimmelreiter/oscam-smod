@@ -1213,9 +1213,28 @@ extern const char *boxdesc[];
 
 static void dvbapi_boxtype_fn(const char *token, char *value, void *UNUSED(setting), FILE *f)
 {
-	if(boxtype_is("sogno-8800hd") || boxtype_is("unibox-hde")) {
-		value = "sogno";
+#if defined(__linux__)
+        char boxtype[128];
+        boxtype[0] = 0;
+
+	FILE *f = fopen("/proc/stb/info/boxtype", "r");
+	if (f) {
+		while (fgets(boxtype, sizeof(boxtype), f)) {
+			if (strstr(boxtype,"\n")) {
+				boxtype[strlen(boxtype)-1] = '\0';
+				break;
+			}
+		}
+		fclose(f);
 	}
+        if (boxtype[0]) {
+		if(!strcasecmp(boxtype, "sogno-8800hd") || !strcasecmp(boxtype, "unibox-hde")) {
+			value = "sogno";
+			cfg.dvbapi_boxtype = 14;
+			return;
+		}
+	}
+#endif
 
 	if(value)
 	{
