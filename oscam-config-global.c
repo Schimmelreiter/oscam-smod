@@ -1217,15 +1217,15 @@ static void dvbapi_boxtype_fn(const char *token, char *value, void *UNUSED(setti
         char boxtype[128];
         boxtype[0] = 0;
 
-	FILE *f = fopen("/proc/stb/info/boxtype", "r");
-	if (f) {
-		while (fgets(boxtype, sizeof(boxtype), f)) {
+	FILE *p = fopen("/proc/stb/info/boxtype", "r");
+	if (p) {
+		while (fgets(boxtype, sizeof(boxtype), p)) {
 			if (strstr(boxtype,"\n")) {
 				boxtype[strlen(boxtype)-1] = '\0';
 				break;
 			}
 		}
-		fclose(f);
+		fclose(p);
 	}
         if (boxtype[0]) {
 		if(!strcasecmp(boxtype, "sogno-8800hd") || !strcasecmp(boxtype, "unibox-hde")) {
