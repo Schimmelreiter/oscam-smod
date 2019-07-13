@@ -1657,6 +1657,10 @@ int32_t write_ecm_answer(struct s_reader *reader, ECM_REQUEST *er, int8_t rc, ui
 			er->caid != 0x098C && er->prid != 0x000000
 			) && (
 			er->caid != 0x098D && er->prid != 0x000000
+			) && (
+			er->caid != 0x1811 && ( er->prid != 0x000000 || er->prid != 0x003311 || er->prid != 0x003315 )
+			) && (
+			er->caid != 0x1819 && er->prid != 0x00006D
 			)
 		) {
 			if(!chk_if_ignore_checksum(er, &cfg.disablecrccws_only_for) && !chk_if_ignore_checksum(er, &reader->disablecrccws_only_for))
