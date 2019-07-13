@@ -1213,6 +1213,10 @@ extern const char *boxdesc[];
 
 static void dvbapi_boxtype_fn(const char *token, char *value, void *UNUSED(setting), FILE *f)
 {
+	if(boxtype_is("sogno-8800hd") || boxtype_is("unibox-hde")) {
+		value = "sogno";
+	}
+
 	if(value)
 	{
 		int i;
@@ -1228,9 +1232,6 @@ static void dvbapi_boxtype_fn(const char *token, char *value, void *UNUSED(setti
 		return;
 	}
 
-	if(boxtype_is("sogno-8800hd") || boxtype_is("unibox-hde")) {
-		cfg.dvbapi_boxtype = 14;
-	}
 	if(cfg.dvbapi_boxtype)
 		{ fprintf_conf(f, token, "%s\n", boxdesc[cfg.dvbapi_boxtype]); }
 }
