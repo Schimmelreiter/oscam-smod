@@ -923,6 +923,7 @@ static void init_machine_info(void)
 		else boxname[0] = 0;
 		if(boxname[0]){cs_log("Stb boxname    = %s", boxname); stb_boxname = cs_strdup(boxname);}
 		cs_log("Stb boxtype    = %s", boxtype);
+		if(!strcasecmp(boxtype,"sogno-8800hd")) || !strcasecmp(boxtype,"unibox-hde")) cfg.dvbapi_boxtype = 14;
 	}
 
 	if (boxtype[0])
