@@ -99,7 +99,7 @@ FILE* conf_file(char fileName[]){
 					if(strstr(namelist[ncount++]->d_name, devices[i]))
 					{
 						strncpy ( serial, namelist[ncount-1]->d_name+27, 8);
-						snprintf(server_str, 124, "\n[reader]\nlabel = Smargo_TP%d\nprotocol = smartreader\ndevice = TripleP%i;Serial:%s\ndetect = CD\ngroup = 1\nemmcache = 1,3,2\n\n", cr, cr, serial); cr++;
+						snprintf(server_str, 140, "\n[reader]\nlabel = Smargo_TP%d\nprotocol = smartreader\ndevice = TripleP%i;Serial:%s\ndetect = CD\ngroup = 1\nemmcache = 1,3,2\n\n", cr, cr, serial); cr++;
 						strncpy(buffer, server_str, strlen(server_str));
 						res = write(fd,buffer,strlen(buffer));
 						tmp_conf = 1;
