@@ -56,7 +56,7 @@ FILE* conf_file(char fileName[]){
 			devices[3] = "usb-Argolis_Triple_Reader+_"; // Smargo Tripple+
 			detect_index = 4; // 0 counts
 
-			server_str = (char *) malloc(256);
+			server_str = (char *) malloc(512);
 
 			while (i < detect_index){
 
@@ -82,7 +82,7 @@ FILE* conf_file(char fileName[]){
 					while (ncount < n){
 						if(strstr(namelist[ncount++]->d_name, devices[i]))
 						{
-							snprintf(server_str, 256, "[reader]\nlabel = easymouse_%02d\nprotocol = mouse\ndetect = CD\ndevice = /dev/serial/by-id/%s\ngroup = 1\nemmcache = 1,3,2\n\n", cr, namelist[ncount-1]->d_name); cr++;
+							snprintf(server_str, 380, "[reader]\nlabel = easymouse_%02d\nprotocol = mouse\ndetect = CD\ndevice = /dev/serial/by-id/%s\ngroup = 1\nemmcache = 1,3,2\n\n", cr, namelist[ncount-1]->d_name); cr++;
 							strncpy(buffer, server_str, strlen(server_str));
 							res = write(fd,buffer,strlen(buffer));
 							tmp_conf = 1;
