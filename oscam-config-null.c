@@ -23,7 +23,6 @@ FILE* conf_file(char fileName[]){
 	FILE* file = fopen(fileName, "r");
 	if(file == NULL) {
 		int fd;
-		int tmp_conf;
 		tmp_conf = 0;
 
 		char *buffer;
