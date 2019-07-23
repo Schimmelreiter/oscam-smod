@@ -2,6 +2,96 @@
 #ifdef READER_CONAX
 #include "cscrypt/bn.h"
 #include "reader-common.h"
+#include "cscrypt/des.h"
+
+static int32_t CWPK_CNX(uint8_t *msg, uint8_t *mod)
+{
+int32_t ret = 0;
+
+char CWPK_a[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+
+uint8_t CWp1[8];
+uint8_t CWp2[8];
+uint8_t CWs1[8];
+uint8_t CWs2[8];
+uint8_t key[24];
+
+CWPK_a[0] = mod[3];
+CWPK_a[1] = mod[2];
+CWPK_a[2] = mod[1];
+CWPK_a[3] = mod[0];
+
+CWPK_a[4] = mod[7];
+CWPK_a[5] = mod[6];
+CWPK_a[6] = mod[5];
+CWPK_a[7] = mod[4];
+
+CWPK_a[8] = mod[11];
+CWPK_a[9] = mod[10];
+CWPK_a[10] = mod[9];
+CWPK_a[11] = mod[8];
+
+CWPK_a[12] = mod[15];
+CWPK_a[13] = mod[14];
+CWPK_a[14] = mod[13];
+CWPK_a[15] = mod[12];
+
+CWPK_a[16] = mod[3];
+CWPK_a[17] = mod[2];
+CWPK_a[18] = mod[1];
+CWPK_a[19] = mod[0];
+
+CWPK_a[20] = mod[7];
+CWPK_a[21] = mod[6];
+CWPK_a[22] = mod[5];
+CWPK_a[23] = mod[4];
+
+memcpy(key, &CWPK_a,0x18);
+
+CWp1[0] = msg[7];
+CWp1[1] = msg[8];
+CWp1[2] = msg[9];
+CWp1[3] = msg[10];
+CWp1[4] = msg[11];
+CWp1[5] = msg[12];
+CWp1[6] = msg[13];
+CWp1[7] = msg[14];
+
+CWp2[0] = msg[22];
+CWp2[1] = msg[23];
+CWp2[2] = msg[24];
+CWp2[3] = msg[25];
+CWp2[4] = msg[26];
+CWp2[5] = msg[27];
+CWp2[6] = msg[28];
+CWp2[7] = msg[29];
+
+des_ecb3_decrypt(CWp1,key);
+des_ecb3_decrypt(CWp2,key);
+CWs1[0] = CWp1[4];
+CWs1[1] = CWp1[5];
+CWs1[2] = CWp1[6];
+CWs1[3] = CWp1[7];
+CWs1[4] = CWp1[0];
+CWs1[5] = CWp1[1];
+CWs1[6] = CWp1[2];
+CWs1[7] = CWp1[3];
+
+CWs2[0] = CWp2[4];
+CWs2[1] = CWp2[5];
+CWs2[2] = CWp2[6];
+CWs2[3] = CWp2[7];
+CWs2[4] = CWp2[0];
+CWs2[5] = CWp2[1];
+CWs2[6] = CWp2[2];
+CWs2[7] = CWp2[3];
+
+memcpy(&msg[7],CWs1,0x08);
+memcpy(&msg[22],CWs2,0x08);
+
+ret = 0;
+return ret;
+}
 
 static int32_t RSA_CNX(struct s_reader *reader, uint8_t *msg, uint8_t *mod, uint8_t *exp, uint32_t cta_lr, uint32_t modbytes, uint32_t expbytes)
 {
@@ -118,9 +208,11 @@ static uint8_t PairingECMRotation(struct s_reader *reader, const ECM_REQUEST *er
 {
 	uint8_t cta_res[CTA_RES_LEN] = { 0x00 };
 	uint8_t ins26[] = { 0xDD, 0x26, 0x00, 0x00, 0x03, 0x10, 0x01, 0x00 };
+	uint8_t ins26on[] = { 0xDD, 0x26, 0x00, 0x00, 0x04, 0x6c, 0x02, 0x10, 0x00 };
 	uint8_t cnxcurrecm = 0;
+	uint8_t anscwp = 0;
 
-	if(0x0 != reader->rsa_mod[0] && n > 3 &&
+	if( (0x0 != reader->rsa_mod[0] || 0x0 != reader->cwpk_mod[0]) && n > 3 &&
 			0x54 == er->ecm[n - 3] &&
 			0x02 == er->ecm[n - 2] &&
 			0x00 == er->ecm[n - 1])
@@ -131,12 +223,24 @@ static uint8_t PairingECMRotation(struct s_reader *reader, const ECM_REQUEST *er
 	if((0 == reader->cnxlastecm) != (0 == cnxcurrecm))
 	{
 		if(0 == cnxcurrecm) // not paired
-			{ ins26[7] = 0x30; }
+  			{ ins26[7] = 0x30;
+
+                       if (0x0 != reader->cwpk_mod[0] || 0x0 != reader->rsa_mod[0]) { if(read_record(reader, ins26, ins26 + 5, cta_res) <= 0)
+			{ rdr_log(reader, "PairingECMRotation - ERROR"); } }
+
+                        }
 		else
-			{ ins26[7] = 0x40; }
+			{
+                ins26[7] = 0x40;
 
 		if(read_record(reader, ins26, ins26 + 5, cta_res) <= 0)
 			{ rdr_log(reader, "PairingECMRotation - ERROR"); }
+			
+		 if (0x0 != reader->cwpk_mod[0]) { anscwp =	read_record(reader, ins26on, ins26on + 5, cta_res);
+		 
+		//rdr_log(reader, "CONAX_CWPKPairing Rotation res: %16X", anscwp);
+			  }                       }
+
 	}
 	reader->cnxlastecm = cnxcurrecm;
 	return cnxcurrecm;
@@ -239,6 +343,8 @@ static int32_t conax_do_ecm(struct s_reader *reader, const ECM_REQUEST *er, stru
 	uint8_t exp[] = { 0x01, 0x00, 0x01 };
 	uint8_t buf[256];
 
+	char ppp = 0x00;
+
 	if((n = check_sct_len(er->ecm, 3)) < 0)
 		{ return ERROR; }
 
@@ -246,9 +352,12 @@ static int32_t conax_do_ecm(struct s_reader *reader, const ECM_REQUEST *er, stru
 	buf[1] = n + 1;
 
 	if(0x0 != PairingECMRotation(reader, er, n))
-		{ buf[2] = 2; } // card will answer with encrypted dw
+		{
+                 if(0x0 != reader->rsa_mod[0]) {buf[2] = 2; ppp = 0x03;}
+                 if(0x0 != reader->cwpk_mod[0]) {buf[2] = 4; ppp = 0x01;}
+                 } // card will answer with encrypted dw
 	else
-		{ buf[2] = 0; }
+                  { buf[2] = 0; ppp = 0x02;}
 
 	memcpy(buf + 3, er->ecm, n);
 	insA2[4] = n + 3;
@@ -263,13 +372,19 @@ static int32_t conax_do_ecm(struct s_reader *reader, const ECM_REQUEST *er, stru
 		if((cta_res[cta_lr - 2] == 0x98) || ((cta_res[cta_lr - 2] == 0x90)))
 		{
 			/*checks if answer is encrypted with RSA algo and decrypts it if needed*/
-			if(0x81 == cta_res[0] && 2 == cta_res[2] >> 5) /*81 XX 5X*/
+			if(0x81 == cta_res[0] && 2 == cta_res[2] >> 5 && 0x03 == ppp) /*81 XX 5X*/
 			{
 				if(0x00 == cta_res[cta_lr - 1])
 					{ rc = RSA_CNX(reader, cta_res, reader->rsa_mod, exp, cta_lr, 64u, 3u); }
 				else
 					{ rc = -4; } /*card has no right to decode this channel*/
 			}
+			
+                        if(0x01 == ppp)
+                        {
+                        /*trying to decode using CWPK*/
+                         rc = CWPK_CNX(cta_res, reader->cwpk_mod);
+                        }
 
 			if(0 == rc)
 			{

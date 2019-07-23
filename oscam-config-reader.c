@@ -229,6 +229,45 @@ static void boxid_fn(const char *token, char *value, void *setting, FILE *f)
 		{ fprintf_conf(f, token, "\n"); }
 }
 
+static void cwpkkey_fn(const char *token, char *value, void *setting, FILE *f)
+{
+	struct s_reader *rdr = setting;
+	if(value)
+	{
+		int32_t len = strlen(value);
+	//	rdr_log(rdr, "CWPK config key length: %16X", len);
+		if(len == 0 || len > 32)
+		{
+			rdr->cwpk_mod_length = 0;
+			memset(rdr->cwpk_mod, 0, sizeof(rdr->cwpk_mod));
+		}
+		else
+		{
+			if(key_atob_l(value, rdr->cwpk_mod, len))
+			{
+				fprintf(stderr, "reader cwpkkey parse error, %s=%s\n", token, value);
+				rdr->cwpk_mod_length = 0;
+				memset(rdr->cwpk_mod, 0, sizeof(rdr->cwpk_mod));
+			}
+			else
+			{
+				rdr->cwpk_mod_length = len/2;
+			}
+		}
+		return;
+	}
+	int32_t len = rdr->cwpk_mod_length;
+	if(len > 0)
+	{
+		char tmp[len * 2 + 1];
+		fprintf_conf(f, "cwpkkey", "%s\n", cs_hexdump(0, rdr->cwpk_mod, len, tmp, sizeof(tmp)));
+	}
+	else if(cfg.http_full_cfg)
+		{ fprintf_conf(f, "cwpkkey", "\n"); }
+}
+
+
+
 static void rsakey_fn(const char *token, char *value, void *setting, FILE *f)
 {
 	struct s_reader *rdr = setting;
@@ -1116,6 +1155,7 @@ static const struct config_list reader_opts[] =
 	DEF_OPT_FUNC("boxid"                          , 0,                                    boxid_fn),
 	DEF_OPT_FUNC("boxkey"                         , 0,                                    boxkey_fn),
 	DEF_OPT_FUNC("rsakey"                         , 0,                                    rsakey_fn),
+	DEF_OPT_FUNC("cwpkkey"                        , 0,                                    cwpkkey_fn),
 	DEF_OPT_FUNC("deskey"                         , 0,                                    deskey_fn),
 #ifdef READER_NAGRA_MERLIN
 	DEF_OPT_FUNC("mod1"                           , 0,                                    mod1_fn),
