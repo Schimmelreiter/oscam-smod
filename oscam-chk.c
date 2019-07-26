@@ -726,6 +726,26 @@ uint8_t chk_has_fixed_fallback(ECM_REQUEST *er)
 
 uint8_t chk_if_ignore_checksum(ECM_REQUEST *er, FTAB *disablecrc_only_for)
 {
+	if(
+		(er->caid >> 8) == 0x0E
+		||
+		(er->caid == 0x0500 && ( er->prid == 0x030B00 || er->prid == 0x032830 || er->prid == 0x041950 || er->prid == 0x042800 || er->prid == 0x042820 || er->prid == 0x050F00 ))
+		||
+		(er->caid == 0x09C4 && er->prid == 0x000000)
+		||
+		(er->caid == 0x098C && er->prid == 0x000000)
+		||
+		(er->caid == 0x098D && er->prid == 0x000000)
+		||
+		(er->caid == 0x1811 && ( er->prid == 0x000000 || er->prid == 0x000007 || er->prid == 0x000107 || er->prid == 0x003311 || er->prid == 0x003315 || er->prid == 0x00331B || er->prid == 0x003341 || er->prid == 0x023311 ))
+		||
+		(er->caid == 0x1817 && ( er->prid == 0x000000 || er->prid == 0x00006A ))
+		||
+		(er->caid == 0x1818 && ( er->prid == 0x000000 || er->prid == 0x000007 || er->prid == 0x00006C ))
+		||
+		(er->caid == 0x1819 && ( er->prid == 0x000000 || er->prid == 0x000007 || er->prid == 0x00006D ))
+	) { return 1; }
+
 	if(!disablecrc_only_for->nfilts) { return 0; }
 
 	int32_t i, k;
