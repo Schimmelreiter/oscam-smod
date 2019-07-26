@@ -684,8 +684,27 @@ static int32_t cacheex_add_to_cache_int(struct s_client *cl, ECM_REQUEST *er, in
 		return 0;
 	}
 
-	if(!cfg.disablecrccws && ((cl->typ == 'c' && !cl->account->disablecrccacheex) || ( cl->typ == 'p' && !cl->reader->disablecrccws)))
-	{
+	if(!cfg.disablecrccws && ((cl->typ == 'c' && !cl->account->disablecrccacheex) || ( cl->typ == 'p' && !cl->reader->disablecrccws))
+		&& (
+		(er->caid >> 8) != 0x0E
+		) && (
+		er->caid != 0x0500 && ( er->prid != 0x030B00 || er->prid != 0x032830 || er->prid != 0x041950 || er->prid != 0x042800 || er->prid != 0x042820 || er->prid != 0x050F00 )
+		) && (
+		er->caid != 0x09C4 && er->prid != 0x000000
+		) && (
+		er->caid != 0x098C && er->prid != 0x000000
+		) && (
+		er->caid != 0x098D && er->prid != 0x000000
+		) && (
+		er->caid != 0x1811 && ( er->prid != 0x000000 || er->prid != 0x000007 || er->prid != 0x000107 || er->prid != 0x003311 || er->prid != 0x003315 || er->prid != 0x00331B || er->prid != 0x003341 || er->prid != 0x023311 )
+		) && (
+		er->caid != 0x1817 && ( er->prid != 0x000000 || er->prid != 0x00006A )
+		) && (
+		er->caid != 0x1818 && ( er->prid != 0x000000 || er->prid != 0x000007 || er->prid != 0x00006C )
+		) && (
+		er->caid != 0x1819 && ( er->prid != 0x000000 || er->prid != 0x000007 || er->prid != 0x00006D )
+		)
+	) {
 		uint8_t selectedForIgnChecksum = chk_if_ignore_checksum(er, &cfg.disablecrccws_only_for);
 		if(cl->typ == 'c')
 		{
@@ -716,7 +735,16 @@ static int32_t cacheex_add_to_cache_int(struct s_client *cl, ECM_REQUEST *er, in
 
 	if(caid_is_videoguard(er->caid))
 	{
-		if(cl->typ == 'p' && chk_if_ignore_checksum(er, &cl->reader->disablecrccws_only_for))
+		if(cl->typ == 'p' && (
+		(er->caid == 0x09C4 && er->prid == 0x000000)
+		||
+		(er->caid == 0x098C && er->prid == 0x000000)
+		||
+		(er->caid == 0x098D && er->prid == 0x000000)
+		||
+		(chk_if_ignore_checksum(er, &cl->reader->disablecrccws_only_for))
+		)
+		)
 		{
 			if(check_nds_cwex(er))
 			{
@@ -731,8 +759,16 @@ static int32_t cacheex_add_to_cache_int(struct s_client *cl, ECM_REQUEST *er, in
 				}
 			}
 		}
-	
-		if(cl->typ == 'c' && chk_if_ignore_checksum(er, &cl->account->disablecrccacheex_only_for))
+
+		if(cl->typ == 'c' && (
+		(er->caid == 0x09C4 && er->prid == 0x000000)
+		||
+		(er->caid == 0x098C && er->prid == 0x000000)
+		||
+		(er->caid == 0x098D && er->prid == 0x000000)
+		||
+		(chk_if_ignore_checksum(er, &cl->account->disablecrccacheex_only_for))
+		))
 		{
 			if(check_nds_cwex(er))
 			{
