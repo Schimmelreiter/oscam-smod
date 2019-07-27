@@ -1213,14 +1213,12 @@ extern const char *boxdesc[];
 
 static void dvbapi_boxtype_fn(const char *token, char *value, void *UNUSED(setting), FILE *f)
 {
-	int is_stb=0;
 #if defined(__linux__)
         char boxtype[128];
         boxtype[0] = 0;
 
 	FILE *p = fopen("/proc/stb/info/boxtype", "r");
 	if (p) {
-		is_stb=1;
 		while (fgets(boxtype, sizeof(boxtype), p)) {
 			if (strstr(boxtype,"\n")) {
 				boxtype[strlen(boxtype)-1] = '\0';
@@ -1241,11 +1239,7 @@ static void dvbapi_boxtype_fn(const char *token, char *value, void *UNUSED(setti
 	if(value)
 	{
 		int i;
-		if(is_stb) {
-			cfg.dvbapi_boxtype = 1;
-		} else {
-			cfg.dvbapi_boxtype = 0;
-		}
+		cfg.dvbapi_boxtype = 0;
 		for(i = 1; i <= BOXTYPES; i++)
 		{
 			if(streq(value, boxdesc[i]))
