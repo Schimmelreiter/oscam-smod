@@ -42,11 +42,6 @@ LIB_PTHREAD = -lpthread
 LIB_DL = -ldl
 
 LIB_RT :=
-ifeq ($(uname_S),Linux)
-	ifeq "$(shell ./config.sh --enabled CLOCKFIX)" "Y"
-		LIB_RT := -lrt
-	endif
-endif
 ifeq ($(uname_S),FreeBSD)
 	LIB_DL :=
 endif

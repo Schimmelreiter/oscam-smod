@@ -3,10 +3,6 @@
 
 static enum clock_type clock_type = CLOCK_TYPE_UNKNOWN;
 
-#if defined(CLOCKFIX)
-struct timeval lasttime; // holds previous time to detect systemtime adjustments due to eg transponder change on dvb receivers
-#endif
-
 int64_t comp_timeb(struct timeb *tpa, struct timeb *tpb)
 {
 	return (int64_t)(((int64_t)(tpa->time - tpb->time) * 1000ull) + ((int64_t) tpa->millitm - (int64_t) tpb->millitm));
@@ -131,18 +127,6 @@ void cs_ftime(struct timeb *tp)
 {
 	struct timeval tv;
 	gettimeofday(&tv, NULL);
-#if defined(CLOCKFIX)
-	if (tv.tv_sec > lasttime.tv_sec || (tv.tv_sec == lasttime.tv_sec && tv.tv_usec >= lasttime.tv_usec)) // check for time issues!
-	{
-		lasttime = tv; // register this valid time
-	}
-	else
-	{
-		tv = lasttime;
-		settimeofday(&tv, NULL); // set time back to last known valid time
-		//fprintf(stderr, "*** WARNING: BAD TIME AFFECTING WHOLE OSCAM ECM HANDLING, SYSTEMTIME SET TO LAST KNOWN VALID TIME **** \n");
-	}
-#endif
 	tp->time = tv.tv_sec;
 	tp->millitm = tv.tv_usec / 1000;
 }
@@ -151,18 +135,6 @@ void cs_ftimeus(struct timeb *tp)
 {
 	struct timeval tv;
 	gettimeofday(&tv, NULL);
-#if defined(CLOCKFIX)
-	if (tv.tv_sec > lasttime.tv_sec || (tv.tv_sec == lasttime.tv_sec && tv.tv_usec >= lasttime.tv_usec)) // check for time issues!
-	{
-		lasttime = tv; // register this valid time
-	}
-	else
-	{
-		tv = lasttime;
-		settimeofday(&tv, NULL); // set time back to last known valid time
-		//fprintf(stderr, "*** WARNING: BAD TIME AFFECTING WHOLE OSCAM ECM HANDLING, SYSTEMTIME SET TO LAST KNOWN VALID TIME **** \n");
-	}
-#endif
 	tp->time = tv.tv_sec;
 	tp->millitm = tv.tv_usec;
 }
@@ -281,11 +253,6 @@ int64_t add_ms_to_timeb_diff(struct timeb *tb, int32_t ms)
 #define __GLIBCVER 9999
 #endif
 
-// Assume we have HAVE_pthread_condattr_setclock if CLOCK_MONOTONIC is defined
-#if defined(CLOCKFIX) && defined(CLOCK_MONOTONIC)
-#define HAVE_pthread_condattr_setclock 1
-#endif
-
 #if defined(HAVE_pthread_condattr_setclock)
 // UCLIBC 0.9.31 does not have pthread_condattr_setclock
 #if __UCLIBC_VER < 932
@@ -391,53 +358,8 @@ void cs_gettime(struct timespec *ts)
 {
 	struct timeval tv;
 	gettimeofday(&tv, NULL);
-#if defined(CLOCKFIX)
-	if (tv.tv_sec > lasttime.tv_sec || (tv.tv_sec == lasttime.tv_sec && tv.tv_usec >= lasttime.tv_usec)) // check for time issues!
-	{
-		lasttime = tv; // register this valid time
-	}
-	else
-	{
-		tv = lasttime;
-		settimeofday(&tv, NULL); // set time back to last known valid time
-		//fprintf(stderr, "*** WARNING: BAD TIME AFFECTING WHOLE OSCAM ECM HANDLING, SYSTEMTIME SET TO LAST KNOWN VALID TIME **** \n");
-	}
-#endif
 	ts->tv_sec = tv.tv_sec;
 	ts->tv_nsec = tv.tv_usec * 1000;
 	clock_type = CLOCK_TYPE_REALTIME;
 	return;
-#if 0
-#if !defined(CLOCKFIX) || (!defined(CLOCK_MONOTONIC) && !defined(__MACH__))
-	struct timeval tv;
-	gettimeofday(&tv, NULL);
-	ts->tv_sec = tv.tv_sec;
-	ts->tv_nsec = tv.tv_usec * 1000;
-	clock_type = CLOCK_TYPE_REALTIME;
-	return;
-#elif defined (__MACH__)
-// OS X does not have clock_gettime, use clock_get_time
-	clock_serv_t cclock;
-	mach_timespec_t mts;
-	host_get_clock_service(mach_host_self(), CALENDAR_CLOCK, &cclock);
-	clock_get_time(cclock, &mts);
-	mach_port_deallocate(mach_task_self(), cclock);
-	ts->tv_sec = mts.tv_sec;
-	ts->tv_nsec = mts.tv_nsec;
-	clock_type = CLOCK_TYPE_REALTIME;
-#else
-	if (clock_type == CLOCK_TYPE_REALTIME) // monotonic returned error
-	{
-		clock_gettime(CLOCK_REALTIME, ts);
-		return;
-	}
-	int32_t	ret = clock_gettime(CLOCK_MONOTONIC, ts);
-	clock_type = CLOCK_TYPE_MONOTONIC;
-	if ((ret < 0 && errno == EINVAL)) // Error fetching time from this source (Shouldn't happen on modern Linux)
-	{
-		clock_gettime(CLOCK_REALTIME, ts);
-		clock_type = CLOCK_TYPE_REALTIME;
-	}
-#endif
-#endif
 }
