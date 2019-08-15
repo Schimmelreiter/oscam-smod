@@ -136,7 +136,7 @@ void findatr(struct s_reader *reader) {
 	} else if ( strncmp(current.atr, "3B 78 12 00 00 54 C4 03 00 8F F1 90 00", 38) == 0 ) {
 		strcpy(current.providername,"Cryptoworks\x0");
 		reader->saveemm = 0;
-		reader->blockemm = 12;
+		reader->blockemm = ( 12 | reader->blockemm);
 	} else if ( strncmp(current.atr, "3B F7 11 00 01 40 96 70 70 0A 0E 6C B6 D6", 42) == 0 ) {
 		strcpy(current.providername,"Canal Digitaal (NL)\x0");
 		reader->caid = 0x0100;
