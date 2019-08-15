@@ -102,8 +102,8 @@ void findatr(struct s_reader *reader) {
 			reader->boxkey_length = 8;
 			reader->rsa_mod_length = 64;
 		}
-		reader->saveemm = 0;
-		reader->blockemm = 12;
+		reader->saveemm = ( 0 | reader->saveemm);
+		reader->blockemm = ( 12 | reader->blockemm);
 	} else if ( strncmp(current.atr, "3F 77 18 00 00 C2 EB 41 02 6C 90 00", 35) == 0 ) {
 		strcpy(current.providername,"Redlight Mega Elite\x0");
 		if ( !strncmp(rlme_deskey, "0", 1) == 0 ) {
@@ -114,9 +114,8 @@ void findatr(struct s_reader *reader) {
 		}
 		memcpy(reader->pincode, "0000\0", 5);
 		reader->disablecrccws = 1;
-		reader->saveemm = 0;
-		reader->blockemm = 12;
-		return;
+		reader->saveemm = ( 0 | reader->saveemm);
+		reader->blockemm = ( 12 | reader->blockemm);
 	} else if ( strncmp(current.atr, "3F 77 18 00 00 D3 8A 42 01 64 90 00", 35) == 0 ) {
 		strcpy(current.providername,"Redlight Mega Royale\x0");
 		if ( !strncmp(rlmr_deskey, "0", 1) == 0 ) {
@@ -127,23 +126,24 @@ void findatr(struct s_reader *reader) {
 		}
 		memcpy(reader->pincode, "0000\0", 5);
 		reader->disablecrccws = 1;
-		reader->saveemm = 0;
-		reader->blockemm = 12;
+		reader->saveemm = ( 0 | reader->saveemm);
+		reader->blockemm = ( 12 | reader->blockemm);
 	} else if ( strncmp(current.atr, "3B 24 00 30 42 30 30", 20) == 0 ) {
 		strcpy(current.providername,"MTV Unlimited\x0");
-		reader->saveemm = 0;
-		reader->blockemm = 8;
+		reader->saveemm = ( 0 | reader->saveemm);
+		reader->blockemm = ( 8 | reader->blockemm);
 	} else if ( strncmp(current.atr, "3B 78 12 00 00 54 C4 03 00 8F F1 90 00", 38) == 0 ) {
 		strcpy(current.providername,"Cryptoworks\x0");
-		reader->saveemm = 0;
-		reader->blockemm = ( 12 | reader->blockemm);
+		reader->saveemm = ( 0 | reader->saveemm);
+		reader->blockemm = ( 8 | reader->blockemm);
+		reader->needsglobalfirst = 1;
 	} else if ( strncmp(current.atr, "3B F7 11 00 01 40 96 70 70 0A 0E 6C B6 D6", 42) == 0 ) {
 		strcpy(current.providername,"Canal Digitaal (NL)\x0");
 		reader->caid = 0x0100;
 		reader->ratelimitecm = 4;
 		reader->ratelimittime = 9000;
-		reader->saveemm = 3;
-		reader->blockemm = 12;
+		reader->saveemm = ( 3 | reader->saveemm);
+		reader->blockemm = ( 12 | reader->blockemm);
 	} else if ( strncmp(current.atr, "3F FF 95 00 FF 91 81 71 FF 47 00 54 49 47 45 52 30 30 33 20 52 65 76 32 35 30 64", 80) == 0 ) {
 		strcpy(current.providername,"Tivusat 183D\x0");
 		istivu = 1;
@@ -152,17 +152,17 @@ void findatr(struct s_reader *reader) {
 		istivu = 1;
 	} else if ( strncmp(current.atr, "3F 77 18 00 00 C2 7A 41 02 68", 29) == 0 ) {
 		strcpy(current.providername,"SRG v4\x0");
-		reader->saveemm = 0;
-		reader->blockemm = 8;
+		reader->saveemm = ( 0 | reader->saveemm);
+		reader->blockemm = ( 8 | reader->blockemm);
 	} else if ( strncmp(current.atr, "3F 77 18 00 00 C2 7A 44 02 68", 29) == 0 ) {
 		strcpy(current.providername,"SRG v5\x0");
-		reader->saveemm = 0;
-		reader->blockemm = 8;
+		reader->saveemm = ( 0 | reader->saveemm);
+		reader->blockemm = ( 8 | reader->blockemm);
 		reader->read_old_classes = 0;
 	} else if ( strncmp(current.atr, "3F 77 18 00 00 D3 8A 40 01 64", 29) == 0 ) {
 		strcpy(current.providername,"SRG v6\x0");
-		reader->saveemm = 0;
-		reader->blockemm = 8;
+		reader->saveemm = ( 0 | reader->saveemm);
+		reader->blockemm = ( 8 | reader->blockemm);
 		reader->read_old_classes = 0;
 	} else if ( strncmp(current.atr, "3F 77 18 00 00 C2 EB 41 02 6C", 29) == 0 ) {
 		strcpy(current.providername,"TNT Viaccess v5\x0");
@@ -178,8 +178,8 @@ void findatr(struct s_reader *reader) {
 			reader->boxkey_length = 8;
 			reader->rsa_mod_length = 64;
 		}
-		reader->saveemm = 0;
-		reader->blockemm = 12;
+		reader->saveemm = ( 0 | reader->saveemm);
+		reader->blockemm = ( 12 | reader->blockemm);
 	} else if ( strncmp(current.atr, "3F FF 95 00 FF 91 81 71 FE 57 00 44 4E 41 53 50 34 38 32 20 52 65 76 52 32 36 1C", 80) == 0 ) {
 		strcpy(current.providername,"Max TV\x0");
 		if ( !strncmp(max_cwpk, "0", 1) == 0 ) {
@@ -199,8 +199,8 @@ void findatr(struct s_reader *reader) {
 			reader->nuid_length   =   4;
 			reader->cwekey_length =  16;
 		}
-		reader->saveemm = 0;
-		reader->blockemm = 8;
+		reader->saveemm = ( 0 | reader->saveemm);
+		reader->blockemm = ( 8 | reader->blockemm);
 	} else {
 		current.found = 0;
 	}
@@ -214,8 +214,8 @@ void findatr(struct s_reader *reader) {
 				reader->boxkey_length = 8;
 				reader->rsa_mod_length = 64;
 			}
-			reader->saveemm = 0;
-			reader->blockemm = 12;
+			reader->saveemm = ( 0 | reader->saveemm);
+			reader->blockemm = ( 12 | reader->blockemm);
 		} else if ( ishdnew == 1 ) {
 			// Astra HD03 / HD03a / HD03b / HD04 / HD04a
 			if ( !strncmp(hd_cwpk, "0", 1) == 0 ) {
@@ -235,8 +235,8 @@ void findatr(struct s_reader *reader) {
 				reader->nuid_length   =   4;
 				reader->cwekey_length =  16;
 			}
-			reader->saveemm = 0;
-			reader->blockemm = 8;
+			reader->saveemm = ( 0 | reader->saveemm);
+			reader->blockemm = ( 8 | reader->blockemm);
 		} else if ( isum == 1 ) {
 			if ( !strncmp(um_rsakey, "0", 1) == 0 ) {
 				memcpy(reader->boxkey, um_boxkey, 9);
@@ -244,16 +244,15 @@ void findatr(struct s_reader *reader) {
 				reader->boxkey_length = 8;
 				reader->rsa_mod_length = 64;
 			}
-			reader->saveemm = 0;
-			reader->blockemm = 12;
-
+			reader->saveemm = ( 0 | reader->saveemm);
+			reader->blockemm = ( 12 | reader->blockemm);
 		} else if ( istivu == 1 ) {
 			if ( !strncmp(tivu_rsakey, "0", 1) == 0 ) {
 				memcpy(reader->rsa_mod, tivu_rsakey, 120);
 				reader->rsa_mod_length = 120;
 			}
-			reader->saveemm = 0;
-			reader->blockemm = 8;
+			reader->saveemm = ( 0 | reader->saveemm);
+			reader->blockemm = ( 8 | reader->blockemm);
 		} else if ( istnt == 1 ) {
 			if ( !strncmp(tnt_deskey, "0", 1) == 0 ) {
 				memcpy(reader->boxkey, tnt_boxkey, 4);
@@ -262,8 +261,8 @@ void findatr(struct s_reader *reader) {
 				reader->des_key_length = 16;
 			}
 			memcpy(reader->pincode, "0000\0", 5);
-			reader->saveemm = 0;
-			reader->blockemm = 0;
+			reader->saveemm = ( 0 | reader->saveemm);
+			reader->blockemm = ( 0 | reader->blockemm);
 		}
 	} else {
 		int i;
@@ -274,7 +273,7 @@ void findatr(struct s_reader *reader) {
 			if ( strncmp(current.atr, buf, 65) == 0 ) {
 				strcpy(current.providername,"Sky Deutschland V13\x0");
 				reader->disablecrccws = 1;
-				reader->saveemm = 1;
+				reader->saveemm = ( 1 | reader->saveemm);
 				reader->blockemm = 15;
 				reader->boxid = 0x12345678;
 				reader->caid = 0x09C4;
@@ -284,7 +283,7 @@ void findatr(struct s_reader *reader) {
 			snprintf(buf, 63, "3F FD %i 25 02 50 80 0F 41 B0 0A 69 FF 4A 50 F0 00 00 50 31 03", i);
 			if ( strncmp(current.atr, buf, 62) == 0 ) {
 				strcpy(current.providername,"Sky Deutschland V14\x0");
-				reader->saveemm = 1;
+				reader->saveemm = ( 1 | reader->saveemm);
 				reader->blockemm = 15;
 				reader->boxid = 0x12345678;
 				reader->disablecrccws = 1;
@@ -296,7 +295,7 @@ void findatr(struct s_reader *reader) {
 			snprintf(buf, 63, "3F FD %i 25 02 50 80 0F 55 B0 02 69 FF 4A 50 F0 80 00 50 31 03", i);
 			if ( strncmp(current.atr, buf, 62) == 0 ) {
 				strcpy(current.providername,"Sky Deutschland V15\x0");
-				reader->saveemm = 1;
+				reader->saveemm = ( 1 | reader->saveemm);
 				reader->blockemm = 15;
 				reader->boxid = 0x12345678;
 				reader->disablecrccws = 1;
@@ -308,8 +307,8 @@ void findatr(struct s_reader *reader) {
 			snprintf(buf, 66, "3F FF %i 25 03 10 80 54 B0 01 69 FF 4A 50 70 00 00 4B 57 01 00 00", i);
 			if ( strncmp(current.atr, buf, 65) == 0 ) {
 				strcpy(current.providername,"Sky/Unitymedia V23\x0");
-				reader->saveemm = 0;
-				reader->blockemm = 12;
+				reader->saveemm = ( 0 | reader->saveemm);
+				reader->blockemm = ( 12 | reader->blockemm);
 				reader->boxid = 0x12345678;
 				current.found = 1;
 				break;
@@ -317,8 +316,8 @@ void findatr(struct s_reader *reader) {
 			snprintf(buf, 63, "3F FD %i 25 02 50 00 03 33 B0 15 69 FF 4A 50 F0 80 03 4B 4C 03", i);
 			if ( strncmp(current.atr, buf, 62) == 0 ) {
 				strcpy(current.providername,"Vodafone G09\x0");
-				reader->saveemm = 0;
-				reader->blockemm = 12;
+				reader->saveemm = ( 0 | reader->saveemm);
+				reader->blockemm = ( 12 | reader->blockemm);
 				reader->boxid = 0x12345678;
 				reader->deprecated = 1;
 				current.found = 1;
