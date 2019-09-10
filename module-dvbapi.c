@@ -172,6 +172,9 @@ static const char *get_descriptor_tag_txt(uint8_t descriptor_tag)
 		case 0x7C: return "AAC"; // with stream type 0x06
 		case 0x7D: return "XAIT location";
 		case 0x7F: return "DVB extension";
+		// Valid in ATSC context:
+		case 0x81: return "AC-3"; // with stream type 0x81
+		case 0xCC: return "enhanced AC-3"; // with stream type 0x87
 		default: return "user private";
 	}
 }
@@ -190,6 +193,7 @@ static const char *get_extension_descriptor_txt(uint8_t extension_tag)
 		case 0x18: return "protection message";
 		case 0x19: return "audio preselection";
 		case 0x20: return "TTML subtitling"; // (could become 0x1A, value in A038 draft seems weird)
+		case 0x21: return "DTS-UHD"; // with stream type 0x06 (could become 0x1B, value in A038 draft seems weird)
 		default: return "Undefined";
 	}
 }
@@ -1450,7 +1454,7 @@ int32_t dvbapi_stop_filter(int32_t demux_id, int32_t type, uint32_t msgid)
 {
 #if defined(WITH_COOLAPI) || defined(WITH_COOLAPI2)
 	// We prevented PAT and PMT from starting, so lets don't close them either.
-	if(type != TYPE_ECM && type != TYPE_EMM && type != TYPE_SDT)
+	if(type == TYPE_PAT || type == TYPE_PMT)
 	{
 		return 1;
 	}
@@ -1768,7 +1772,7 @@ void dvbapi_start_filter(int32_t demux_id, int32_t pidindex, uint16_t pid, uint1
 
 void dvbapi_start_sdt_filter(int32_t demux_id)
 {
-	dvbapi_start_filter(demux_id, demux[demux_id].pidindex, 0x11, 0x001, 0x01, 0x42, 0xFF, 0, TYPE_SDT);
+	dvbapi_start_filter(demux_id, demux[demux_id].pidindex, 0x0011, 0x001, 0x01, 0x42, 0xFF, 0, TYPE_SDT);
 	demux[demux_id].sdt_filter = 0;
 }
 
@@ -1779,7 +1783,7 @@ void dvbapi_start_pat_filter(int32_t demux_id)
 	// Don't use it
 	return;
 #endif
-	dvbapi_start_filter(demux_id, demux[demux_id].pidindex, 0x00, 0x001, 0x01, 0x00, 0xFF, 0, TYPE_PAT);
+	dvbapi_start_filter(demux_id, demux[demux_id].pidindex, 0x0000, 0x001, 0x01, 0x00, 0xFF, 0, TYPE_PAT);
 }
 
 void dvbapi_start_pmt_filter(int32_t demux_id)
@@ -1800,6 +1804,12 @@ void dvbapi_start_pmt_filter(int32_t demux_id)
 	mask[2] = 0xFF;
 
 	dvbapi_set_filter(demux_id, selected_api, demux[demux_id].pmtpid, 0x001, 0x01, filter, mask, 0, 0, TYPE_PMT, 0);
+}
+
+void dvbapi_start_cat_filter(int32_t demux_id)
+{
+	dvbapi_start_filter(demux_id, demux[demux_id].pidindex, 0x0001, 0x001, 0x01, 0x01, 0xFF, 0, TYPE_CAT);
+	demux[demux_id].emm_filter = 0;
 }
 
 void dvbapi_start_emm_filter(int32_t demux_id)
@@ -2106,7 +2116,99 @@ void dvbapi_add_emmpid(int32_t demux_id, uint16_t caid, uint16_t emmpid, uint32_
 	}
 }
 
-void dvbapi_parse_cat(int32_t demux_id, uint8_t *buf, int32_t len)
+static void dvbapi_parse_cat_ca_descriptor(int32_t demux_id, const uint8_t *buffer, uint8_t descriptor_length)
+{
+	uint16_t i, ca_system_id, ca_pid;
+	uint32_t ca_provider = 0, ca_data = 0;
+
+	if(descriptor_length < 4)
+	{
+		return; // CA descriptor has a minimum length of 4 bytes
+	}
+
+	ca_system_id = b2i(2, buffer);
+	ca_pid = b2i(2, buffer + 2) & 0x1FFF;
+
+	switch(ca_system_id >> 8)
+	{
+		case 0x01:
+		{
+			dvbapi_add_emmpid(demux_id, ca_system_id, ca_pid, 0, 0, EMM_UNIQUE | EMM_GLOBAL);
+
+			for(i = 5; i < descriptor_length; i += 4)
+			{
+				ca_pid = b2i(2, buffer + i) & 0x1FFF;
+				ca_provider = b2i(2, buffer + i + 2);
+
+				dvbapi_add_emmpid(demux_id, ca_system_id, ca_pid, ca_provider, 0, EMM_SHARED);
+			}
+			break;
+		}
+
+		case 0x05:
+		{
+			for(i = 4; i < descriptor_length; i += 2 + buffer[i + 1])
+			{
+				if(buffer[i] == 0x14)
+				{
+					ca_provider = (b2i(3, buffer + i + 2) & 0xFFFFF0); // viaccess fixup: don't care about last digit
+					dvbapi_add_emmpid(demux_id, ca_system_id, ca_pid, ca_provider, 0, EMM_UNIQUE | EMM_SHARED | EMM_GLOBAL);
+				}
+			}
+			break;
+		}
+
+		case 0x18:
+		{
+			if(descriptor_length == 0x07 || descriptor_length == 0x0B)
+			{
+				for(i = 5; i < 5 + buffer[4]; i += 2)
+				{
+					ca_provider = b2i(2, buffer + i);
+					dvbapi_add_emmpid(demux_id, ca_system_id, ca_pid, ca_provider, 0, EMM_UNIQUE | EMM_SHARED | EMM_GLOBAL);
+				}
+			}
+			else
+			{
+				dvbapi_add_emmpid(demux_id, ca_system_id, ca_pid, ca_provider, 0, EMM_UNIQUE | EMM_SHARED | EMM_GLOBAL);
+			}
+			break;
+		}
+
+		case 0x27:
+		case 0x4A:
+		{
+			if(caid_is_bulcrypt(ca_system_id))
+			{
+				dvbapi_add_emmpid(demux_id, ca_system_id, ca_pid, 0, 0, EMM_UNIQUE | EMM_SHARED | EMM_GLOBAL);
+				break;
+			}
+
+			ca_provider = buffer[4];
+
+			if(buffer[4] == 0xFE)
+			{
+				dvbapi_add_emmpid(demux_id, ca_system_id, ca_pid, ca_provider, 0x102, EMM_GLOBAL);
+			}
+			else
+			{
+				if(descriptor_length == 0x0A)
+				{
+					ca_data = b2i(4, buffer + 6);
+				}
+
+				dvbapi_add_emmpid(demux_id, ca_system_id, ca_pid, ca_provider, ca_data, EMM_UNIQUE | EMM_SHARED | EMM_GLOBAL);
+			}
+			break;
+		}
+
+		default:
+			dvbapi_add_emmpid(demux_id, ca_system_id, ca_pid, 0, 0, EMM_UNIQUE | EMM_SHARED | EMM_GLOBAL);
+			break;
+	}
+}
+
+static void dvbapi_parse_cat(int32_t demux_id, const uint8_t *buffer, uint16_t length, uint32_t msgid)
 {
 #if defined WITH_COOLAPI || defined WITH_COOLAPI2
 	// driver sometimes reports error if too many emm filter
@@ -2140,87 +2242,21 @@ void dvbapi_parse_cat(int32_t demux_id, uint8_t *buf, int32_t len)
 	}
 #endif
 
-	uint16_t i, k;
-	cs_log_dump_dbg(D_DVBAPI, buf, len, "cat:");
+	uint16_t i;
+	uint8_t descriptor_tag, descriptor_length;
 
-	for(i = 8; i < (b2i(2, buf + 1) & 0xFFF) - 1; i += buf[i + 1] + 2)
+	dvbapi_stop_filter(demux_id, TYPE_CAT, msgid);
+
+	for(i = 8; i + 1 < length; i += 2 + descriptor_length)
 	{
-		if(buf[i] != 0x09)
+		descriptor_tag = buffer[i];
+		descriptor_length = buffer[i + 1];
+
+		if(descriptor_tag == 0x09) // There should be only CA descriptors here
 		{
-			continue;
-		}
-
-		uint16_t caid = b2i(2, buf + i + 2);
-		uint16_t emm_pid = b2i(2, buf + i +4) & 0x1FFF;
-		uint32_t emm_provider = 0;
-
-		switch(caid >> 8)
-		{
-			case 0x01:
-				dvbapi_add_emmpid(demux_id, caid, emm_pid, 0, 0, EMM_UNIQUE | EMM_GLOBAL);
-				for(k = i + 7; k < i + buf[i + 1] + 2; k += 4)
-				{
-					emm_provider = b2i(2, buf + k + 2);
-					emm_pid = b2i(2, buf + k) & 0xFFF;
-					dvbapi_add_emmpid(demux_id, caid, emm_pid, emm_provider, 0, EMM_SHARED);
-				}
-				break;
-
-			case 0x05:
-				for(k = i + 6; k < i + buf[i + 1] + 2; k += buf[k + 1] + 2)
-				{
-					if(buf[k] == 0x14)
-					{
-						emm_provider = (b2i(3, buf + k + 2) & 0xFFFFF0); // viaccess fixup last digit is a dont care!
-						dvbapi_add_emmpid(demux_id, caid, emm_pid, emm_provider, 0, EMM_UNIQUE | EMM_SHARED | EMM_GLOBAL);
-					}
-				}
-				break;
-
-			case 0x18:
-				if(buf[i + 1] == 0x07 || buf[i + 1] == 0x0B)
-				{
-					for(k = i + 7; k < i + 7 + buf[i + 6]; k += 2)
-					{
-						emm_provider = b2i(2, buf + k);
-						dvbapi_add_emmpid(demux_id, caid, emm_pid, emm_provider, 0, EMM_UNIQUE | EMM_SHARED | EMM_GLOBAL);
-					}
-				}
-				else
-				{
-					dvbapi_add_emmpid(demux_id, caid, emm_pid, emm_provider, 0, EMM_UNIQUE | EMM_SHARED | EMM_GLOBAL);
-				}
-				break;
-
-			case 0x27:
-			case 0x4A:
-				if(caid_is_bulcrypt(caid))
-				{
-					dvbapi_add_emmpid(demux_id, caid, emm_pid, 0, 0, EMM_UNIQUE | EMM_SHARED | EMM_GLOBAL);
-					break;
-				}
-				emm_provider = (uint32_t)buf[i + 6];
-				if(buf[i + 6] == 0xFE)
-				{
-					dvbapi_add_emmpid(demux_id, caid, emm_pid, emm_provider, 0x102, EMM_GLOBAL);
-				}
-				else
-				{
-					uint32_t cadata = 0;
-					if(buf[i + 1] == 0x0A)
-					{
-						cadata = (buf[i + 8] << 24) | (buf[i + 9] << 16) | (buf[i + 10] << 8) | buf[i + 11];
-					}
-					dvbapi_add_emmpid(demux_id, caid, emm_pid, emm_provider, cadata, EMM_UNIQUE | EMM_SHARED | EMM_GLOBAL);
-				}
-				break;
-
-			default:
-				dvbapi_add_emmpid(demux_id, caid, emm_pid, 0, 0, EMM_UNIQUE | EMM_SHARED | EMM_GLOBAL);
-				break;
+			dvbapi_parse_cat_ca_descriptor(demux_id, buffer + i + 2, descriptor_length);
 		}
 	}
-	return;
 }
 
 static pthread_mutex_t lockindex = PTHREAD_MUTEX_INITIALIZER;
@@ -2489,21 +2525,32 @@ void dvbapi_set_pid(int32_t demux_id, int32_t num, uint32_t idx, bool enable, bo
 void dvbapi_stop_all_descrambling(uint32_t msgid)
 {
 	int32_t j;
+
 	for(j = 0; j < MAX_DEMUX; j++)
 	{
-		if(demux[j].program_number == 0) { continue; }
+		if(demux[j].program_number == 0)
+		{
+			continue;
+		}
+
 		dvbapi_stop_descrambling(j, msgid);
 	}
 }
 
-void dvbapi_stop_all_emm_sdt_filtering(uint32_t msgid)
+void dvbapi_stop_all_cat_emm_sdt_filtering(uint32_t msgid)
 {
 	int32_t j;
+
 	for(j = 0; j < MAX_DEMUX; j++)
 	{
-		if(demux[j].program_number == 0) { continue; }
+		if(demux[j].program_number == 0)
+		{
+			continue;
+		}
+
 		dvbapi_stop_filter(j, TYPE_EMM, msgid);
 		dvbapi_stop_filter(j, TYPE_SDT, msgid);
+		dvbapi_stop_filter(j, TYPE_CAT, msgid);
 		demux[j].emm_filter = -1;
 	}
 }
@@ -2534,6 +2581,7 @@ void dvbapi_stop_descrambling(int32_t demux_id, uint32_t msgid)
 	dvbapi_stop_filter(demux_id, TYPE_SDT, msgid);
 	dvbapi_stop_filter(demux_id, TYPE_PAT, msgid);
 	dvbapi_stop_filter(demux_id, TYPE_PMT, msgid);
+	dvbapi_stop_filter(demux_id, TYPE_CAT, msgid);
 
 	for(i = 0; i < demux[demux_id].ECMpidcount && demux[demux_id].ECMpidcount > 0; i++)
 	{
@@ -2704,9 +2752,9 @@ int32_t dvbapi_start_descrambling(int32_t demux_id, int32_t pid, int8_t checked,
 			er->ens &= 0x0FFFFFFF; // clear top 4 bits (in case of DVB-T/C or garbage), prepare for flagging
 			er->ens |= 0xA0000000; // flag to emu: this is the namespace, not a pid
 
-			i2b_buf(2, er->tsid, er->ecm + 3 + er->ecm[2]);     // place tsid after the last stream pid
-			i2b_buf(2, er->onid, er->ecm + 3 + er->ecm[2] + 2); // place onid right after tsid
-			i2b_buf(4, er->ens, er->ecm + 3 + er->ecm[2] + 4);  // place namespace at the end of the ecm
+			i2b_buf(2, er->tsid, er->ecm + er->ecmlen);     // place tsid after the last stream pid
+			i2b_buf(2, er->onid, er->ecm + er->ecmlen + 2); // place onid right after tsid
+			i2b_buf(4, er->ens, er->ecm + er->ecmlen + 4);  // place namespace at the end of the ecm
 
 			er->ecm[2] += 8;
 			er->ecmlen += 8;
@@ -3832,7 +3880,7 @@ static void dvbapi_priority_read_entry_extra(int32_t demux_id)
 	}
 }
 
-static void dvbapi_parse_ca_descriptor(int32_t demux_id, const uint8_t *buffer, uint8_t descriptor_length)
+static void dvbapi_parse_pmt_ca_descriptor(int32_t demux_id, const uint8_t *buffer, uint8_t descriptor_length)
 {
 	uint16_t i, ca_system_id, ca_pid;
 	uint32_t ca_provider = 0, ca_data = 0;
@@ -3928,7 +3976,7 @@ static void dvbapi_parse_pmt_descriptors(int32_t demux_id, const uint8_t *buffer
 
 			case 0x09: // CA descriptor
 			{
-				dvbapi_parse_ca_descriptor(demux_id, buffer + i + 2, descriptor_length);
+				dvbapi_parse_pmt_ca_descriptor(demux_id, buffer + i + 2, descriptor_length);
 				break;
 			}
 
@@ -3942,6 +3990,8 @@ static void dvbapi_parse_pmt_descriptors(int32_t demux_id, const uint8_t *buffer
 			case 0x7A: // Enhanced AC-3 descriptor (DVB)
 			case 0x7B: // DTS descriptor (DVB)
 			case 0x7C: // AAC descriptor (DVB)
+			case 0x81: // AC-3 descriptor (ATSC)
+			case 0xCC: // Enhanced AC-3 descriptor (ATSC)
 			{
 				*type = STREAM_AUDIO;
 				break;
@@ -3959,6 +4009,7 @@ static void dvbapi_parse_pmt_descriptors(int32_t demux_id, const uint8_t *buffer
 					case 0x0E: // DTS-HD descriptor (DVB)
 					case 0x0F: // DTS Neural descriptor (DVB)
 					case 0x15: // AC-4 descriptor (DVB)
+					case 0x21: // DTS-UHD descriptor (DVB)
 						*type = STREAM_AUDIO;
 						break;
 
@@ -3966,13 +4017,6 @@ static void dvbapi_parse_pmt_descriptors(int32_t demux_id, const uint8_t *buffer
 						*type = STREAM_UNDEFINED;
 						break;
 				}
-				break;
-			}
-
-			case 0x81: // AC-3 descriptor (ATSC)
-			{
-				*type = STREAM_AUDIO;
-				cs_log_dbg(D_DVBAPI, "Demuxer %d assuming AC-3 descriptor (ATSC)", demux_id);
 				break;
 			}
 
@@ -4107,7 +4151,7 @@ static void dvbapi_parse_pmt_program_info(int32_t demux_id, const uint8_t *buffe
 
 		if(descriptor_tag == 0x09) // We only care about CA descriptors at program level
 		{
-			dvbapi_parse_ca_descriptor(demux_id, buffer + i + 2, descriptor_length);
+			dvbapi_parse_pmt_ca_descriptor(demux_id, buffer + i + 2, descriptor_length);
 		}
 	}
 }
@@ -4424,6 +4468,7 @@ static void dvbapi_capmt_notify(struct demux_s *dmx)
 static void dvbapi_prepare_descrambling(int32_t demux_id, uint32_t msgid)
 {
 	bool is_powervu = false, start_emm = true;
+	char service_name[CS_SERVICENAME_SIZE];
 
 	// The CA PMT should have given us enough info to determine if descrambling
 	// is possible. Parsing the (real) PMT is not necessary, unless we have a
@@ -4462,10 +4507,13 @@ static void dvbapi_prepare_descrambling(int32_t demux_id, uint32_t msgid)
 	{
 		// remove all non important filtering
 		// (there are images with limited amount of filters available!)
-		dvbapi_stop_all_emm_sdt_filtering(msgid);
+		dvbapi_stop_all_cat_emm_sdt_filtering(msgid);
 
-		cs_log_dbg(D_DVBAPI, "Demuxer %d started descrambling for program %04X (fd: %d)",
-			demux_id, demux[demux_id].program_number, demux[demux_id].socket_fd);
+		get_servicename(dvbapi_client, demux[demux_id].program_number, demux[demux_id].ECMpids[0].PROVID,
+			demux[demux_id].ECMpids[0].CAID, service_name, sizeof(service_name));
+
+		cs_log_dbg(D_DVBAPI, "Demuxer %d started descrambling for program %04X (%s) (fd: %d)",
+			demux_id, demux[demux_id].program_number, service_name, demux[demux_id].socket_fd);
 
 		demux[demux_id].running = true; // mark channel as running
 		openxcas_set_sid(demux[demux_id].program_number);
@@ -4476,8 +4524,11 @@ static void dvbapi_prepare_descrambling(int32_t demux_id, uint32_t msgid)
 	}
 	else if(demux[demux_id].ECMpidcount == 0) // FTA: do logging and part of ecm handler
 	{
-		cs_log_dbg(D_DVBAPI, "Demuxer %d no descrambling needed for FTA program %04X (fd: %d)",
-			demux_id, demux[demux_id].program_number, demux[demux_id].socket_fd);
+		get_servicename(dvbapi_client, demux[demux_id].program_number, NO_PROVID_VALUE, NO_CAID_VALUE,
+			service_name, sizeof(service_name));
+
+		cs_log_dbg(D_DVBAPI, "Demuxer %d no descrambling needed for FTA program %04X (%s) (fd: %d)",
+			demux_id, demux[demux_id].program_number, service_name, demux[demux_id].socket_fd);
 
 		demux[demux_id].running = false; // reset running flag
 		demux[demux_id].pidindex = -1; // reset ecmpid used for descrambling
@@ -4512,7 +4563,7 @@ static void dvbapi_prepare_descrambling(int32_t demux_id, uint32_t msgid)
 			// trick to let emm fetching start after 30 seconds to speed up zapping
 			cs_ftime(&demux[demux_id].emmstart);
 
-			dvbapi_start_filter(demux_id, demux[demux_id].pidindex, 0x001, 0x001, 0x01, 0x01, 0xFF, 0, TYPE_EMM); // CAT
+			dvbapi_start_cat_filter(demux_id);
 		}
 		else
 		{
@@ -4761,7 +4812,7 @@ int32_t dvbapi_parse_capmt(const uint8_t *buffer, uint32_t length, int32_t connf
 	}
 }
 
-static void dvbapi_parse_pmt(int32_t demux_id, const uint8_t *buffer, uint32_t length, uint32_t msgid)
+static void dvbapi_parse_pmt(int32_t demux_id, const uint8_t *buffer, uint16_t length, uint32_t msgid)
 {
 	uint16_t program_number = b2i(2, buffer + 3);
 	if(program_number != demux[demux_id].program_number)
@@ -4774,153 +4825,11 @@ static void dvbapi_parse_pmt(int32_t demux_id, const uint8_t *buffer, uint32_t l
 	dvbapi_parse_pmt_info(demux_id, buffer + 10, length - 10 - 4, NULL); // last 4 bytes are the CRC-32
 }
 
-static uint32_t dvbapi_extract_sdt_string(char *buf, uint32_t buflen, uint8_t *source, uint32_t sourcelen)
-{
-	uint32_t i, j, offset = 0;
-	int8_t iso_mode = -1;
-	char *tmpbuf;
-	const uint8_t *ptr_in;
-	uint8_t *ptr_out;
-	size_t in_bytes, out_bytes;
-
-	if(sourcelen == 0)
-	{
-		buf[0] = '\0';
-		return 1;
-	}
-
-	if(!cs_malloc(&tmpbuf, buflen))
-	{
-		return 0;
-	}
-
-	if((sourcelen + 1) > buflen)
-	{
-		sourcelen = buflen - 1;
-	}
-
-	if(sourcelen > 0 && source[0] < 0x20)
-	{
-		//ISO-8859
-		if(source[0] >= 0x01 && source[0] <= 0x0B && source[0] != 0x08)
-		{
-			offset = 1;
-			iso_mode = 4 + source[0];
-		}
-		//ISO-8859
-		else if(source[0] == 0x10 && source[1] == 0x00 && source[2] >= 0x01 && source[2] <= 0x0F && source[2] != 0x0C)
-		{
-			offset = 3; iso_mode = source[2];
-		}
-		//Unicode
-		else if(source[0] == 0x11)
-		{
-			offset = 1;
-			iso_mode = -2;
-		}
-		//missing: 0x12 Korean Character Set KSC5601-1987
-		//missing: 0x13 Simplified Chinese Character Set GB-2312-1980
-		//missing: 0x14 Big5 subset of ISO/IEC 10646-1 (Traditional Chinese)
-		//Unicode as UTF-8
-		else if(source[0] == 0x15)
-		{
-			offset = 1;
-			iso_mode = -3;
-		}
-		//missing: 0x1F Described by encoding_type_id *standard not finished yet*
-		//Reserved for future use
-		else
-		{
-			NULLFREE(tmpbuf); return 0;
-		}
-	}
-
-	if(offset >= sourcelen)
-	{
-		NULLFREE(tmpbuf); return 0;
-	}
-
-	if(iso_mode >= -1)
-	{
-		for(i = 0, j = 0; i < (sourcelen - offset); i++)
-		{
-			if(((uint8_t)source[offset + i]) >= 0x80 && ((uint8_t)source[offset + i]) <= 0x9F)
-			{
-				continue;
-			}
-			tmpbuf[j] = source[offset + i];
-			j++;
-		}
-		tmpbuf[j] = '\0';
-	}
-
-	ptr_in = (const uint8_t *)tmpbuf;
-	in_bytes = strlen(tmpbuf);
-	ptr_out = (uint8_t *)buf;
-	out_bytes = buflen;
-
-#ifdef READ_SDT_CHARSETS
-	if(iso_mode >= -1)
-	{
-		memset(buf, 0, buflen);
-		cs_log_dbg(D_DVBAPI, "sdt-info dbg: iso_mode: %d offset: %u", iso_mode, offset);
-		cs_log_dump_dbg(D_DVBAPI, (uint8_t *)tmpbuf, in_bytes, "sdt-info dbg: raw string: ");
-
-		if(iso_mode == -1)
-		{
-			if(ISO6937toUTF8(&ptr_in, &in_bytes, &ptr_out, &out_bytes) == (size_t)(-1))
-			{
-				cs_log_dbg(D_DVBAPI, "sdt-info error: ISO6937toUTF8 failed");
-				NULLFREE(tmpbuf);
-				return 0;
-			}
-		}
-		else
-		{
-			if(ISO8859toUTF8(iso_mode, &ptr_in, &in_bytes, &ptr_out, &out_bytes) == (size_t)(-1))
-			{
-				cs_log_dbg(D_DVBAPI, "sdt-info error: ISO8859toUTF8 failed");
-				NULLFREE(tmpbuf);
-				return 0;
-			}
-		}
-	}
-#else
-	if(iso_mode >= -1)
-	{
-		cs_strncpy(buf, tmpbuf, buflen);
-		cs_log_dbg(D_DVBAPI, "sdt-info warning: your build of oscam does not support iso-to-utf8 conversion, special chars may be corrupted!");
-	}
-#endif
-	else if(iso_mode == -2)
-	{
-		memset(buf, 0, buflen);
-		cs_log_dbg(D_DVBAPI, "sdt-info dbg: iso_mode: %d offset: %u", iso_mode, offset);
-
-		if(UnicodetoUTF8(&ptr_in, &in_bytes, &ptr_out, &out_bytes) == (size_t)(-1))
-		{
-			cs_log_dbg(D_DVBAPI, "sdt-info error: UnicodetoUTF8 failed");
-			NULLFREE(tmpbuf);
-			return 0;
-		}
-	}
-	else if(iso_mode == -3)
-	{
-		memcpy(buf, source + offset, sourcelen - offset);
-		buf[sourcelen - offset] = '\0';
-		cs_log_dbg(D_DVBAPI, "sdt-info dbg: iso_mode: -3 offset: %u", offset);
-	}
-	cs_log_dump_dbg(D_DVBAPI, (uint8_t*)buf, strlen(buf), "sdt-info dbg: encoded string: ");
-	NULLFREE(tmpbuf);
-	return 1;
-}
-
 static void dvbapi_create_srvid_line(int32_t demux_id, char *buffer, uint32_t buflen)
 {
-	int32_t i, j;
+	int32_t i, j, pos = 0;
 	uint16_t caid_done[32], cur_caid;
 	uint8_t caid_done_count = 0, skip_caid;
-	int32_t pos = 0;
 
 	if(demux[demux_id].ECMpidcount == 0)
 	{
@@ -4960,17 +4869,282 @@ static void dvbapi_create_srvid_line(int32_t demux_id, char *buffer, uint32_t bu
 				pos += snprintf(buffer + pos, buflen - pos, "@%06X", demux[demux_id].ECMpids[j].PROVID);
 			}
 		}
+
 		caid_done[caid_done_count] = demux[demux_id].ECMpids[i].CAID;
 		caid_done_count++;
 	}
 }
 
-static const char *dvbapi_get_service_type(uint8_t service_type_id)
+static void dvbapi_write_sdt_info(int32_t demux_id, const char *provider_name, const char* service_name, const char *service_type)
 {
-	switch(service_type_id)
+	int8_t did_save_srvid = 0;
+	int32_t provid, caid, pidindex;
+	char tmp[256], srvid_line[1024];
+	FILE *fpsave = NULL;
+
+	pidindex = demux[demux_id].pidindex;
+	if(pidindex != -1)
+	{
+		caid = demux[demux_id].ECMpids[pidindex].CAID;
+		provid = demux[demux_id].ECMpids[pidindex].PROVID;
+	}
+	else
+	{
+		if(demux[demux_id].ECMpidcount == 0 || demux[demux_id].ECMpids[0].CAID == 0)
+		{
+			caid = NO_CAID_VALUE;
+			provid = NO_PROVID_VALUE;
+		}
+		else
+		{
+			caid = demux[demux_id].ECMpids[0].CAID;
+			provid = demux[demux_id].ECMpids[0].PROVID;
+		}
+	}
+
+	if(strlen(provider_name) && caid != NO_CAID_VALUE)
+	{
+		get_providername_or_null(provid, caid, tmp, sizeof(tmp));
+
+		if(tmp[0] == '\0')
+		{
+			get_config_filename(tmp, sizeof(tmp), "oscam.provid");
+
+			if((fpsave = fopen(tmp, "a")))
+			{
+				fprintf(fpsave, "\n%04X@%06X|%s|", caid, provid, provider_name);
+				fclose(fpsave);
+				init_provid();
+			}
+		}
+	}
+
+	if(strlen(service_name))
+	{
+		get_servicename_or_null(cur_client(), demux[demux_id].program_number, provid, caid, tmp, sizeof(tmp));
+
+		if(tmp[0] == '\0')
+		{
+			get_config_filename(tmp, sizeof(tmp), "oscam.srvid2");
+
+			if(!access(tmp, F_OK) && (fpsave = fopen(tmp, "a")))
+			{
+				if((caid != NO_CAID_VALUE) || (cfg.dvbapi_read_sdt > 1))
+				{
+					dvbapi_create_srvid_line(demux_id, srvid_line, sizeof(srvid_line));
+
+					if(cfg.dvbapi_write_sdt_prov)
+					{
+						fprintf(fpsave, "\n%04X:%s|%s|%s||%s", demux[demux_id].program_number, srvid_line, service_name, service_type, provider_name);
+					}
+					else
+					{
+						fprintf(fpsave, "\n%04X:%s|%s|%s", demux[demux_id].program_number, srvid_line, service_name, service_type);
+					}
+
+					did_save_srvid = 1;
+				}
+			}
+			else
+			{
+				get_config_filename(tmp, sizeof(tmp), "oscam.srvid");
+
+				if((fpsave = fopen(tmp, "a")))
+				{
+					if((caid != NO_CAID_VALUE) || (cfg.dvbapi_read_sdt > 1))
+					{
+						dvbapi_create_srvid_line(demux_id, srvid_line, sizeof(srvid_line));
+
+						if(cfg.dvbapi_write_sdt_prov)
+						{
+							fprintf(fpsave, "\n%s:%04X|%s|%s|%s", srvid_line, demux[demux_id].program_number, provider_name, service_name, service_type);
+						}
+						else
+						{
+							fprintf(fpsave, "\n%s:%04X||%s|%s", srvid_line, demux[demux_id].program_number, service_name, service_type);
+						}
+
+						did_save_srvid = 1;
+					}
+				}
+			}
+
+			if(fpsave)
+			{
+				fclose(fpsave);
+			}
+
+			if(did_save_srvid)
+			{
+				init_srvid();
+			}
+		}
+	}
+}
+
+static uint32_t dvbapi_extract_sdt_string(char *buf, uint32_t buflen, const uint8_t *source, uint8_t sourcelen)
+{
+	uint32_t i, j, offset = 0;
+	int8_t iso_mode = -1;
+	char *tmpbuf;
+	const uint8_t *ptr_in;
+	uint8_t *ptr_out;
+	size_t in_bytes, out_bytes;
+
+	if(sourcelen == 0)
+	{
+		buf[0] = '\0';
+		return 1;
+	}
+
+	if(!cs_malloc(&tmpbuf, buflen))
+	{
+		return 0;
+	}
+
+	if(sourcelen > buflen - 1)
+	{
+		sourcelen = buflen - 1;
+	}
+
+	if(sourcelen > 0 && source[0] < 0x20)
+	{
+		if(source[0] >= 0x01 && source[0] <= 0x0B && source[0] != 0x08) // ISO/IEC 8859
+		{
+			offset = 1;
+			iso_mode = 4 + source[0];
+		}
+		else if(source[0] == 0x10) // Dynamically selected part of ISO/IEC 8859
+		{
+			if(source[1] == 0x00 && source[2] >= 0x01 && source[2] <= 0x0F && source[2] != 0x0C)
+			{
+				offset = 3;
+				iso_mode = source[2];
+			}
+		}
+		else if(source[0] == 0x11) // ISO/IEC 10646
+		{
+			offset = 1;
+			iso_mode = -2;
+		}
+		// missing: 0x12 KSX1001-2004 (Korean Character Set)
+		// missing: 0x13 GB-2312-1980 (Simplified Chinese Character Set)
+		// missing: 0x14 Big5 subset of ISO/IEC 10646 (Traditional Chinese)
+		else if(source[0] == 0x15) // UTF-8 encoding of ISO/IEC 10646
+		{
+			offset = 1;
+			iso_mode = -3;
+		}
+		// missing: 0x1F Described by encoding_type_id
+		else
+		{
+			NULLFREE(tmpbuf);
+			return 0;
+		}
+	}
+
+	if(offset >= sourcelen)
+	{
+		NULLFREE(tmpbuf);
+		return 0;
+	}
+
+	if(iso_mode >= -1)
+	{
+		for(i = 0, j = 0; i < sourcelen - offset; i++)
+		{
+			if(source[offset + i] >= 0x80 && source[offset + i] <= 0x9F)
+			{
+				continue;
+			}
+
+			tmpbuf[j] = source[offset + i];
+			j++;
+		}
+
+		tmpbuf[j] = '\0';
+	}
+
+	ptr_in = (const uint8_t *)tmpbuf;
+	in_bytes = strlen(tmpbuf);
+	ptr_out = (uint8_t *)buf;
+	out_bytes = buflen;
+
+#ifdef READ_SDT_CHARSETS
+	if(iso_mode >= -1)
+	{
+		memset(buf, 0, buflen);
+		cs_log_dbg(D_DVBAPI, "sdt-info dbg: iso_mode: %d offset: %u", iso_mode, offset);
+		cs_log_dump_dbg(D_DVBAPI, (uint8_t *)tmpbuf, in_bytes, "sdt-info dbg: raw string:");
+
+		if(iso_mode == -1)
+		{
+			if(ISO6937toUTF8(&ptr_in, &in_bytes, &ptr_out, &out_bytes) == (size_t)(-1))
+			{
+				cs_log_dbg(D_DVBAPI, "sdt-info error: ISO6937toUTF8 failed");
+				NULLFREE(tmpbuf);
+				return 0;
+			}
+		}
+		else
+		{
+			if(ISO8859toUTF8(iso_mode, &ptr_in, &in_bytes, &ptr_out, &out_bytes) == (size_t)(-1))
+			{
+				cs_log_dbg(D_DVBAPI, "sdt-info error: ISO8859toUTF8 failed");
+				NULLFREE(tmpbuf);
+				return 0;
+			}
+		}
+	}
+#else
+	if(iso_mode >= -1)
+	{
+		cs_strncpy(buf, tmpbuf, buflen);
+		cs_log_dbg(D_DVBAPI, "sdt-info warning: your build of oscam does not support iso-to-utf8 conversion, special chars may be corrupted!");
+	}
+#endif
+	else if(iso_mode == -2)
+	{
+		memset(buf, 0, buflen);
+		cs_log_dbg(D_DVBAPI, "sdt-info dbg: iso_mode: %d offset: %u", iso_mode, offset);
+
+		if(UnicodetoUTF8(&ptr_in, &in_bytes, &ptr_out, &out_bytes) == (size_t)(-1))
+		{
+			cs_log_dbg(D_DVBAPI, "sdt-info error: UnicodetoUTF8 failed");
+			NULLFREE(tmpbuf);
+			return 0;
+		}
+	}
+	else if(iso_mode == -3) // No conversion, already in UTF-8
+	{
+		memcpy(buf, source + offset, sourcelen - offset);
+		buf[sourcelen - offset] = '\0';
+		cs_log_dbg(D_DVBAPI, "sdt-info dbg: iso_mode: -3 offset: %u", offset);
+	}
+
+	cs_log_dump_dbg(D_DVBAPI, (uint8_t *)buf, strlen(buf), "sdt-info dbg: encoded string:");
+	NULLFREE(tmpbuf);
+	return 1;
+}
+
+static const char *dvbapi_get_service_type(uint8_t service_type)
+{
+	switch(service_type)
 	{
 		case 0x01:
+		case 0x0B:
 		case 0x11:
+		case 0x16:
+		case 0x17:
+		case 0x18:
+		case 0x19:
+		case 0x1A:
+		case 0x1B:
+		case 0x1C:
+		case 0x1D:
+		case 0x1E:
+		case 0x1F:
+		case 0x20:
 			return "TV";
 
 		case 0x02:
@@ -4985,206 +5159,91 @@ static const char *dvbapi_get_service_type(uint8_t service_type_id)
 			return "Data";
 
 		default:
-			return "TV";
+			return "unknown";
 	}
 }
 
-static void dvbapi_parse_sdt(int32_t demux_id, uint8_t *buffer, uint32_t length, uint32_t msgid)
+static void dvbapi_parse_service_descriptor(int32_t demux_id, const uint8_t *buffer, uint8_t descriptor_length)
 {
-	uint8_t tag, data_length = 0, provider_name_length, service_name_length, service_type;
-	uint16_t service_id, descriptor_length, dpos;
-	uint32_t section_length, pos;
-	int8_t did_save_srvid = 0;
-	int32_t provid, caid, pidindex;
-	char provider_name[64], service_name[64], tmp[256], srvid_line[1024];
-	const char *type;
-	FILE *fpsave = NULL;
+	uint8_t service_provider_name_length, service_name_length;
+	char service_provider_name[64], service_name[64];
+	const char *service_type;
 
-	cs_log_dump_dbg(D_DVBAPI, buffer, length, "sdt-info dbg: sdt data: ");
+	if(descriptor_length < 3)
+	{
+		return; // Service descriptor has a minimum length of 3 bytes
+	}
 
-	if(length < 3)
+	service_type = dvbapi_get_service_type(buffer[0]);
+
+	service_provider_name_length = buffer[1];
+	if(2 + service_provider_name_length + 1 > descriptor_length)
 	{
 		return;
 	}
 
-	if(buffer[0] != 0x42)
+	service_name_length = buffer[2 + service_provider_name_length];
+	if(2 + service_provider_name_length + 1 + service_name_length > descriptor_length)
 	{
 		return;
 	}
 
-	section_length = b2i(2, buffer + 1) & 0xFFF;
-	if(section_length + 3 != length)
+	if(!dvbapi_extract_sdt_string(service_provider_name, sizeof(service_provider_name), buffer + 2, service_provider_name_length) ||
+		!dvbapi_extract_sdt_string(service_name, sizeof(service_name), buffer + 2 + service_provider_name_length + 1, service_name_length))
 	{
 		return;
 	}
 
-	for(pos = 11; pos + 5 < length; pos += descriptor_length)
-	{
-		service_id = b2i(2, buffer + pos);
-		descriptor_length = b2i(2, buffer + pos + 3) & 0xFFF;
+	cs_log_dbg(D_DVBAPI, "Demuxer %d got service info (provider: %s - name: %s - type: %s)",
+		demux_id, service_provider_name, service_name, service_type);
 
-		if((pos + 5 + descriptor_length) >= length)
-		{
-			return;
-		}
-		pos += 5;
+	dvbapi_write_sdt_info(demux_id, service_provider_name, service_name, service_type);
+}
+
+static void dvbapi_parse_sdt(int32_t demux_id, const uint8_t *buffer, uint16_t length, uint32_t msgid)
+{
+	uint8_t descriptor_tag, descriptor_length;
+	uint16_t service_id, descriptors_loop_length, i, j;
+
+	if(buffer[0] != 0x42) // SDT sections with table_id value 0x42 describe the actual TS
+	{
+		return;
+	}
+
+	// Get the tsid and onid (in enigma2 STBs we have
+	// already received them in the CA PMT message)
+	demux[demux_id].tsid = b2i(2, buffer + 3);
+	demux[demux_id].onid = b2i(2, buffer + 8);
+
+	for(i = 11; i + 5 < length; i += 5 + descriptors_loop_length)
+	{
+		service_id = b2i(2, buffer + i);
+		descriptors_loop_length = b2i(2, buffer + i + 3) & 0x0FFF;
 
 		if(service_id != demux[demux_id].program_number)
 		{
 			continue;
 		}
 
-		for(dpos = 0; dpos + 1 < descriptor_length; dpos += (2 + data_length))
+		for(j = 0; j + 1 < descriptors_loop_length; j += 2 + descriptor_length)
 		{
-			tag = buffer[pos + dpos];
-			data_length = buffer[pos + dpos + 1];
+			descriptor_tag = buffer[i + 5 + j];
+			descriptor_length = buffer[i + 5 + j + 1];
 
-			if(dpos + 1 + data_length >= descriptor_length)
+			if(descriptor_tag == 0x48)
 			{
-				break;
+				dvbapi_parse_service_descriptor(demux_id, buffer + i + 5 + j + 2, descriptor_length);
 			}
-
-			if(tag != 0x48)
-			{
-				continue;
-			}
-
-			if(dpos + 3 >= descriptor_length)
-			{
-				break;
-			}
-
-			service_type = buffer[pos + dpos + 2];
-			provider_name_length = buffer[pos + dpos + 3];
-
-			if((dpos + 4 + provider_name_length + 1) > descriptor_length)
-			{
-				break;
-			}
-
-			service_name_length = buffer[pos + dpos + 4 + provider_name_length];
-			if((dpos + 4 + provider_name_length + 1 + service_name_length) > descriptor_length)
-			{
-				break;
-			}
-
-			pidindex = demux[demux_id].pidindex;
-			if(pidindex !=-1)
-			{
-				provid = demux[demux_id].ECMpids[pidindex].PROVID;
-				caid = demux[demux_id].ECMpids[pidindex].CAID;
-			}
-			else
-			{
-				if(demux[demux_id].ECMpidcount == 0 || demux[demux_id].ECMpids[0].CAID == 0)
-				{
-					caid = NO_CAID_VALUE;
-					provid = NO_PROVID_VALUE;
-				}
-				else
-				{
-					caid = demux[demux_id].ECMpids[0].CAID;
-					provid = demux[demux_id].ECMpids[0].PROVID;
-				}
-			}
-
-			if(!dvbapi_extract_sdt_string(provider_name, sizeof(provider_name), buffer + pos + dpos + 4, provider_name_length))
-			{
-				break;
-			}
-
-			if(!dvbapi_extract_sdt_string(service_name, sizeof(service_name), buffer + pos + dpos + 4 + provider_name_length + 1, service_name_length))
-			{
-				break;
-			}
-
-			cs_log_dbg(D_DVBAPI,"sdt-info (provider: %s - channel: %s)", provider_name, service_name);
-			dvbapi_stop_filter(demux_id, TYPE_SDT, msgid);
-
-			if(strlen(provider_name) && caid != NO_CAID_VALUE)
-			{
-				get_providername_or_null(provid, caid, tmp, sizeof(tmp));
-				if(tmp[0] == '\0')
-				{
-					get_config_filename(tmp, sizeof(tmp), "oscam.provid");
-					if((fpsave = fopen(tmp, "a")))
-					{
-						fprintf(fpsave, "\n%04X@%06X|%s|", caid, provid, provider_name);
-						fclose(fpsave);
-						init_provid();
-					}
-				}
-			}
-
-			if(strlen(service_name))
-			{
-				get_servicename_or_null(cur_client(), service_id, provid, caid, tmp, sizeof(tmp));
-
-				if(tmp[0] == '\0')
-				{
-					type = dvbapi_get_service_type(service_type);
-					get_config_filename(tmp, sizeof(tmp), "oscam.srvid2");
-
-					if(!access(tmp, F_OK) && (fpsave = fopen(tmp, "a")))
-					{
-						if((caid != NO_CAID_VALUE) || (cfg.dvbapi_read_sdt > 1))
-						{
-							dvbapi_create_srvid_line(demux_id, srvid_line, sizeof(srvid_line));
-
-							if(cfg.dvbapi_write_sdt_prov)
-							{
-								fprintf(fpsave, "\n%04X:%s|%s|%s||%s", service_id, srvid_line, service_name, type, provider_name);
-							}
-							else
-							{
-								fprintf(fpsave, "\n%04X:%s|%s|%s", service_id, srvid_line, service_name, type);
-							}
-							did_save_srvid = 1;
-						}
-					}
-					else
-					{
-						get_config_filename(tmp, sizeof(tmp), "oscam.srvid");
-
-						if((fpsave = fopen(tmp, "a")))
-						{
-							if((caid != NO_CAID_VALUE) || (cfg.dvbapi_read_sdt > 1))
-							{
-								dvbapi_create_srvid_line(demux_id, srvid_line, sizeof(srvid_line));
-
-								if(cfg.dvbapi_write_sdt_prov)
-								{
-									fprintf(fpsave, "\n%s:%04X|%s|%s|%s", srvid_line, service_id, provider_name, service_name, type);
-								}
-								else
-								{
-									fprintf(fpsave, "\n%s:%04X||%s|%s", srvid_line, service_id, service_name, type);
-								}
-								did_save_srvid = 1;
-							}
-						}
-					}
-
-					if(fpsave)
-					{
-						fclose(fpsave);
-					}
-
-					if(did_save_srvid)
-					{
-						init_srvid();
-					}
-				}
-			}
-			return;
 		}
+
+		dvbapi_stop_filter(demux_id, TYPE_SDT, msgid);
+		break;
 	}
 }
 
-static void dvbapi_parse_pat(int32_t demux_id, uint8_t *buffer, uint32_t length, uint32_t msgid)
+static void dvbapi_parse_pat(int32_t demux_id, const uint8_t *buffer, uint16_t length, uint32_t msgid)
 {
-	uint16_t srvid;
-	uint32_t i;
+	uint16_t i, srvid;
 
 	dvbapi_stop_filter(demux_id, TYPE_PAT, msgid);
 
@@ -5544,11 +5603,11 @@ void dvbapi_process_input(int32_t demux_id, int32_t filter_num, uint8_t *buffer,
 	struct s_ecmpid *curpid = NULL;
 	int32_t pid = demux[demux_id].demux_fd[filter_num].pidindex;
 	uint16_t filtertype = demux[demux_id].demux_fd[filter_num].type;
-	uint32_t sctlen = SCT_LEN(buffer);
+	uint16_t sctlen = SCT_LEN(buffer);
 
-	if((uint32_t) len < sctlen) // invalid CAT length
+	if(len < sctlen)
 	{
-		cs_log_dbg(D_DVBAPI, "Received filterdata with total length 0x%03X but section length is 0x%03X -> invalid length!", len, sctlen);
+		cs_log_dbg(D_DVBAPI, "Received filter data with total length 0x%03X but section length is 0x%03X -> invalid length!", len, sctlen);
 		return;
 	}
 
@@ -5608,7 +5667,7 @@ void dvbapi_process_input(int32_t demux_id, int32_t filter_num, uint8_t *buffer,
 
 		if(len != 0) // len = 0 receiver encountered an internal bufferoverflow!
 		{
-			cs_log_dump_dbg(D_DVBAPI, buffer, sctlen, "Demuxer %d Filter %d fetched ECM data (ecmlength = 0x%03X):",
+			cs_log_dump_dbg(D_DVBAPI, buffer, sctlen, "Demuxer %d filter %d fetched ECM data (length = 0x%03X):",
 				demux_id, filter_num + 1, sctlen);
 
 			if(sctlen > MAX_ECM_SIZE) // ecm too long to handle!
@@ -5979,7 +6038,7 @@ void dvbapi_process_input(int32_t demux_id, int32_t filter_num, uint8_t *buffer,
 	{
 		if(len != 0) // len = 0 receiver encountered an internal buffer overflow!
 		{
-			cs_log_dump_dbg(D_DVBAPI, buffer, sctlen, "Demuxer %d Filter %d fetched EMM data (emmlength = 0x%03X):",
+			cs_log_dump_dbg(D_DVBAPI, buffer, sctlen, "Demuxer %d filter %d fetched EMM data (length = 0x%03X):",
 				demux_id, filter_num + 1, sctlen);
 
 			if(sctlen > MAX_EMM_SIZE) // emm too long to handle!
@@ -5993,14 +6052,6 @@ void dvbapi_process_input(int32_t demux_id, int32_t filter_num, uint8_t *buffer,
 		else
 		{
 			return; // just skip on internal buffer overflow
-		}
-
-		if(demux[demux_id].demux_fd[filter_num].pid == 0x01) // CAT
-		{
-			cs_log_dbg(D_DVBAPI, "receiving cat");
-			dvbapi_parse_cat(demux_id, buffer, sctlen);
-			dvbapi_stop_filternum(demux_id, filter_num, msgid);
-			return;
 		}
 
 #ifdef WITH_EMU
@@ -6055,7 +6106,7 @@ void dvbapi_process_input(int32_t demux_id, int32_t filter_num, uint8_t *buffer,
 
 	if(filtertype == TYPE_SDT)
 	{
-		cs_log_dump_dbg(D_DVBAPI, buffer, sctlen, "Demuxer %d Filter %d fetched SDT data (length = 0x%03X):",
+		cs_log_dump_dbg(D_DVBAPI, buffer, sctlen, "Demuxer %d filter %d fetched SDT data (length = 0x%03X):",
 			demux_id, filter_num + 1, sctlen);
 
 		dvbapi_parse_sdt(demux_id, buffer, sctlen, msgid);
@@ -6063,7 +6114,7 @@ void dvbapi_process_input(int32_t demux_id, int32_t filter_num, uint8_t *buffer,
 
 	if(filtertype == TYPE_PAT)
 	{
-		cs_log_dump_dbg(D_DVBAPI, buffer, sctlen, "Demuxer %d Filter %d fetched PAT data (length = 0x%03X):",
+		cs_log_dump_dbg(D_DVBAPI, buffer, sctlen, "Demuxer %d filter %d fetched PAT data (length = 0x%03X):",
 			demux_id, filter_num + 1, sctlen);
 
 		dvbapi_parse_pat(demux_id, buffer, sctlen, msgid);
@@ -6071,10 +6122,18 @@ void dvbapi_process_input(int32_t demux_id, int32_t filter_num, uint8_t *buffer,
 
 	if(filtertype == TYPE_PMT)
 	{
-		cs_log_dump_dbg(D_DVBAPI, buffer, sctlen, "Demuxer %d Filter %d fetched PMT data (length = 0x%03X):",
+		cs_log_dump_dbg(D_DVBAPI, buffer, sctlen, "Demuxer %d filter %d fetched PMT data (length = 0x%03X):",
 			demux_id, filter_num + 1, sctlen);
 
 		dvbapi_parse_pmt(demux_id, buffer, sctlen, msgid);
+	}
+
+	if(filtertype == TYPE_CAT)
+	{
+		cs_log_dump_dbg(D_DVBAPI, buffer, sctlen, "Demuxer %d filter %d fetched CAT data (length = 0x%03X):",
+			demux_id, filter_num + 1, sctlen);
+
+		dvbapi_parse_cat(demux_id, buffer, sctlen, msgid);
 	}
 }
 
@@ -6790,7 +6849,7 @@ static void *dvbapi_main_local(void *cli)
 					if(do_emm_start)
 					{
 						cs_ftime(&demux[i].emmstart); // trick to let emm fetching start after 30 seconds to speed up zapping
-						dvbapi_start_filter(i, demux[i].pidindex, 0x001, 0x001, 0x01, 0x01, 0xFF, 0, TYPE_EMM); //CAT
+						dvbapi_start_cat_filter(i);
 					}
 				}
 
