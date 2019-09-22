@@ -225,21 +225,33 @@ void findatr(struct s_reader *reader) {
 		} else if ( ishdnew == 1 ) {
 			// Astra HD03 / HD03a / HD03b / HD04 / HD04a
 			if ( !strncmp(hd_cwpk, "0", 1) == 0 ) {
-				memcpy(reader->data50, data50,   80);
-				memcpy(reader->mod50,   mod50,   80);
-				memcpy(reader->key60,   key60,   96);
-				memcpy(reader->exp60,   exp60,   96);
-				memcpy(reader->mod1,    mod1,   112);
-				memcpy(reader->nuid,    hd_nuid,  4);
-				memcpy(reader->cwekey0,  hd_cwpk, 16);
+				memcpy(reader->data50, data50,    80);
+				memcpy(reader->mod50,   mod50,    80);
+				memcpy(reader->key60,   key60,    96);
+				memcpy(reader->exp60,   exp60,    96);
+				memcpy(reader->mod1,    mod1,    112);
+				memcpy(reader->mod2,    mod2,    112);
+				memcpy(reader->nuid,    hd_nuid,   4);
+				memcpy(reader->cwekey0, hd_cwpk,  16);
+				memcpy(reader->key3588, key3588, 136);
+				memcpy(reader->key3460, key3460,  96);
+				memcpy(reader->key3310, key3310,  16);
+				memcpy(reader->idird,   idird,     4);
+				memcpy(reader->cmd0eprov, cmd0eprov, 2);
 
-				reader->data50_length =  80;
-				reader->mod50_length  =  80;
-				reader->key60_length  =  96;
-				reader->exp60_length  =  96;
-				reader->mod1_length   = 112;
-				reader->nuid_length   =   4;
+				reader->data50_length =   80;
+				reader->mod50_length  =   80;
+				reader->key60_length  =   96;
+				reader->exp60_length  =   96;
+				reader->mod1_length   =  112;
+				reader->mod2_length   =  112;
+				reader->nuid_length   =    4;
 				reader->cwekey0_length =  16;
+				reader->key3588_length = 136;
+				reader->key3460_length =  96;
+				reader->key3310_length =  16;
+				reader->idird_length =     4;
+				reader->cmd0eprov_length = 2;
 			}
 			reader->saveemm = ( 0 | reader->saveemm);
 			reader->blockemm = ( 8 | reader->blockemm);
