@@ -227,8 +227,6 @@ void findatr(struct s_reader *reader) {
 			if ( !strncmp(hd_cwpk, "0", 1) == 0 ) {
 				memcpy(reader->data50, data50,    80);
 				memcpy(reader->mod50,   mod50,    80);
-				memcpy(reader->key60,   key60,    96);
-				memcpy(reader->exp60,   exp60,    96);
 				memcpy(reader->mod1,    mod1,    112);
 				memcpy(reader->mod2,    mod2,    112);
 				memcpy(reader->nuid,    hd_nuid,   4);
@@ -241,8 +239,6 @@ void findatr(struct s_reader *reader) {
 
 				reader->data50_length =   80;
 				reader->mod50_length  =   80;
-				reader->key60_length  =   96;
-				reader->exp60_length  =   96;
 				reader->mod1_length   =  112;
 				reader->mod2_length   =  112;
 				reader->nuid_length   =    4;
