@@ -12,7 +12,13 @@ static const char data50[81]       = { "\x00" };
 static const char mod50[81]        = { "\x00" };
 static const char key60[97]        = { "\x00" };
 static const char exp60[97]        = { "\x00" };
+static const char key3588[137]     = { "\x00" };
+static const char key3460[97]      = { "\x00" };
+static const char key3310[17]      = { "\x00" };
 static const char mod1[113]        = { "\x00" };
+static const char mod2[113]        = { "\x00" };
+static const char idird[5]         = { "\x00" };
+static const char cmd0eprov[3]     = { "\x00" };
 static const char hd_boxkey[9]     = { "\x00" };
 static const char hd_rsakey[129]   = { "\x00" };
 static const char hd_nuid[5]       = { "\x00" };
@@ -189,7 +195,7 @@ void findatr(struct s_reader *reader) {
 			memcpy(reader->exp60,  exp60,  96);
 			memcpy(reader->mod1,   mod1, 112);
 			memcpy(reader->nuid,   max_nuid,   4);
-			memcpy(reader->cwekey, max_cwpk,  16);
+			memcpy(reader->cwekey0, max_cwpk,  16);
 
 			reader->data50_length =  80;
 			reader->mod50_length  =  80;
@@ -197,7 +203,7 @@ void findatr(struct s_reader *reader) {
 			reader->exp60_length  =  96;
 			reader->mod1_length   = 112;
 			reader->nuid_length   =   4;
-			reader->cwekey_length =  16;
+			reader->cwekey0_length =  16;
 		}
 		reader->saveemm = ( 0 | reader->saveemm);
 		reader->blockemm = ( 8 | reader->blockemm);
@@ -225,7 +231,7 @@ void findatr(struct s_reader *reader) {
 				memcpy(reader->exp60,   exp60,   96);
 				memcpy(reader->mod1,    mod1,   112);
 				memcpy(reader->nuid,    hd_nuid,  4);
-				memcpy(reader->cwekey,  hd_cwpk, 16);
+				memcpy(reader->cwekey0,  hd_cwpk, 16);
 
 				reader->data50_length =  80;
 				reader->mod50_length  =  80;
@@ -233,7 +239,7 @@ void findatr(struct s_reader *reader) {
 				reader->exp60_length  =  96;
 				reader->mod1_length   = 112;
 				reader->nuid_length   =   4;
-				reader->cwekey_length =  16;
+				reader->cwekey0_length =  16;
 			}
 			reader->saveemm = ( 0 | reader->saveemm);
 			reader->blockemm = ( 8 | reader->blockemm);

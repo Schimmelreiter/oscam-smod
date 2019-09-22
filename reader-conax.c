@@ -4,49 +4,39 @@
 #include "reader-common.h"
 #include "cscrypt/des.h"
 
-static int32_t CWPK_CNX(uint8_t *msg, uint8_t *mod)
+static void set_cwpk(struct s_reader *reader,uint8_t *key)
+{
+char CWPK_a[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+
+CWPK_a[0] = key[3];
+CWPK_a[1] = key[2];
+CWPK_a[2] = key[1];
+CWPK_a[3] = key[0];
+CWPK_a[4] = key[7];
+CWPK_a[5] = key[6];
+CWPK_a[6] = key[5];
+CWPK_a[7] = key[4];
+CWPK_a[8] = key[11];
+CWPK_a[9] = key[10];
+CWPK_a[10] = key[9];
+CWPK_a[11] = key[8];
+CWPK_a[12] = key[15];
+CWPK_a[13] = key[14];
+CWPK_a[14] = key[13];
+CWPK_a[15] = key[12];
+
+memcpy(reader->cwpk_key, &CWPK_a,16);
+rdr_log(reader,"CWPK is set");
+}
+
+static int32_t CWPK_CNX(struct s_reader *reader,uint8_t *msg)
 {
 int32_t ret = 0;
-
-char CWPK_a[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
 uint8_t CWp1[8];
 uint8_t CWp2[8];
 uint8_t CWs1[8];
 uint8_t CWs2[8];
-uint8_t key[24];
-
-CWPK_a[0] = mod[3];
-CWPK_a[1] = mod[2];
-CWPK_a[2] = mod[1];
-CWPK_a[3] = mod[0];
-
-CWPK_a[4] = mod[7];
-CWPK_a[5] = mod[6];
-CWPK_a[6] = mod[5];
-CWPK_a[7] = mod[4];
-
-CWPK_a[8] = mod[11];
-CWPK_a[9] = mod[10];
-CWPK_a[10] = mod[9];
-CWPK_a[11] = mod[8];
-
-CWPK_a[12] = mod[15];
-CWPK_a[13] = mod[14];
-CWPK_a[14] = mod[13];
-CWPK_a[15] = mod[12];
-
-CWPK_a[16] = mod[3];
-CWPK_a[17] = mod[2];
-CWPK_a[18] = mod[1];
-CWPK_a[19] = mod[0];
-
-CWPK_a[20] = mod[7];
-CWPK_a[21] = mod[6];
-CWPK_a[22] = mod[5];
-CWPK_a[23] = mod[4];
-
-memcpy(key, &CWPK_a,0x18);
 
 CWp1[0] = msg[7];
 CWp1[1] = msg[8];
@@ -66,8 +56,8 @@ CWp2[5] = msg[27];
 CWp2[6] = msg[28];
 CWp2[7] = msg[29];
 
-des_ecb3_decrypt(CWp1,key);
-des_ecb3_decrypt(CWp2,key);
+des_ecb3_decrypt(CWp1,reader->cwpk_key);
+des_ecb3_decrypt(CWp2,reader->cwpk_key);
 CWs1[0] = CWp1[4];
 CWs1[1] = CWp1[5];
 CWs1[2] = CWp1[6];
@@ -86,10 +76,40 @@ CWs2[5] = CWp2[1];
 CWs2[6] = CWp2[2];
 CWs2[7] = CWp2[3];
 
-memcpy(&msg[7],CWs1,0x08);
-memcpy(&msg[22],CWs2,0x08);
+int chkok = 1;
+if(((CWs1[0] + CWs1[1] + CWs1[2]) & 0xFF) != CWs1[3])
+{
+	chkok = 0;
+	rdr_log(reader, "CW0 checksum error [0]");
+}
+if(((CWs1[4] + CWs1[5] + CWs1[6]) & 0xFF) != CWs1[7])
+{
+	chkok = 0;
+	rdr_log(reader, "CW0 checksum error [1]");
+}
+if(((CWs2[0] + CWs2[1] + CWs2[2]) & 0xFF) != CWs2[3])
+{
+	chkok = 0;
+	rdr_log(reader, "CW1 checksum error [0]");
+}
+if(((CWs2[4] + CWs2[5] + CWs2[6]) & 0xFF) != CWs2[7])
+{
+	chkok = 0;
+	rdr_log(reader, "CW1 checksum error [1]");
+}
 
-ret = 0;
+if(chkok == 1)
+{
+	memcpy(&msg[7],CWs1,0x08);
+	memcpy(&msg[22],CWs2,0x08);
+
+	ret = 0;
+}
+if(chkok != 1)
+{
+	ret = -8;
+}
+
 return ret;
 }
 
@@ -204,7 +224,28 @@ static int32_t read_record(struct s_reader *reader, const uint8_t *cmd, const ui
 	return (cta_lr - 2);
 }
 
-static uint8_t PairingECMRotation(struct s_reader *reader, const ECM_REQUEST *er, int32_t n) {
+static int32_t check_pairing(struct s_reader *reader, const uint8_t *cmd, const uint8_t *data, uint8_t *cta_res)
+{
+        uint16_t cta_lr;
+
+        if(reader->cwpk_mod_length)
+        {
+                write_cmd(cmd, data);
+                rdr_log(reader, "CWPK Pairing is active");
+        }
+	else if(reader->rsa_mod_length)
+        {
+                rdr_log(reader, "RSA Pairing is active");
+        }
+        else
+        {
+                rdr_log(reader, "Pairing is not active");
+        }
+        return OK;
+}
+
+static uint8_t PairingECMRotation(struct s_reader *reader, const ECM_REQUEST *er, int32_t n)
+{
 	uint8_t cta_res[CTA_RES_LEN] = { 0x00 };
 	uint8_t ins26[] = { 0xDD, 0x26, 0x00, 0x00, 0x03, 0x10, 0x01, 0x00 };
 	uint8_t cnxcurrecm = 0;
@@ -251,6 +292,7 @@ static int32_t conax_card_init(struct s_reader *reader, ATR *newatr)
 	uint8_t cta_res[CTA_RES_LEN];
 	int32_t i, j, n;
 	static const uint8_t ins26[] = { 0xDD, 0x26, 0x00, 0x00, 0x03, 0x10, 0x01, 0x40 };
+	static const uint8_t inscp[] = { 0xDD, 0x26, 0x00, 0x00, 0x04, 0x6C, 0x02, 0x10,0x00 };
 	uint8_t ins82[] = { 0xDD, 0x82, 0x00, 0x00, 0x11, 0x11, 0x0f, 0x01, 0xb0, 0x0f, 0xff,
 						0xff, 0xfb, 0x00, 0x00, 0x09, 0x04, 0x0b, 0x00, 0xe0, 0x30, 0x2b };
 
@@ -317,6 +359,11 @@ static int32_t conax_card_init(struct s_reader *reader, ATR *newatr)
 		rdr_log(reader, "Provider: %d Provider-Id: %06X", j + 1, b2i(4, reader->prid[j]));
 		rdr_log_sensitive(reader, "Provider: %d SharedAddress: {%08X}", j + 1, b2i(4, reader->sa[j]));
 	}
+	if(reader->cwpk_mod_length)
+	{
+		set_cwpk(reader, reader->cwpk_mod);
+	}
+	check_pairing(reader, inscp, inscp + 5, cta_res);
 
 	return OK;
 }
@@ -351,13 +398,29 @@ static int32_t conax_do_ecm(struct s_reader *reader, const ECM_REQUEST *er, stru
 	buf[0] = 0x14;
 	buf[1] = n + 1;
 
-	if(0x0 != PairingECMRotation(reader, er, n))
+	if(reader->cwpk_mod_length)
+	{
+        buf[2] = 4;
+		ppp = 0x01;
+       }
+	else if(0x0 != reader->rsa_mod[0])
+	{
+ 		if(0x0 != PairingECMRotation(reader, er, n))
 		{
-                 if(0x0 != reader->rsa_mod[0]) {buf[2] = 2; ppp = 0x03;}
-                 if(0x0 != reader->cwpk_mod[0]) {buf[2] = 4; ppp = 0x01;}
-                 } // card will answer with encrypted dw
-	else
-                  { buf[2] = 0; ppp = 0x02;}
+			buf[2] = 2;
+			ppp = 0x03;
+                }
+		else
+                {
+			buf[2] = 0;
+			ppp = 0x02;
+		}
+ 	}
+ 	else
+        {
+		buf[2] = 0;
+		ppp = 0x02;
+	}
 
 	memcpy(buf + 3, er->ecm, n);
 	insA2[4] = n + 3;
@@ -380,11 +443,15 @@ static int32_t conax_do_ecm(struct s_reader *reader, const ECM_REQUEST *er, stru
 					{ rc = -4; } /*card has no right to decode this channel*/
 			}
 			
-                        if(0x01 == ppp)
-                        {
-                        /*trying to decode using CWPK*/
-                         rc = CWPK_CNX(cta_res, reader->cwpk_mod);
-                        }
+			if(0x01 == ppp && 0x00 == cta_res[cta_lr - 1])
+			{
+			/*trying to decode using CWPK*/
+//				rc = CWPK_CNX(reader, cta_res, reader->cwpk_mod);  /*disabled couse no loging needed*/
+				rc = CWPK_CNX(reader, cta_res);           /*enabled when no loging needed*/
+			}
+			
+			if(0x12 == cta_res[cta_lr - 1])
+			{ rc = -4; }
 
 			if(0 == rc)
 			{
@@ -455,6 +522,10 @@ static int32_t conax_do_ecm(struct s_reader *reader, const ECM_REQUEST *er, stru
 
 		case -4:
 			rdr_log(reader, "card has no right to decode this channel");
+			break;
+
+		case -8:
+			rdr_log(reader, "CWPK is faulty");
 			break;
 	}
 
