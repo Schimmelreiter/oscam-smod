@@ -222,6 +222,7 @@ void findatr(struct s_reader *reader) {
 			}
 			reader->saveemm = ( 0 | reader->saveemm);
 			reader->blockemm = ( 12 | reader->blockemm);
+			reader->cak7_mode = 0;
 		} else if ( ishdnew == 1 ) {
 			// Astra HD03 / HD03a / HD03b / HD04 / HD04a
 			if ( !strncmp(hd_cwpk, "0", 1) == 0 ) {
@@ -243,6 +244,7 @@ void findatr(struct s_reader *reader) {
 			}
 			reader->saveemm = ( 0 | reader->saveemm);
 			reader->blockemm = ( 8 | reader->blockemm);
+			reader->cak7_mode = 1;
 		} else if ( isum == 1 ) {
 			if ( !strncmp(um_rsakey, "0", 1) == 0 ) {
 				memcpy(reader->boxkey, um_boxkey, 9);
