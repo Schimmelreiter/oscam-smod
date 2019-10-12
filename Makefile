@@ -4,9 +4,10 @@ SHELL = /bin/sh
 .SUFFIXES: .o .c
 .PHONY: all tests help README.build README.config simple default debug config menuconfig allyesconfig allnoconfig defconfig clean distclean
 
-VER     := $(shell ./config.sh --oscam-version)
-SVN_REV := $(shell ./config.sh --oscam-revision)
-GIT_REV := $(shell ./config.sh --git-revision)
+VER          := $(shell ./config.sh --oscam-version)
+SVN_REV      := $(shell ./config.sh --oscam-revision)
+GIT_REV      := $(shell ./config.sh --git-revision)
+GIT_REV_HASH := $(shell ./config.sh --git-revision | cut -d\+ -f2)
 
 uname_S := $(shell sh -c 'uname -s 2>/dev/null || echo not')
 
@@ -49,6 +50,7 @@ endif
 override STD_LIBS := -lm $(LIB_PTHREAD) $(LIB_DL) $(LIB_RT)
 override STD_DEFS := -D'CS_SVN_VERSION="$(SVN_REV)"'
 override STD_DEFS += -D'CS_GIT_VERSION="$(GIT_REV)"'
+override STD_DEFS += -D'CS_GIT_VERSION_HASH="$(GIT_REV_HASH)"'
 override STD_DEFS += -D'CS_CONFDIR="$(CONF_DIR)"'
 
 # Compiler warnings
