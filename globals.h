@@ -365,7 +365,7 @@
 #   define CS_GIT_VERSION "test"
 #endif
 #ifndef CS_GIT_VERSION_HASH
-#   define CS_GIT_VERSION_HASH "11aaff00"
+#   define CS_GIT_VERSION_HASH ""
 #endif
 #ifndef CS_SVN_VERSION
 # define CS_SVN_VERSION			"stable"
