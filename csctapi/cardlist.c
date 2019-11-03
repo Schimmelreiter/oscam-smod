@@ -287,7 +287,7 @@ void findatr(struct s_reader *reader) {
 				reader->disablecrccws = 1;
 				reader->saveemm = ( 1 | reader->saveemm);
 				reader->blockemm = 15;
-				reader->boxid = 0x12345678;
+				if ( !reader->boxid ) {reader->boxid = 0x12345678;}
 				reader->caid = 0x09C4;
 				current.found = 1;
 				break;
@@ -297,7 +297,7 @@ void findatr(struct s_reader *reader) {
 				strcpy(current.providername,"Sky Deutschland V14\x0");
 				reader->saveemm = ( 1 | reader->saveemm);
 				reader->blockemm = 15;
-				reader->boxid = 0x12345678;
+				if ( !reader->boxid ) {reader->boxid = 0x12345678;}
 				reader->disablecrccws = 1;
 				reader->caid = 0x098C;
 				current.found = 1;
@@ -309,7 +309,7 @@ void findatr(struct s_reader *reader) {
 				strcpy(current.providername,"Sky Deutschland V15\x0");
 				reader->saveemm = ( 1 | reader->saveemm);
 				reader->blockemm = 15;
-				reader->boxid = 0x12345678;
+				if ( !reader->boxid ) {reader->boxid = 0x12345678;}
 				reader->disablecrccws = 1;
 				reader->caid = 0x098D;
 				current.found = 1;
@@ -321,7 +321,7 @@ void findatr(struct s_reader *reader) {
 				strcpy(current.providername,"Sky/Unitymedia V23\x0");
 				reader->saveemm = ( 0 | reader->saveemm);
 				reader->blockemm = ( 12 | reader->blockemm);
-				reader->boxid = 0x12345678;
+				if ( !reader->boxid ) {reader->boxid = 0x12345678;}
 				current.found = 1;
 				break;
 			}
@@ -330,7 +330,7 @@ void findatr(struct s_reader *reader) {
 				strcpy(current.providername,"Vodafone G09\x0");
 				reader->saveemm = ( 0 | reader->saveemm);
 				reader->blockemm = ( 12 | reader->blockemm);
-				reader->boxid = 0x12345678;
+				if ( !reader->boxid ) {reader->boxid = 0x12345678;}
 				reader->deprecated = 1;
 				current.found = 1;
 				break;
