@@ -85,13 +85,17 @@ void findatr(struct s_reader *reader) {
 		ishdnew = 1;
 		strcpy(current.providername,"Astra HD+ HD03b\x0");
 	} else if ( strncmp(current.atr, "3F FF 95 00 FF 91 81 71 FE 57 00 44 4E 41 53 50 34 32 30 20 52 65 76 53 36 30 17", 80) == 0 ) {
-		// HD+ 04
+		// HD+ 04a|b
 		ishdnew = 1;
-		strcpy(current.providername,"Astra HD+ HD04\x0");
+		strcpy(current.providername,"Astra HD+ HD04a|b\x0");
 	} else if ( strncmp(current.atr, "3F FF 95 00 FF 91 81 71 FE 57 00 44 4E 41 53 50 34 32 30 20 52 65 76 53 36 34 13", 80) == 0 ) {
-		// HD+ 04a
+		// HD+ 04h
 		ishdnew = 1;
-		strcpy(current.providername,"Astra HD+ HD04a\x0");
+		strcpy(current.providername,"Astra HD+ HD04h\x0");
+	} else if ( strncmp(current.atr, "3F FF 95 00 FF 91 81 71 FE 57 00 44 4E 41 53 50 34 35 30 20 52 65 76 57 36 30 14", 80) == 0 ) {
+		// HD+ 05a
+		ishdnew = 1;
+		strcpy(current.providername,"Astra HD+ HD05\x0");
 	} else if ( strncmp(current.atr, "3F FF 95 00 FF 91 81 71 FE 47 00 44 4E 41 53 50 31 31 30 20 52 65 76 41 32 32 15", 80) == 0 ) {
 		// UM01
 		isum = 1;
@@ -224,7 +228,7 @@ void findatr(struct s_reader *reader) {
 			reader->blockemm = ( 12 | reader->blockemm);
 			reader->cak7_mode = 0;
 		} else if ( ishdnew == 1 ) {
-			// Astra HD03 / HD03a / HD03b / HD04 / HD04a
+			// Astra HD03 / HD03a / HD03b / HD04 / HD04a / HD04b / HD04h / HD05a
 			if ( !strncmp(hd_cwpk, "0", 1) == 0 ) {
 				memcpy(reader->data50,  data50,      80);
 				memcpy(reader->mod50,   mod50,       80);
