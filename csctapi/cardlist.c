@@ -7,7 +7,7 @@
 // Some legal data for cards
 //
 //
-
+#ifdef READER_NAGRA_MERLIN
 static const char data50[81]       = { "\x00" };
 static const char mod50[81]        = { "\x00" };
 static const char key60[97]        = { "\x00" };
@@ -17,13 +17,14 @@ static const char key3310[17]      = { "\x00" };
 static const char mod1[113]        = { "\x00" };
 static const char mod2[113]        = { "\x00" };
 static const char cmd0eprov[3]     = { "\x00" };
-static const char hd_boxkey[9]     = { "\x00" };
-static const char hd_rsakey[129]   = { "\x00" };
 static const char hd_nuid[5]       = { "\x00" };
-static const char hd_cwpk[17]      = { "\x00" };
 static const char hd_key3588[137]  = { "\x00" };
 static const char hd_idird[5]      = { "\x00" };
 static const char max_nuid[5]      = { "\x00" };
+#endif
+static const char hd_boxkey[9]     = { "\x00" };
+static const char hd_rsakey[129]   = { "\x00" };
+static const char hd_cwpk[17]      = { "\x00" };
 static const char max_cwpk[17]     = { "\x00" };
 static const char rlme_boxkey[5]   = { "\x00" };
 static const char rlme_deskey[17]  = { "\x00" };
@@ -193,6 +194,7 @@ void findatr(struct s_reader *reader) {
 	} else if ( strncmp(current.atr, "3F FF 95 00 FF 91 81 71 FE 57 00 44 4E 41 53 50 34 38 32 20 52 65 76 52 32 36 1C", 80) == 0 ) {
 		strcpy(current.providername,"Max TV\x0");
 		if ( !strncmp(max_cwpk, "0", 1) == 0 ) {
+#ifdef READER_NAGRA_MERLIN
 			memcpy(reader->data50, data50,  80);
 			memcpy(reader->mod50,  mod50,  80);
 			memcpy(reader->key60,  key60,  96);
@@ -208,6 +210,7 @@ void findatr(struct s_reader *reader) {
 			reader->mod1_length   = 112;
 			reader->nuid_length   =   4;
 			reader->cwekey0_length =  16;
+#endif
 		}
 		reader->saveemm = ( 0 | reader->saveemm);
 		reader->blockemm = ( 8 | reader->blockemm);
@@ -230,6 +233,7 @@ void findatr(struct s_reader *reader) {
 		} else if ( ishdnew == 1 ) {
 			// Astra HD03 / HD03a / HD03b / HD04 / HD04a / HD04b / HD04h / HD05a
 			if ( !strncmp(hd_cwpk, "0", 1) == 0 ) {
+#ifdef READER_NAGRA_MERLIN
 				memcpy(reader->data50,  data50,      80);
 				memcpy(reader->mod50,   mod50,       80);
 				memcpy(reader->mod1,    mod1,       112);
@@ -245,6 +249,7 @@ void findatr(struct s_reader *reader) {
 				reader->cwekey0_length =  16;
 				reader->key3588_length = 136;
 				reader->idird_length =     4;
+#endif
 			}
 			reader->saveemm = ( 0 | reader->saveemm);
 			reader->blockemm = ( 8 | reader->blockemm);
