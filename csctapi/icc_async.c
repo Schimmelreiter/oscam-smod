@@ -281,7 +281,7 @@ int32_t ICC_Async_Activate(struct s_reader *reader, ATR *atr, uint16_t deprecate
 	memcpy(current.atr, cs_hexdump(1, atrarr, atr_size, tmp, sizeof(tmp)), atr_size * 3 - 1);
 	findatr(reader);
 	if ( current.found == 1 ) {
-		rdr_log(reader, "%s recognized", current.providername);
+		rdr_log(reader, "%s recognized %s", current.providername, current.info);
 	}
 
 	// Get ICC reader->convention
