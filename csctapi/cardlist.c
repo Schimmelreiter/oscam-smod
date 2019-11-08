@@ -62,10 +62,11 @@ EMM_UNKNOWN: 8
 SUM EMM for Value
 */
 
-struct atrlist current = { 1, "\0", "\0" };
+struct atrlist current = { 1, "\0", "\0", "\0" };
 
 void findatr(struct s_reader *reader) {
 	current.found = 1;
+	strcpy(current.info, "\x0");
 	int ishdold = 0;
 	int ishdnew = 0;
 	int istivu = 0;
@@ -124,7 +125,7 @@ void findatr(struct s_reader *reader) {
 		reader->saveemm = ( 0 | reader->saveemm);
 		reader->blockemm = ( 12 | reader->blockemm);
 #else
-			strcpy(current.providername, printf("%s - but card system NAGRA not built in", current.providername) + "\x0");
+		strcpy(current.info, "- but card system NAGRA not built in!\x0");
 #endif
 	} else if ( strncmp(current.atr, "3F 77 18 00 00 C2 EB 41 02 6C 90 00", 35) == 0 ) {
 #ifdef READER_VIACCESS
@@ -140,7 +141,7 @@ void findatr(struct s_reader *reader) {
 		reader->saveemm = ( 0 | reader->saveemm);
 		reader->blockemm = ( 12 | reader->blockemm);
 #else
-		strcpy(current.providername, printf("%s - but card system VIACCESS not built in", current.providername) + "\x0");
+		strcpy(current.info, "- but card system VIACCESS not built in!\x0");
 #endif
 	} else if ( strncmp(current.atr, "3F 77 18 00 00 D3 8A 42 01 64 90 00", 35) == 0 ) {
 #ifdef READER_VIACCESS
@@ -156,7 +157,7 @@ void findatr(struct s_reader *reader) {
 		reader->saveemm = ( 0 | reader->saveemm);
 		reader->blockemm = ( 12 | reader->blockemm);
 #else
-		strcpy(current.providername, printf("%s - but card system VIACCESS not built in", current.providername) + "\x0");
+		strcpy(current.info, "- but card system VIACCESS not built in!\x0");
 #endif
 	} else if ( strncmp(current.atr, "3B 24 00 30 42 30 30", 20) == 0 ) {
 #ifdef READER_CONAX
@@ -164,7 +165,7 @@ void findatr(struct s_reader *reader) {
 		reader->saveemm = ( 0 | reader->saveemm);
 		reader->blockemm = ( 8 | reader->blockemm);
 #else
-		strcpy(current.providername, printf("%s - but card system CONAX not built in", current.providername) + "\x0");
+		strcpy(current.info, "- but card system CONAX not built in!\x0");
 #endif
 	} else if ( strncmp(current.atr, "3B 78 12 00 00 54 C4 03 00 8F F1 90 00", 38) == 0 ) {
 #ifdef READER_CRYPTOWORKS
@@ -173,7 +174,7 @@ void findatr(struct s_reader *reader) {
 		reader->blockemm = ( 8 | reader->blockemm);
 		reader->needsglobalfirst = 1;
 #else
-		strcpy(current.providername, printf("%s - but card system CRYPTOWORKS not built in", current.providername) + "\x0");
+		strcpy(current.info, "- but card system CRYPTOWORKS not built in!\x0");
 #endif
 	} else if ( strncmp(current.atr, "3B F7 11 00 01 40 96 70 70 0A 0E 6C B6 D6", 42) == 0 ) {
 #ifdef READER_SECA
@@ -184,7 +185,7 @@ void findatr(struct s_reader *reader) {
 		reader->saveemm = ( 3 | reader->saveemm);
 		reader->blockemm = ( 12 | reader->blockemm);
 #else
-		strcpy(current.providername, printf("%s - but card system SECA not built in", current.providername) + "\x0");
+		strcpy(current.info, "- but card system SECA not built in!\x0");
 #endif
 	} else if ( strncmp(current.atr, "3F FF 95 00 FF 91 81 71 FF 47 00 54 49 47 45 52 30 30 33 20 52 65 76 32 35 30 64", 80) == 0 ) {
 		strcpy(current.providername,"Tivusat 183D\x0");
@@ -198,7 +199,7 @@ void findatr(struct s_reader *reader) {
 		reader->saveemm = ( 0 | reader->saveemm);
 		reader->blockemm = ( 8 | reader->blockemm);
 #else
-		strcpy(current.providername, printf("%s - but card system VIACCESS not built in", current.providername) + "\x0");
+		strcpy(current.info, "- but card system VIACCESS not built in!\x0");
 #endif
 	} else if ( strncmp(current.atr, "3F 77 18 00 00 C2 7A 44 02 68", 29) == 0 ) {
 #ifdef READER_VIACCESS
@@ -207,7 +208,7 @@ void findatr(struct s_reader *reader) {
 		reader->blockemm = ( 8 | reader->blockemm);
 		reader->read_old_classes = 0;
 #else
-		strcpy(current.providername, printf("%s - but card system VIACCESS not built in", current.providername) + "\x0");
+		strcpy(current.info, "- but card system VIACCESS not built in!\x0");
 #endif
 	} else if ( strncmp(current.atr, "3F 77 18 00 00 D3 8A 40 01 64", 29) == 0 ) {
 #ifdef READER_VIACCESS
@@ -216,7 +217,7 @@ void findatr(struct s_reader *reader) {
 		reader->blockemm = ( 8 | reader->blockemm);
 		reader->read_old_classes = 0;
 #else
-		strcpy(current.providername, printf("%s - but card system VIACCESS not built in", current.providername) + "\x0");
+		strcpy(current.info, "- but card system VIACCESS not built in!\x0");
 #endif
 	} else if ( strncmp(current.atr, "3F 77 18 00 00 C2 EB 41 02 6C", 29) == 0 ) {
 		strcpy(current.providername,"TNT Viaccess v5\x0");
@@ -236,7 +237,7 @@ void findatr(struct s_reader *reader) {
 		reader->saveemm = ( 0 | reader->saveemm);
 		reader->blockemm = ( 12 | reader->blockemm);
 #else
-		strcpy(current.providername, printf("%s - but card system IRDETO not built in", current.providername) + "\x0");
+		strcpy(current.info, "- but card system IRDETO not built in!\x0");
 #endif
 	} else if ( strncmp(current.atr, "3F FF 95 00 FF 91 81 71 FE 57 00 44 4E 41 53 50 34 38 32 20 52 65 76 52 32 36 1C", 80) == 0 ) {
 #ifdef READER_NAGRA_MERLIN
@@ -261,7 +262,7 @@ void findatr(struct s_reader *reader) {
 		reader->saveemm = ( 0 | reader->saveemm);
 		reader->blockemm = ( 8 | reader->blockemm);
 #else
-		strcpy(current.providername, printf("%s - but card system NAGRA_MERLIN not built in", current.providername) + "\x0");
+		strcpy(current.info, "- but card system NAGRA_MERLIN not built in!\x0");
 #endif
 	} else {
 		current.found = 0;
@@ -281,7 +282,7 @@ void findatr(struct s_reader *reader) {
 			reader->blockemm = ( 12 | reader->blockemm);
 			reader->cak7_mode = 0;
 #else
-			strcpy(current.providername, printf("%s - but card system NAGRA not built in", current.providername) + "\x0");
+			strcpy(current.info, "- but card system NAGRA not built in!\x0");
 #endif
 		} else if ( ishdnew == 1 ) {
 #ifdef READER_NAGRA_MERLIN
@@ -307,7 +308,7 @@ void findatr(struct s_reader *reader) {
 			reader->blockemm = ( 8 | reader->blockemm);
 			reader->cak7_mode = 1;
 #else
-			strcpy(current.providername, printf("%s - but card system NAGRA_MERLIN not built in", current.providername) + "\x0");
+			strcpy(current.info, "- but card system NAGRA_MERLIN not built in!\x0");
 #endif
 		} else if ( isum == 1 ) {
 #ifdef READER_NAGRA
@@ -320,7 +321,7 @@ void findatr(struct s_reader *reader) {
 			reader->saveemm = ( 0 | reader->saveemm);
 			reader->blockemm = ( 12 | reader->blockemm);
 #else
-			strcpy(current.providername, printf("%s - but card system NAGRA not built in", current.providername) + "\x0");
+			strcpy(current.info, "- but card system NAGRA not built in!\x0");
 #endif
 		} else if ( istivu == 1 ) {
 #ifdef READER_NAGRA
@@ -331,7 +332,7 @@ void findatr(struct s_reader *reader) {
 			reader->saveemm = ( 0 | reader->saveemm);
 			reader->blockemm = ( 8 | reader->blockemm);
 #else
-			strcpy(current.providername, printf("%s - but card system NAGRA not built in", current.providername) + "\x0");
+			strcpy(current.info, "- but card system NAGRA not built in!\x0");
 #endif
 		} else if ( istnt == 1 ) {
 #ifdef READER_VIACCESS
@@ -345,7 +346,7 @@ void findatr(struct s_reader *reader) {
 			reader->saveemm = ( 0 | reader->saveemm);
 			reader->blockemm = ( 0 | reader->blockemm);
 #else
-			strcpy(current.providername, printf("%s - but card system VIACCESS not built in", current.providername) + "\x0");
+			strcpy(current.info, "- but card system VIACCESS not built in!\x0");
 #endif
 		}
 	} else {
@@ -409,7 +410,7 @@ void findatr(struct s_reader *reader) {
 				break;
 			}
 #else
-			strcpy(current.providername, printf("%s - but card system VIDEOGUARD not built in", current.providername) + "\x0");
+			strcpy(current.info, "- but card system VIDEOGUARD not built in!\x0");
 #endif
 		}
 	}
