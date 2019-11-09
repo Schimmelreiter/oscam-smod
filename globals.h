@@ -1481,11 +1481,9 @@ struct s_reader										// contains device info, reader info and card info
 	uint8_t			keepalive;
 	uint8_t			changes_since_shareupdate;
 	int32_t			resetcycle;						// ECM until reset
-       int32_t                 wdelay;                                             // ECM until reset
 	int32_t			resetcounter;					// actual count
 	uint32_t		auprovid;						// AU only for this provid
 	int8_t			audisabled;						// exclude reader from auto AU
-	int8_t                  autype;
 	int8_t			needsemmfirst;					// 0: reader descrambles without emm first, 1: reader needs emms before it can descramble
 	struct timeb	emm_last;							// time of last successfully written emm
 	int8_t			smargopatch;
@@ -1507,53 +1505,18 @@ struct s_reader										// contains device info, reader info and card info
 #ifdef READER_NAGRA_MERLIN
 	uint8_t			mod1[112];
 	uint8_t			mod1_length;
-	uint8_t			cmd0eprov[2];
-	uint8_t			cmd0eprov_length;
-       uint8_t                 mod2[112];
-       uint8_t                 mod2_length;
-       uint8_t                 tmprsa[112];
 	uint8_t			data50[80];
 	uint8_t			data50_length;
 	uint8_t			mod50[80];
 	uint8_t			mod50_length;
-       uint8_t                 key3588[136];
-       uint8_t                 key3588_length;
 	uint8_t			key60[96];
 	uint8_t			key60_length;
 	uint8_t			exp60[96];
 	uint8_t			exp60_length;
-       uint8_t                 key68[104];
-       uint8_t                 key68_length;
-       uint8_t                 exp68[104];
-       uint8_t                 exp68_length;
-	uint8_t			key3des[16];
-       uint8_t                 klucz68[24];
-	uint8_t			pairtype;
-       uint8_t                 pairbyte;
-       uint8_t                 key3460[96];
-       uint8_t                 key3460_length;
-       uint8_t                 key3310[16];
-       uint8_t                 key3310_length;
 	uint8_t			nuid[4];
 	uint8_t			nuid_length;
-	uint8_t			cwekey0[16];
-	uint8_t			cwekey0_length;
-       uint8_t                 cwekey1[16];
-       uint8_t                 cwekey1_length;
-       uint8_t                 cwekey2[16];
-       uint8_t                 cwekey2_length;
-       uint8_t                 cwekey3[16];
-       uint8_t                 cwekey3_length;
-       uint8_t                 cwekey4[16];
-       uint8_t                 cwekey4_length;
-       uint8_t                 cwekey5[16];
-       uint8_t                 cwekey5_length;
-       uint8_t                 cwekey6[16];
-       uint8_t                 cwekey6_length;
-       uint8_t                 cwekey7[16];
-       uint8_t                 cwekey7_length;
-	uint8_t			idird[4];
-	uint8_t			idird_length;
+	uint8_t			cwekey[16];
+	uint8_t			cwekey_length;
 	uint8_t			kdt05_00[216];
 	uint8_t			kdt05_10[208];
 	uint8_t			cardid[8];
@@ -1566,9 +1529,6 @@ struct s_reader										// contains device info, reader info and card info
 	uint8_t			iout[8];
 	uint32_t		dword_83DBC;
 	uint8_t			data2[4];
-	uint8_t                 ecmheader[4];
-	uint8_t                 timestmp1[4];
-	uint8_t                 timestmp2[4];
 	uint8_t			cak7expo[0x11];
 	uint8_t			data[0x80];
 	uint8_t			step1[0x60];
@@ -1606,9 +1566,6 @@ struct s_reader										// contains device info, reader info and card info
 	int32_t			l_port;
 	CAIDTAB			ctab;
 	uint32_t		boxid;
-	int8_t			cak7_mode;
-	int8_t			cameleon_nagra_mode;
-       uint8_t                 cak7type;
 	int8_t			nagra_read;						// read nagra ncmed records: 0 Disabled (default), 1 read all records, 2 read valid records only
 	int8_t			detect_seca_nagra_tunneled_card;
 	int8_t			force_irdeto;
@@ -1616,10 +1573,8 @@ struct s_reader										// contains device info, reader info and card info
 	uint8_t			boxkey_length;
 	uint8_t			rsa_mod[120];					// rsa modulus for nagra cards.
 	uint8_t			rsa_mod_length;
-	uint8_t			cwpk_mod[16];					// cwpk modulus for conax cards.
+	uint8_t			cwpk_mod[16];					// cwpk modulus for conaxnagra cards.
 	uint8_t			cwpk_mod_length;
-	uint8_t         cwpk_key[16];                   // cwpk key after byte swap.
-	uint8_t         cwpk_key_length;
 	uint8_t			des_key[128];					// 3des key for Viaccess 16 bytes, des key for Dre 128 bytes
 	uint8_t			des_key_length;
 	uint8_t			atr[64];
@@ -1631,18 +1586,8 @@ struct s_reader										// contains device info, reader info and card info
 	SIDTABS			lb_sidtabs;
 	uint8_t			hexserial[8];
 	int32_t			nprov;
-	int32_t			nsa;
-       int32_t                 nemm84;
-       int32_t                 nemm83u;
-       int32_t                 nemm83s;
-       int32_t                 nemm87;
 	uint8_t			prid[CS_MAXPROV][8];
 	uint8_t			sa[CS_MAXPROV][4];				// viaccess & seca
-       uint8_t                 emm84[CS_MAXPROV][3];
-       uint8_t                 emm83u[CS_MAXPROV][6];
-       uint8_t                 emm83s[CS_MAXPROV][6];
-       uint8_t                 emm87[CS_MAXPROV][6];
-	uint8_t			emm82;
 	uint8_t			read_old_classes;				// viaccess
 	uint8_t			maturity;						// viaccess & seca maturity level
 	uint16_t		caid;
