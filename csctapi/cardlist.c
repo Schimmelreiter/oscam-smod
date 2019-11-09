@@ -13,11 +13,18 @@ static const char data50[81]       = { "\x00" };
 static const char mod50[81]        = { "\x00" };
 static const char key60[97]        = { "\x00" };
 static const char exp60[97]        = { "\x00" };
+<<<<<<< HEAD
 static const char key3460[97]      = { "\x00" };
 static const char key3310[17]      = { "\x00" };
 static const char mod1[113]        = { "\x00" };
 static const char mod2[113]        = { "\x00" };
 static const char cmd0eprov[3]     = { "\x00" };
+=======
+static const char mod1[113]        = { "\x00" };
+static const char hd_boxkey[9]     = { "\x00" };
+static const char hd_rsakey[129]   = { "\x00" };
+static const char hd_nuid[5]       = { "\x00" };
+>>>>>>> parent of 1c31f26... CAK7 resync patch for HD03/HD04
 static const char hd_cwpk[17]      = { "\x00" };
 static const char hd_nuid[5]       = { "\x00" };
 static const char hd_key3588[137]  = { "\x00" };
@@ -254,6 +261,7 @@ void findatr(struct s_reader *reader) {
 	} else if ( strncmp(current.atr, "3F FF 95 00 FF 91 81 71 FE 57 00 44 4E 41 53 50 34 38 32 20 52 65 76 52 32 36 1C", 80) == 0 ) {
 #ifdef READER_NAGRA_MERLIN
 		strcpy(current.providername,"Max TV\x0");
+<<<<<<< HEAD
 		if ( strlen(max_cwpk) > 0 ) {
 			memcpy(reader->data50,	data50,		 81);
 			memcpy(reader->mod50,	mod50,  	 81);
@@ -272,6 +280,24 @@ void findatr(struct s_reader *reader) {
 			reader->cwekey0_length	=  16;
 		} else {
 			rdr_log(reader, "no keys built in, use config values data50 + mod50 + key60 + exp60 + mod1 + nuid + cwekey0");
+=======
+		if ( !strncmp(max_cwpk, "0", 1) == 0 ) {
+			memcpy(reader->data50, data50,  80);
+			memcpy(reader->mod50,  mod50,  80);
+			memcpy(reader->key60,  key60,  96);
+			memcpy(reader->exp60,  exp60,  96);
+			memcpy(reader->mod1,   mod1, 112);
+			memcpy(reader->nuid,   max_nuid,   4);
+			memcpy(reader->cwekey, max_cwpk,  16);
+
+			reader->data50_length =  80;
+			reader->mod50_length  =  80;
+			reader->key60_length  =  96;
+			reader->exp60_length  =  96;
+			reader->mod1_length   = 112;
+			reader->nuid_length   =   4;
+			reader->cwekey_length =  16;
+>>>>>>> parent of 1c31f26... CAK7 resync patch for HD03/HD04
 		}
 		reader->saveemm				= ( 0 | reader->saveemm);
 		reader->blockemm			= ( 8 | reader->blockemm);
@@ -302,6 +328,7 @@ void findatr(struct s_reader *reader) {
 			strcpy(current.info, "- but card system NAGRA not built in!\x0");
 #endif
 		} else if ( ishdnew == 1 ) {
+<<<<<<< HEAD
 #ifdef READER_NAGRA_MERLIN
 			// Astra HD03 / HD03a / HD03b / HD04 / HD04a / HD04b / HD04h / HD05a
 			if ( strlen(hd_cwpk) > 0 ) {
@@ -322,6 +349,25 @@ void findatr(struct s_reader *reader) {
 				reader->idird_length	=   4;
 			} else {
 				rdr_log(reader, "no keys built in, use config values data50 + mod50 + mod1 + nuid + cwekey0 + key3588 + idird");
+=======
+			// Astra HD03 / HD03a / HD03b / HD04 / HD04a
+			if ( !strncmp(hd_cwpk, "0", 1) == 0 ) {
+				memcpy(reader->data50, data50,   80);
+				memcpy(reader->mod50,   mod50,   80);
+				memcpy(reader->key60,   key60,   96);
+				memcpy(reader->exp60,   exp60,   96);
+				memcpy(reader->mod1,    mod1,   112);
+				memcpy(reader->nuid,    hd_nuid,  4);
+				memcpy(reader->cwekey,  hd_cwpk, 16);
+
+				reader->data50_length =  80;
+				reader->mod50_length  =  80;
+				reader->key60_length  =  96;
+				reader->exp60_length  =  96;
+				reader->mod1_length   = 112;
+				reader->nuid_length   =   4;
+				reader->cwekey_length =  16;
+>>>>>>> parent of 1c31f26... CAK7 resync patch for HD03/HD04
 			}
 			reader->cak7_mode			= 1;
 			reader->saveemm				= ( 0 | reader->saveemm);
