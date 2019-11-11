@@ -311,7 +311,6 @@ void findatr(struct s_reader *reader) {
 				memcpy(reader->nuid,    hd_nuid,      5);
 				memcpy(reader->cwekey0, hd_cwpk,     17);
 				memcpy(reader->key3588, hd_key3588, 137);
-				memcpy(reader->idird,   hd_idird,     5);
 				
 				reader->data50_length	=  80;
 				reader->mod50_length	=  80;
@@ -319,9 +318,8 @@ void findatr(struct s_reader *reader) {
 				reader->nuid_length		=   4;
 				reader->cwekey0_length	=  16;
 				reader->key3588_length	= 136;
-				reader->idird_length	=   4;
 			} else {
-				rdr_log(reader, "no keys built in, use config values data50 + mod50 + mod1 + nuid + cwekey0 + key3588 + idird");
+				rdr_log(reader, "no keys built in, use config values data50 + mod50 + mod1 + nuid + cwekey0 + key3588");
 			}
 			reader->cak7_mode			= 1;
 			reader->saveemm				= ( 0 | reader->saveemm);

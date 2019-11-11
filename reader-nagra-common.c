@@ -46,7 +46,7 @@ int32_t nagra_get_emm_type(EMM_PACKET *ep, struct s_reader *rdr)
 			case 0x83:
 				ep->type = GLOBAL;
 				uint8_t filtr[] = {0x83, 0x00, 0x74};
-                        	return (!memcmp(ep->emm, filtr, 3));
+				return (!memcmp(ep->emm, filtr, 3));
 
 			default:
 				ep->type = UNKNOWN;
@@ -58,13 +58,13 @@ int32_t nagra_get_emm_type(EMM_PACKET *ep, struct s_reader *rdr)
 		int i;
 		switch(ep->emm[0])
 		{
-                	case 0x82:
-                        	ep->type = GLOBAL;
+			case 0x82:
+				ep->type = GLOBAL;
 				if(rdr->emm82 == 1)
 				{
 					return 1;
 				}
-                        	return 0;
+				return 0;
 
 			case 0x83:
 				if(ep->emm[7] == 0x10)
@@ -106,16 +106,16 @@ int32_t nagra_get_emm_type(EMM_PACKET *ep, struct s_reader *rdr)
 				return 0;
 
 			case 0x87:
-                        	ep->type = SHARED;
+				ep->type = SHARED;
 
-        			for(i = 0; i < rdr->nemm87; i++)
-        			{
-                			if(!memcmp(rdr->emm87[i] + 1, ep->emm + 3, 0x03))
-                			{
-                        			return 1;
-                			}
-        			}
-        			return 0;
+				for(i = 0; i < rdr->nemm87; i++)
+				{
+					if(!memcmp(rdr->emm87[i] + 1, ep->emm + 3, 0x03))
+					{
+						return 1;
+					}
+				}
+				return 0;
 
 			default:
 				ep->type = UNKNOWN;
@@ -127,9 +127,9 @@ int32_t nagra_get_emm_type(EMM_PACKET *ep, struct s_reader *rdr)
 		int i;
 		switch(ep->emm[0])
 		{
-                	case 0x82:
-                        	ep->type = GLOBAL;
-                        	return 1;
+			case 0x82:
+				ep->type = GLOBAL;
+				return 1;
 
 			case 0x83:
 				memset(ep->hexserial, 0x00, 0x08);
@@ -167,23 +167,23 @@ int32_t nagra_get_emm_type(EMM_PACKET *ep, struct s_reader *rdr)
 				return 1;
 
 			case 0x87:
-                        	memset(ep->hexserial, 0x00, 0x08);
-                        	ep->hexserial[0] = ep->emm[5];
-                        	ep->hexserial[1] = ep->emm[4];
-                        	ep->hexserial[2] = ep->emm[3];
-                        	ep->type = SHARED;
+				memset(ep->hexserial, 0x00, 0x08);
+				ep->hexserial[0] = ep->emm[5];
+				ep->hexserial[1] = ep->emm[4];
+				ep->hexserial[2] = ep->emm[3];
+				ep->type = SHARED;
 
-                        	for(i = 0; i < rdr->nprov; i++)
-                        	{
-                                	if(!memcmp(rdr->sa[i], "\x00\x00\x00", 3))
-                                	{
-                                        	continue;
-                                	}
-                        		if(!memcmp(rdr->sa[i], ep->hexserial, 0x03))
-                                	{
-                                		return 1;
-                                	}
-                        	}
+				for(i = 0; i < rdr->nprov; i++)
+				{
+					if(!memcmp(rdr->sa[i], "\x00\x00\x00", 3))
+					{
+						continue;
+					}
+					if(!memcmp(rdr->sa[i], ep->hexserial, 0x03))
+					{
+						return 1;
+					}
+				}
 				return 0;
 
 			default:
@@ -257,12 +257,12 @@ int32_t nagra_get_emm_filter(struct s_reader *rdr, struct s_csystem_emm_filter *
 				}
 
 				filters[idx].type = EMM_GLOBAL;
-	                	filters[idx].enabled = 1;
-        	        	filters[idx].filter[0] = 0x83;
-          	     		filters[idx].mask[0] = 0xFF;
-            	    		memcpy(&filters[idx].filter[1], &rdr->prid[prov][2], 2);
-            	    		memset(&filters[idx].mask[1], 0xFF, 2);
-            	 		idx++;
+				filters[idx].enabled = 1;
+				filters[idx].filter[0] = 0x83;
+				filters[idx].mask[0] = 0xFF;
+				memcpy(&filters[idx].filter[1], &rdr->prid[prov][2], 2);
+				memset(&filters[idx].mask[1], 0xFF, 2);
+				idx++;
 
 				filters[idx].type = EMM_SHARED;
 				filters[idx].enabled = 1;
@@ -297,15 +297,15 @@ int32_t nagra_get_emm_filter(struct s_reader *rdr, struct s_csystem_emm_filter *
 
 			if(rdr->emm82 == 1)
 			{
-                		filters[idx].type = EMM_GLOBAL;
-                		filters[idx].enabled = 1;
-                		filters[idx].filter[0] = 0x82;
-                		filters[idx].mask[0] = 0xFF;
-                		idx++;
+				filters[idx].type = EMM_GLOBAL;
+				filters[idx].enabled = 1;
+				filters[idx].filter[0] = 0x82;
+				filters[idx].mask[0] = 0xFF;
+				idx++;
 			}
 
-                	int32_t i;
-                	for(i = 0; i < rdr->nemm83u; i++)
+			int32_t i;
+			for(i = 0; i < rdr->nemm83u; i++)
 			{
 				filters[idx].type = EMM_UNIQUE;
 				filters[idx].enabled = 1;
@@ -334,11 +334,11 @@ int32_t nagra_get_emm_filter(struct s_reader *rdr, struct s_csystem_emm_filter *
 
 			for(i = 0; i < rdr->nemm87; i++)
 			{
-                		filters[idx].type = EMM_SHARED;
-                		filters[idx].enabled = 1;
-                		memcpy(&filters[idx].filter[0], rdr->emm87[i], 6);
-                		memset(&filters[idx].mask[0], 0xFF, 6);
-                		idx++;
+				filters[idx].type = EMM_SHARED;
+				filters[idx].enabled = 1;
+				memcpy(&filters[idx].filter[0], rdr->emm87[i], 6);
+				memset(&filters[idx].mask[0], 0xFF, 6);
+				idx++;
 			}
 
 			*filter_count = idx;
@@ -361,17 +361,17 @@ int32_t nagra_get_emm_filter(struct s_reader *rdr, struct s_csystem_emm_filter *
 
 			int32_t idx = 0;
 
-                	filters[idx].type = EMM_GLOBAL;
-                	filters[idx].enabled = 1;
-                	filters[idx].filter[0] = 0x82;
-                	filters[idx].mask[0] = 0xFF;
-                	idx++;
+			filters[idx].type = EMM_GLOBAL;
+			filters[idx].enabled = 1;
+			filters[idx].filter[0] = 0x82;
+			filters[idx].mask[0] = 0xFF;
+			idx++;
 
-                	filters[idx].type = EMM_GLOBAL;
-                	filters[idx].enabled = 1;
-                	filters[idx].filter[0] = 0x84;
-                	filters[idx].mask[0] = 0xFF;
-                	idx++;
+			filters[idx].type = EMM_GLOBAL;
+			filters[idx].enabled = 1;
+			filters[idx].filter[0] = 0x84;
+			filters[idx].mask[0] = 0xFF;
+			idx++;
 
 			filters[idx].type = EMM_UNIQUE;
 			filters[idx].enabled = 1;
@@ -384,7 +384,7 @@ int32_t nagra_get_emm_filter(struct s_reader *rdr, struct s_csystem_emm_filter *
 			memset(&filters[idx].mask[0], 0xFF, 6);
 			idx++;
 
-                	int i;
+			int i;
 			for(i = 0; i < rdr->nprov; i++)
 			{
 				if(!memcmp(rdr->sa[i], "\x00\x00\x00", 3))
