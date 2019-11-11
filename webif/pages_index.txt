@@ -199,6 +199,7 @@ READERCONFIGBOXKEY            readerconfig/readerconfig_hwreader_boxkey.html    
 READERCONFIGIRDETO            readerconfig/readerconfig_hwreader_irdeto.html              READER_IRDETO
 READERCONFIGNAGRA             readerconfig/readerconfig_hwreader_nagra.html               READER_NAGRA
 READERCONFIGNAGRACAK7         readerconfig/readerconfig_hwreader_nagracak7.html           READER_NAGRA_MERLIN
+READERCONFIGCONAX             readerconfig/readerconfig_hwreader_conax.html               READER_CONAX
 READERCONFIGNANO              readerconfig/readerconfig_hwreader_nano.html                WITH_CARDREADER
 READERPINCODE                 readerconfig/readerconfig_hwreader_pincode.html             READER_CONAX,READER_CRYPTOWORKS,READER_VIACCESS,READER_SECA
 READERCONFIGRSAKEY            readerconfig/readerconfig_hwreader_rsakey.html              READER_NAGRA,READER_IRDETO,READER_CONAX
