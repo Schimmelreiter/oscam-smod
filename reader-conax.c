@@ -4,6 +4,31 @@
 #include "reader-common.h"
 #include "cscrypt/des.h"
 
+static void set_cwpk(struct s_reader *reader,uint8_t *key)
+{
+char CWPK_a[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+
+CWPK_a[0] = key[3];
+CWPK_a[1] = key[2];
+CWPK_a[2] = key[1];
+CWPK_a[3] = key[0];
+CWPK_a[4] = key[7];
+CWPK_a[5] = key[6];
+CWPK_a[6] = key[5];
+CWPK_a[7] = key[4];
+CWPK_a[8] = key[11];
+CWPK_a[9] = key[10];
+CWPK_a[10] = key[9];
+CWPK_a[11] = key[8];
+CWPK_a[12] = key[15];
+CWPK_a[13] = key[14];
+CWPK_a[14] = key[13];
+CWPK_a[15] = key[12];
+
+memcpy(reader->cwpk_key, &CWPK_a,16);
+rdr_log(reader,"CWPK is set");
+}
+
 static int32_t CWPK_CNX(struct s_reader *reader,uint8_t *msg)
 {
 int32_t ret = 0;
@@ -31,8 +56,8 @@ CWp2[5] = msg[27];
 CWp2[6] = msg[28];
 CWp2[7] = msg[29];
 
-des_ecb3_decrypt(CWp1,reader->cwpk_mod);
-des_ecb3_decrypt(CWp2,reader->cwpk_mod);
+des_ecb3_decrypt(CWp1,reader->cwpk_key)
+des_ecb3_decrypt(CWp2,reader->cwpk_key)
 CWs1[0] = CWp1[4];
 CWs1[1] = CWp1[5];
 CWs1[2] = CWp1[6];
@@ -332,6 +357,10 @@ static int32_t conax_card_init(struct s_reader *reader, ATR *newatr)
 	{
 		rdr_log(reader, "Provider: %d Provider-Id: %06X", j + 1, b2i(4, reader->prid[j]));
 		rdr_log_sensitive(reader, "Provider: %d SharedAddress: {%08X}", j + 1, b2i(4, reader->sa[j]));
+	}
+	if(reader->cwpk_mod_length)
+	{
+		set_cwpk(reader, reader->cwpk_mod);
 	}
 	check_pairing(reader, inscp, inscp + 5, cta_res);
 
