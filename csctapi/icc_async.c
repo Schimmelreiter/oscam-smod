@@ -316,7 +316,7 @@ int32_t ICC_Async_Activate(struct s_reader *reader, ATR *atr, uint16_t deprecate
 
 	ATR_GetRaw(atr, atrarr, &atr_size);
 
-	if((memcmp(atrarr + 8, "DNASP40", 7) == 0) || (memcmp(atrarr + 11, "DNASP41", 7) == 0) || (memcmp(atrarr + 11, "DNASP48", 7) == 0))
+	if((memcmp(atrarr + 8, "DNASP40", 7) == 0) || (memcmp(atrarr + 11, "DNASP41", 7) == 0))
 	{
 		rdr_log(reader, "card needs reset before init");
 		memset(atr, 0, 1);
