@@ -304,6 +304,7 @@ static int32_t seca_card_init(struct s_reader *reader, ATR *newatr)
 			break;
 	}
 
+	reader->cak7type = 0;
 	reader->caid = 0x0100;
 	memset(reader->prid, 0xff, sizeof(reader->prid));
 	write_cmd(ins0e, NULL); // read unique id
