@@ -792,7 +792,7 @@ static int32_t nagra2_card_init(struct s_reader *reader, ATR *newatr)
 		}
 		memcpy(reader->rom, cta_res + 2, 15);
 	}
-	else if(!reader->cameleon_nagra_mode && reader->detect_seca_nagra_tunneled_card && memcmp(atr + 7, "pp", 2) == 0 && ((atr[9]&0x0F) >= 10))
+	else if(reader->detect_seca_nagra_tunneled_card && memcmp(atr + 7, "pp", 2) == 0 && ((atr[9]&0x0F) >= 10))
 	{
 		rdr_log(reader, "detect seca/nagra tunneled card");
 
@@ -863,7 +863,6 @@ static int32_t nagra2_card_init(struct s_reader *reader, ATR *newatr)
 	csystem_data->is_tiger = is_tiger;
 	csystem_data->is_n3_na = is_n3_na;
 
-	reader->cak7type = 0;
 	reader->nprov = 1;
 
 	if(!csystem_data->is_tiger)
