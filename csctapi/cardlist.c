@@ -73,8 +73,12 @@ void findatr(struct s_reader *reader) {
 	int istnt = 0;
 	int isum = 0;
 
-	if ( strncmp(current.atr, "3F FF 95 00 FF 91 81 71 FE 47 00 44 4E 41 53 50 31 34 32 20 52 65 76 47 43 36 61", 80) == 0 ) {
-		// HD+ 01
+	if ( strncmp(current.atr, "3F FF 95 00 FF 91 81 71 FE 47 00 44 4E 41 53 50 31 34 32 20 52 65 76 47 43 34 63", 80) == 0 ) {
+		// HD+ 01 RevGC4
+		ishdold = 1;
+		strcpy(current.providername,"Astra HD+ HD01\x0");
+	} else if ( strncmp(current.atr, "3F FF 95 00 FF 91 81 71 FE 47 00 44 4E 41 53 50 31 34 32 20 52 65 76 47 43 36 61", 80) == 0 ) {
+		// HD+ 01 RevGC6
 		ishdold = 1;
 		strcpy(current.providername,"Astra HD+ HD01\x0");
 	} else if ( strncmp(current.atr, "3F FF 95 00 FF 91 81 71 A0 47 00 44 4E 41 53 50 31 38 30 20 4D 65 72 30 30 30 28", 80) == 0 ) {
