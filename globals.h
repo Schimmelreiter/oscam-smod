@@ -361,14 +361,14 @@
  *			constants
  * =========================== */
 #define CS_VERSION				"smod"
-#ifndef CS_GIT_VERSION
-#   define CS_GIT_VERSION "test"
-#endif
-#ifndef CS_GIT_VERSION_HASH
-#   define CS_GIT_VERSION_HASH ""
-#endif
 #ifndef CS_SVN_VERSION
-# define CS_SVN_VERSION			"stable"
+# define CS_SVN_VERSION			"test"
+#endif
+#ifndef CS_SMOD_VERSION
+#   define CS_SMOD_VERSION			"test"
+#endif
+#ifndef CS_SMOD_VERSION_HASH
+#   define CS_SMOD_VERSION_HASH		""
 #endif
 #ifndef CS_TARGET
 # define CS_TARGET				"smod"

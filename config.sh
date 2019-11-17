@@ -98,8 +98,8 @@ Usage: `basename $0` [parameters]
  -R, --restore             Restore default config.
 
  -v, --oscam-version       Display OSCam version.
- -i, --git-revision        Display OSCam-Schimmelreiter GIT revision.
  -r, --oscam-revision      Display OSCam SVN revision.
+ -i, --smod-revision       Display OSCam-Schimmelreiter revision.
 
  -O, --detect-osx-sdk-version  Find where OS X SDK is located
 
@@ -708,12 +708,19 @@ do
 		grep CS_VERSION globals.h | cut -d\" -f2
 		break
 	;;
-	'-i'|'--git-revision')
-		echo $(git rev-list --count HEAD ; echo "+" ; git rev-list --all --max-count=1 | cut -c1-7) | sed 's# ##g'
-		break
-	;;
 	'-r'|'--oscam-revision')
 		cat .trunk-svn
+		break
+	;;
+	'-i'|'--smod-revision')
+		revision=$(git rev-list --count HEAD 2>/dev/null; git rev-list --all --max-count=1 2>/dev/null | cut -c1-7)
+		if [ -n "$revision" ]; then
+			revision="git $revision"
+		else
+			revision=$(svn info 2>/dev/null | grep Revision | cut -d ' ' -f 2)
+			[ -n "$revision" ] && revision="svn $revision"
+		fi
+		echo $revision
 		break
 	;;
 	'--emu-version')
