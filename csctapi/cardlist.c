@@ -11,17 +11,15 @@
 #ifdef READER_NAGRA_MERLIN
 static const char data50[81]       = { "\x00" };
 static const char mod50[81]        = { "\x00" };
-static const char key60[97]        = { "\x00" };
-static const char exp60[97]        = { "\x00" };
-static const char key3460[97]      = { "\x00" };
-static const char key3310[17]      = { "\x00" };
+//static const char key3460[97]      = { "\x00" };
+//static const char key3310[17]      = { "\x00" };
 static const char mod1[113]        = { "\x00" };
-static const char mod2[113]        = { "\x00" };
-static const char cmd0eprov[3]     = { "\x00" };
+//static const char mod2[113]        = { "\x00" };
+//static const char cmd0eprov[3]     = { "\x00" };
 static const char hd_cwpk[17]      = { "\x00" };
 static const char hd_nuid[5]       = { "\x00" };
 static const char hd_key3588[137]  = { "\x00" };
-static const char hd_idird[5]      = { "\x00" };
+//static const char hd_idird[5]      = { "\x00" };
 static const char max_cwpk[17]     = { "\x00" };
 static const char max_nuid[5]      = { "\x00" };
 #endif
@@ -261,21 +259,17 @@ void findatr(struct s_reader *reader) {
 		if ( strlen(max_cwpk) > 0 ) {
 			memcpy(reader->data50,	data50,		 81);
 			memcpy(reader->mod50,	mod50,  	 81);
-			memcpy(reader->key60,	key60,  	 97);
-			memcpy(reader->exp60,	exp60,  	 97);
 			memcpy(reader->mod1,	mod1, 		113);
 			memcpy(reader->nuid,	max_nuid,	  5);
 			memcpy(reader->cwekey0,	max_cwpk,	 17);
 
 			reader->data50_length	=  80;
 			reader->mod50_length	=  80;
-			reader->key60_length	=  96;
-			reader->exp60_length	=  96;
 			reader->mod1_length		= 112;
 			reader->nuid_length		=   4;
 			reader->cwekey0_length	=  16;
 		} else {
-			rdr_log(reader, "no keys built in, use config values data50 + mod50 + key60 + exp60 + mod1 + nuid + cwekey0");
+			rdr_log(reader, "no keys built in, use config values data50 + mod50 + mod1 + nuid + cwekey0");
 		}
 		reader->saveemm				= ( 0 | reader->saveemm);
 		reader->blockemm			= ( 8 | reader->blockemm);

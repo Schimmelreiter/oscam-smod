@@ -2551,62 +2551,6 @@ static char *send_oscam_reader_config(struct templatevars *vars, struct uriparam
 			{ tpl_printf(vars, TPLAPPEND, "CWEKEY0", "%02X", rdr->cwekey0[i]); }
 	}
 
-	// cwekey1 (CAK7)
-	len = rdr->cwekey1_length;
-	if(len > 0)
-	{
-		for(i = 0; i < len ; i++)
-			{ tpl_printf(vars, TPLAPPEND, "CWEKEY1", "%02X", rdr->cwekey1[i]); }
-	}
-
-	// cwekey2 (CAK7)
-	len = rdr->cwekey2_length;
-	if(len > 0)
-	{
-		for(i = 0; i < len ; i++)
-			{ tpl_printf(vars, TPLAPPEND, "CWEKEY2", "%02X", rdr->cwekey2[i]); }
-	}
-
-	// cwekey3 (CAK7)
-	len = rdr->cwekey3_length;
-	if(len > 0)
-	{
-		for(i = 0; i < len ; i++)
-			{ tpl_printf(vars, TPLAPPEND, "CWEKEY3", "%02X", rdr->cwekey3[i]); }
-	}
-
-	// cwekey4 (CAK7)
-	len = rdr->cwekey4_length;
-	if(len > 0)
-	{
-		for(i = 0; i < len ; i++)
-			{ tpl_printf(vars, TPLAPPEND, "CWEKEY4", "%02X", rdr->cwekey4[i]); }
-	}
-
-	// cwekey5 (CAK7)
-	len = rdr->cwekey5_length;
-	if(len > 0)
-	{
-		for(i = 0; i < len ; i++)
-			{ tpl_printf(vars, TPLAPPEND, "CWEKEY5", "%02X", rdr->cwekey5[i]); }
-	}
-
-	// cwekey6 (CAK7)
-	len = rdr->cwekey6_length;
-	if(len > 0)
-	{
-		for(i = 0; i < len ; i++)
-			{ tpl_printf(vars, TPLAPPEND, "CWEKEY6", "%02X", rdr->cwekey6[i]); }
-	}
-
-	// cwekey7 (CAK7)
-	len = rdr->cwekey7_length;
-	if(len > 0)
-	{
-		for(i = 0; i < len ; i++)
-			{ tpl_printf(vars, TPLAPPEND, "CWEKEY7", "%02X", rdr->cwekey7[i]); }
-	}
-
 	// force_cw_swap
 	if(rdr->forcecwswap)
 		{ tpl_addVar(vars, TPLADD, "FORCECWSWAPCHECKED", "checked"); }
