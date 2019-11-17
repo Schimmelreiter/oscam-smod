@@ -261,15 +261,10 @@ void findatr(struct s_reader *reader) {
 			memcpy(reader->mod50,	mod50,  	 81);
 			memcpy(reader->mod1,	mod1, 		113);
 			memcpy(reader->nuid,	max_nuid,	  5);
-			memcpy(reader->cwekey0,	max_cwpk,	 17);
+			memcpy(reader->cwekey,	max_cwpk,	 17);
 
-			reader->data50_length	=  80;
-			reader->mod50_length	=  80;
-			reader->mod1_length		= 112;
-			reader->nuid_length		=   4;
-			reader->cwekey0_length	=  16;
 		} else {
-			rdr_log(reader, "no keys built in, use config values data50 + mod50 + mod1 + nuid + cwekey0");
+			rdr_log(reader, "no keys built in, use config values data50 + mod50 + mod1 + nuid + cwekey");
 		}
 		reader->saveemm				= ( 0 | reader->saveemm);
 		reader->blockemm			= ( 8 | reader->blockemm);
@@ -307,17 +302,11 @@ void findatr(struct s_reader *reader) {
 				memcpy(reader->mod50,   mod50,       81);
 				memcpy(reader->mod1,    mod1,       113);
 				memcpy(reader->nuid,    hd_nuid,      5);
-				memcpy(reader->cwekey0, hd_cwpk,     17);
+				memcpy(reader->cwekey,  hd_cwpk,     17);
 				memcpy(reader->key3588, hd_key3588, 137);
 				
-				reader->data50_length	=  80;
-				reader->mod50_length	=  80;
-				reader->mod1_length		= 112;
-				reader->nuid_length		=   4;
-				reader->cwekey0_length	=  16;
-				reader->key3588_length	= 136;
 			} else {
-				rdr_log(reader, "no keys built in, use config values data50 + mod50 + mod1 + nuid + cwekey0 + key3588");
+				rdr_log(reader, "no keys built in, use config values data50 + mod50 + mod1 + nuid + cwekey + key3588");
 			}
 			reader->cak7_mode			= 1;
 			reader->saveemm				= ( 0 | reader->saveemm);
