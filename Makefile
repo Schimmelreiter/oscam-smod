@@ -247,7 +247,6 @@ SRC-$(CONFIG_LIB_MDC2) += cscrypt/mdc2.c
 SRC-$(CONFIG_LIB_FAST_AES) += cscrypt/fast_aes.c
 SRC-$(CONFIG_LIB_SHA256) += cscrypt/sha256.c
 
-SRC-$(CONFIG_WITH_CARDREADER) += csctapi/cardlist.c
 SRC-$(CONFIG_WITH_CARDREADER) += csctapi/atr.c
 SRC-$(CONFIG_WITH_CARDREADER) += csctapi/icc_async.c
 SRC-$(CONFIG_WITH_CARDREADER) += csctapi/io_serial.c
@@ -277,6 +276,7 @@ SRC-$(CONFIG_MODULE_CAMD33) += module-camd33.c
 SRC-$(CONFIG_CS_CACHEEX) += module-camd35-cacheex.c
 SRC-$(sort $(CONFIG_MODULE_CAMD35) $(CONFIG_MODULE_CAMD35_TCP)) += module-camd35.c
 SRC-$(CONFIG_CS_CACHEEX) += module-cccam-cacheex.c
+SRC-$(CONFIG_WITH_CARDLIST) += module-cardlist.c
 SRC-$(CONFIG_MODULE_CCCAM) += module-cccam.c
 SRC-$(CONFIG_MODULE_CCCSHARE) += module-cccshare.c
 SRC-$(CONFIG_MODULE_CONSTCW) += module-constcw.c
