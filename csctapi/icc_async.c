@@ -14,7 +14,7 @@
 #include "../cscrypt/idea.h"
 #endif
 #ifdef WITH_CARDLIST
-#include "../module-cardlist.h"
+#include "../cardlist.h"
 struct atrlist current;
 #endif
 

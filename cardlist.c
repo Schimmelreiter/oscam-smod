@@ -4,7 +4,7 @@
 
 #ifdef WITH_CARDLIST
 
-#include "module-cardlist.h"
+#include "cardlist.h"
 
 //
 //
