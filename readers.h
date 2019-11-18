@@ -17,6 +17,8 @@ extern const struct s_cardsystem reader_tongfang;
 extern const struct s_cardsystem reader_bulcrypt;
 extern const struct s_cardsystem reader_griffin;
 extern const struct s_cardsystem reader_dgcrypt;
+extern const struct s_cardsystem reader_streamguard;
+extern const struct s_cardsystem reader_jet;
 extern const struct s_cardsystem reader_emu;
 
 #endif

@@ -253,7 +253,7 @@ static void clear_info_clients_stats(void)
 	first_client->cwcache = 0;
 	first_client->cwnot = 0;
 	first_client->cwtun = 0;
-	first_client->cwignored  = 0;
+	first_client->cwignored = 0;
 	first_client->cwtout = 0;
 	first_client->emmok = 0;
 	first_client->emmnok = 0;
@@ -1294,51 +1294,58 @@ static char *send_oscam_config_cccam(struct templatevars *vars, struct uriparams
 
 	tpl_printf(vars, TPLADD, "RESHARE", "%d", cfg.cc_reshare);
 
-	if(!strcmp((char *)cfg.cc_version, "2.0.11"))
+	if(!strcmp((char *)cfg.cc_version, "2.0.9"))
 	{
 		tpl_addVar(vars, TPLADD, "VERSIONSELECTED0", "selected");
 	}
-	else if(!strcmp((char *)cfg.cc_version, "2.1.1"))
+	else if(!strcmp((char *)cfg.cc_version, "2.0.11"))
 	{
 		tpl_addVar(vars, TPLADD, "VERSIONSELECTED1", "selected");
 	}
-	else if(!strcmp((char *)cfg.cc_version, "2.1.2"))
+	else if(!strcmp((char *)cfg.cc_version, "2.1.1"))
 	{
 		tpl_addVar(vars, TPLADD, "VERSIONSELECTED2", "selected");
 	}
-	else if(!strcmp((char *)cfg.cc_version, "2.1.3"))
+	else if(!strcmp((char *)cfg.cc_version, "2.1.2"))
 	{
 		tpl_addVar(vars, TPLADD, "VERSIONSELECTED3", "selected");
 	}
-	else if(!strcmp((char *)cfg.cc_version, "2.1.4"))
+	else if(!strcmp((char *)cfg.cc_version, "2.1.3"))
 	{
 		tpl_addVar(vars, TPLADD, "VERSIONSELECTED4", "selected");
 	}
-	else if(!strcmp((char *)cfg.cc_version, "2.2.0"))
+	else if(!strcmp((char *)cfg.cc_version, "2.1.4"))
 	{
 		tpl_addVar(vars, TPLADD, "VERSIONSELECTED5", "selected");
 	}
-	else if(!strcmp((char *)cfg.cc_version, "2.2.1"))
+	else if(!strcmp((char *)cfg.cc_version, "2.2.0"))
 	{
 		tpl_addVar(vars, TPLADD, "VERSIONSELECTED6", "selected");
 	}
-	else if(!strcmp((char *)cfg.cc_version, "2.3.0"))
+	else if(!strcmp((char *)cfg.cc_version, "2.2.1"))
 	{
 		tpl_addVar(vars, TPLADD, "VERSIONSELECTED7", "selected");
 	}
-	else if(!strcmp((char *)cfg.cc_version, "2.3.1"))
+	else if(!strcmp((char *)cfg.cc_version, "2.3.0"))
 	{
 		tpl_addVar(vars, TPLADD, "VERSIONSELECTED8", "selected");
 	}
-	else if(!strcmp((char *)cfg.cc_version, "2.3.2"))
+	else if(!strcmp((char *)cfg.cc_version, "2.3.1"))
 	{
 		tpl_addVar(vars, TPLADD, "VERSIONSELECTED9", "selected");
+	}
+	else if(!strcmp((char *)cfg.cc_version, "2.3.2"))
+	{
+		tpl_addVar(vars, TPLADD, "VERSIONSELECTED10", "selected");
 	}
 
 	tpl_printf(vars, TPLADD, "UPDATEINTERVAL", "%d", cfg.cc_update_interval);
 	tpl_printf(vars, TPLADD, "RECV_TIMEOUT", "%u", cfg.cc_recv_timeout);
 
 	tpl_addVar(vars, TPLADD, "STEALTH", (cfg.cc_stealth == 1) ? "checked" : "");
+	
+	if (cfg.cc_cfgfile)
+		tpl_printf(vars, TPLADD, "CCCFGFILE", "%s", cfg.cc_cfgfile);
 
 	tpl_printf(vars, TPLADD, "NODEID", "%02X%02X%02X%02X%02X%02X%02X%02X",
 			   cfg.cc_fixed_nodeid[0], cfg.cc_fixed_nodeid[1], cfg.cc_fixed_nodeid[2], cfg.cc_fixed_nodeid[3],
@@ -1356,6 +1363,9 @@ static char *send_oscam_config_cccam(struct templatevars *vars, struct uriparams
 	tpl_addVar(vars, TPLADD, "FORWARDORIGINCARD", (cfg.cc_forward_origin_card == 1) ? "checked" : "");
 
 	tpl_addVar(vars, TPLADD, "KEEPCONNECTED", (cfg.cc_keep_connected == 1) ? "checked" : "");
+	
+	if (cfg.cc_autosidblock)
+		tpl_addVar(vars, TPLADD, "AUTOSIDBLOCK", (cfg.cc_autosidblock == 1) ? "checked" : "");
 
 	tpl_addVar(vars, TPLADDONCE, "CONFIG_CONTROL", tpl_getTpl(vars, "CONFIGCCCAMCTRL"));
 
@@ -2878,45 +2888,49 @@ static char *send_oscam_reader_config(struct templatevars *vars, struct uriparam
 	free_mk_t(value);
 
 #ifdef MODULE_CCCAM
-	if(!strcmp(rdr->cc_version, "2.0.11"))
-	{
-		tpl_addVar(vars, TPLADD, "CCCVERSIONSELECTED0", "selected");
-	}
-	else if(!strcmp(rdr->cc_version, "2.1.1"))
+	if(!strcmp(rdr->cc_version, "2.0.9"))
+ 	{
+ 		tpl_addVar(vars, TPLADD, "CCCVERSIONSELECTED0", "selected");
+ 	}
+	else if(!strcmp(rdr->cc_version, "2.0.11"))
 	{
 		tpl_addVar(vars, TPLADD, "CCCVERSIONSELECTED1", "selected");
 	}
-	else if(!strcmp(rdr->cc_version, "2.1.2"))
+	else if(!strcmp(rdr->cc_version, "2.1.1"))
 	{
 		tpl_addVar(vars, TPLADD, "CCCVERSIONSELECTED2", "selected");
 	}
-	else if(!strcmp(rdr->cc_version, "2.1.3"))
+	else if(!strcmp(rdr->cc_version, "2.1.2"))
 	{
 		tpl_addVar(vars, TPLADD, "CCCVERSIONSELECTED3", "selected");
 	}
-	else if(!strcmp(rdr->cc_version, "2.1.4"))
+	else if(!strcmp(rdr->cc_version, "2.1.3"))
 	{
 		tpl_addVar(vars, TPLADD, "CCCVERSIONSELECTED4", "selected");
 	}
-	else if(!strcmp(rdr->cc_version, "2.2.0"))
+	else if(!strcmp(rdr->cc_version, "2.1.4"))
 	{
 		tpl_addVar(vars, TPLADD, "CCCVERSIONSELECTED5", "selected");
 	}
-	else if(!strcmp(rdr->cc_version, "2.2.1"))
+	else if(!strcmp(rdr->cc_version, "2.2.0"))
 	{
 		tpl_addVar(vars, TPLADD, "CCCVERSIONSELECTED6", "selected");
 	}
-	else if(!strcmp(rdr->cc_version, "2.3.0"))
+	else if(!strcmp(rdr->cc_version, "2.2.1"))
 	{
 		tpl_addVar(vars, TPLADD, "CCCVERSIONSELECTED7", "selected");
 	}
-	else if(!strcmp(rdr->cc_version, "2.3.1"))
+	else if(!strcmp(rdr->cc_version, "2.3.0"))
 	{
 		tpl_addVar(vars, TPLADD, "CCCVERSIONSELECTED8", "selected");
 	}
-	else if(!strcmp(rdr->cc_version, "2.3.2"))
+	else if(!strcmp(rdr->cc_version, "2.3.1"))
 	{
 		tpl_addVar(vars, TPLADD, "CCCVERSIONSELECTED9", "selected");
+	}
+	else if(!strcmp(rdr->cc_version, "2.3.2"))
+	{
+		tpl_addVar(vars, TPLADD, "CCCVERSIONSELECTED10", "selected");
 	}
 #endif
 
@@ -2932,12 +2946,28 @@ static char *send_oscam_reader_config(struct templatevars *vars, struct uriparam
 	if(rdr->detect_seca_nagra_tunneled_card)
 		{ tpl_addVar(vars, TPLADD, "NAGRADETECTSECACARDCHECKED", "checked"); }
 
+#ifdef READER_TONGFANG
+	if(rdr->tongfang3_calibsn)
+		{ tpl_printf(vars, TPLADD, "TONGFANGCALIBSN", "%08X", rdr->tongfang3_calibsn); }
+
+#endif
+#ifdef READER_JET
+	for(i = 0; (size_t)i < sizeof(rdr->jet_authorize_id) && rdr->jet_authorize_id[i] == 0; i++);
+	if((size_t)i <  sizeof(rdr->jet_authorize_id))
+	{
+		for(i = 0; (size_t)i <  sizeof(rdr->jet_authorize_id) ; i++)
+			{ tpl_printf(vars, TPLAPPEND, "JETAUTHORIZEID", "%02X", rdr->jet_authorize_id[i]); }
+	}
+	tpl_addVar(vars, TPLADD, "JETFIXECM", (rdr->jet_fix_ecm == 1) ? "checked" : "");
+#endif
+
 #ifdef MODULE_CCCAM
 	tpl_printf(vars, TPLADD, "CCCMAXHOPS",   "%d", rdr->cc_maxhops);
 	tpl_printf(vars, TPLADD, "CCCMINDOWN",   "%d", rdr->cc_mindown);
 	tpl_printf(vars, TPLADD, "CCCRESHARE",   "%d", rdr->cc_reshare);
 	tpl_printf(vars, TPLADD, "RESHARE",      "%d", cfg.cc_reshare);
 	tpl_printf(vars, TPLADD, "CCCRECONNECT", "%d", rdr->cc_reconnect);
+	tpl_printf(vars, TPLADD, "CCCKEEPALIVEPING",   "%d", rdr->cc_keepaliveping);
 
 	if(rdr->cc_want_emu)
 		{ tpl_addVar(vars, TPLADD, "CCCWANTEMUCHECKED", "checked"); }
@@ -3858,11 +3888,26 @@ static void webif_add_client_proto(struct templatevars *vars, struct s_client *c
 		struct cc_data *cc = cl->cc;
 		if(cc && *cc->remote_version && *cc->remote_build)
 		{
-			tpl_printf(vars, TPLADD, "CLIENTPROTO", "%s (%s-%s)", proto, cc->remote_version, cc->remote_build);
-			tpl_printf(vars, TPLADD, "CLIENTPROTOSORT", "%s (%s-%s)", proto, cc->remote_version, cc->remote_build);
+			uint8_t mcs_ver = 0;
+			if (cc->multics_version[0] | (cc->multics_version[1] << 8))
+			{
+				mcs_ver = cc->multics_version[0] | (cc->multics_version[1] << 8);
+			}
+			uint8_t nbx_ver = 0;
+			if (cc->newbox_version[0] | (cc->newbox_version[1] << 8))
+			{
+				nbx_ver = cc->newbox_version[0] | (cc->newbox_version[1] << 8);
+			}
+
+			tpl_printf(vars, TPLADD, "CLIENTPROTO", "%s (%s-%s)", (char *)proto, cc->remote_version, cc->remote_build);
+			tpl_printf(vars, TPLADD, "CLIENTPROTOSORT", "%s (%s-%s)", (char *)proto, cc->remote_version, cc->remote_build);
 			if(cccam_client_multics_mode(cl))
 			{
-				tpl_printf(vars, TPLADD, "CLIENTPROTOTITLE", "Multics, revision r%d", cc->multics_version[0] | (cc->multics_version[1] << 8));
+				tpl_printf(vars, TPLADD, "CLIENTPROTOTITLE", "Multics, revision r%d", mcs_ver);
+			}
+			else if(cccam_client_newbox_mode(cl))
+			{
+				tpl_printf(vars, TPLADD, "CLIENTPROTOTITLE", "Newbox, revision r%d", nbx_ver);
 			}
 			else
 			{
@@ -3879,31 +3924,59 @@ static void webif_add_client_proto(struct templatevars *vars, struct s_client *c
 				switch(is_other_proto)
 				{
 					case 1:
-						snprintf(picon_name, sizeof(picon_name) / sizeof(char) - 1, "%s_r_%d", proto, cc->multics_version[0] | (cc->multics_version[1] << 8));
+						snprintf(picon_name, sizeof(picon_name) / sizeof(char) - 1, "%s_r_%d", (char *)proto, mcs_ver);
 						if(picon_exists(picon_name))
 						{
 							if (!apicall)
 							{
 								tpl_addVar(vars, TPLADD, "CCA", (char *)proto);
 								tpl_addVar(vars, TPLADD, "CCB", "r");
-								tpl_printf(vars, TPLADD, "CCC", "%d", cc->multics_version[0] | (cc->multics_version[1] << 8));
+								tpl_printf(vars, TPLADD, "CCC", "%d", mcs_ver);
 								tpl_addVar(vars, TPLADD, "CCD", "");
 								tpl_addVar(vars, TPLADD, "CLIENTPROTO", tpl_getTpl(vars, "PROTOCCCAMPIC"));
 							}
 							else
 							{
-								tpl_printf(vars, TPLADDONCE, "PROTOICON", "%s_r_%d",(char *)proto, cc->multics_version[0] | (cc->multics_version[1] << 8));
+								tpl_printf(vars, TPLADDONCE, "PROTOICON", "%s_r_%d",(char *)proto, mcs_ver);
 							}
 						}
 						else
 						{
 							tpl_printf(vars, TPLADD, "CLIENTPROTOTITLE", "Multics, revision r%d missing icon: IC_%s_r_%d.tpl",
-								cc->multics_version[0] | (cc->multics_version[1] << 8), proto, cc->multics_version[0] | (cc->multics_version[1] << 8));
+								 mcs_ver, (char *)proto, mcs_ver);
 						}
 						break;
+						
+					if(cccam_client_newbox_mode(cl)) { is_other_proto = 1; }
+
+					switch(is_other_proto)
+					{
+						case 1:
+							snprintf(picon_name, sizeof(picon_name) / sizeof(char) - 1, "%s_r_%d", (char *)proto, nbx_ver);
+							if(picon_exists(picon_name))
+							{
+								if (!apicall)
+								{
+									tpl_addVar(vars, TPLADD, "CCA", (char *)proto);
+									tpl_addVar(vars, TPLADD, "CCB", "r");
+									tpl_printf(vars, TPLADD, "CCC", "%d", nbx_ver);
+									tpl_addVar(vars, TPLADD, "CCD", "");
+									tpl_addVar(vars, TPLADD, "CLIENTPROTO", tpl_getTpl(vars, "PROTOCCCAMPIC"));
+								}
+								else
+								{
+									tpl_printf(vars, TPLADDONCE, "PROTOICON", "%s_r_%d",(char *)proto, nbx_ver);
+								}
+							}
+							else
+							{
+								tpl_printf(vars, TPLADD, "CLIENTPROTOTITLE", "Newbox, revision r%d missing icon: IC_%s_r_%d.tpl",
+									 nbx_ver, (char *)proto, nbx_ver);
+							}
+							break;
 
 					default:
-						snprintf(picon_name, sizeof(picon_name) / sizeof(char) - 1, "%s_%s_%s", proto, cc->remote_version, cc->remote_build);
+						snprintf(picon_name, sizeof(picon_name) / sizeof(char) - 1, "%s_%s_%s", (char *)proto, cc->remote_version, cc->remote_build);
 						if(picon_exists(picon_name))
 						{
 							if (!apicall)
@@ -3925,6 +3998,7 @@ static void webif_add_client_proto(struct templatevars *vars, struct s_client *c
 								 cc->extended_mode ? cc->remote_oscam : "", proto, cc->remote_version, cc->remote_build);
 						}
 						break;
+					}	
 				}
 			}
 		}

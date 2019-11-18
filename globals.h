@@ -1612,6 +1612,7 @@ struct s_reader										// contains device info, reader info and card info
 	uint32_t		boxid;
 	int8_t			cak7_mode;
 	uint8_t			cak7type;
+	uint32_t		cas_version;
 	int8_t			nagra_read;						// read nagra ncmed records: 0 Disabled (default), 1 read all records, 2 read valid records only
 	int8_t			detect_seca_nagra_tunneled_card;
 	int8_t			force_irdeto;
@@ -1676,6 +1677,20 @@ struct s_reader										// contains device info, reader info and card info
 	int8_t			ncd_proto;
 	int8_t			currenthops;					// number of hops (cccam & gbox)
 	int8_t			sh4_stb;						// to set sh4 type box used to identify sci type.
+#ifdef READER_TONGFANG
+	uint32_t		tongfang3_calibsn;
+	uint8_t			tongfang3_commkey[8];
+#endif
+#ifdef READER_JET
+	uint8_t			jet_vendor_key[32];
+	uint8_t			jet_root_key[8];
+	uint8_t			jet_service_key[8];
+	uint8_t			jet_derive_key[56];
+	uint8_t			jet_auth_key[10];
+	uint8_t			jet_authorize_id[8];
+	uint8_t			jet_fix_ecm;                   // for dvn jet ,ecm head is 0x50, this option indicate if fix it to 0x80 or 0x81.
+	uint8_t			jet_resync_vendorkey;
+#endif
 #ifdef MODULE_CCCAM
 	char			cc_version[7];					// cccam version
 	char			cc_build[7];					// cccam build number
@@ -1684,9 +1699,11 @@ struct s_reader										// contains device info, reader info and card info
 	int8_t			cc_want_emu;					// Schlocke: Client want to have EMUs, 0 - NO; 1 - YES
 	uint32_t		cc_id;
 	int8_t			cc_keepalive;
+	int8_t			cc_keepaliveping;				// Keep Alive Ping - interval to send keepalives if idle.
 	int8_t			cc_hop;							// For non-cccam reader: hop for virtual cards
 	int8_t			cc_reshare;
 	int32_t			cc_reconnect;					// reconnect on ecm-request timeout
+	int8_t			from_cccam_cfg;					// created from cccam.cfg
 #endif
 	int8_t			tcp_connected;
 	int32_t			tcp_ito;						// inactivity timeout
@@ -2209,6 +2226,8 @@ struct s_config
 	int8_t			cc_reshare_services;
 	int8_t			cc_forward_origin_card;
 	uint8_t			cc_fixed_nodeid[8];
+	int8_t			cc_autosidblock;
+	char			*cc_cfgfile;					// CCcam.cfg file path
 	uint32_t		cc_recv_timeout;				// The poll() timeout parameter in ms. Default: DEFAULT_CC_RECV_TIMEOUT (2000 ms).
 #endif
 #ifdef MODULE_GBOX
@@ -2531,7 +2550,10 @@ static inline bool caid_is_director(uint16_t caid) { return caid >> 8 == 0x10; }
 static inline bool caid_is_betacrypt(uint16_t caid) { return caid >> 8 == 0x17; }
 static inline bool caid_is_nagra(uint16_t caid) { return caid >> 8 == 0x18; }
 static inline bool caid_is_bulcrypt(uint16_t caid) { return caid == 0x5581 || caid == 0x4AEE; }
-static inline bool caid_is_dre(uint16_t caid) { return caid == 0x4AE0 || caid == 0x4AE1 || caid == 0x2710;}
+static inline bool caid_is_dre(uint16_t caid) { return caid == 0x4AE0 || caid == 0x4AE1 || caid == 0x2710; }
+static inline bool caid_is_streamguard(uint16_t caid) { return caid == 0x4AD2; }
+static inline bool caid_is_dvn(uint16_t caid) { return caid == 0x4A30; }
+static inline bool caid_is_tongfang(uint16_t caid) { return (caid == 0x4A02) || (caid >= 0x4B00 && caid <= 0x4BFF); }
 const char *get_cardsystem_desc_by_caid(uint16_t caid);
 
 #ifdef WITH_EMU

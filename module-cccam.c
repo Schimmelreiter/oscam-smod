@@ -31,6 +31,31 @@ static const char *cmd05_mode_name[] = { "UNKNOWN", "PLAIN", "AES", "CC_CRYPT", 
 // Mode names for CMD_0C command
 static const char *cmd0c_mode_name[] = { "NONE", "RC6", "RC4", "CC_CRYPT", "AES", "IDEA" };
 
+const char *cc_msg_name[]={"MSG_CLI_DATA","MSG_CW_ECM","MSG_EMM_ACK","MSG_VALUE_03",
+			    "MSG_CARD_REMOVED","MSG_CMD_05","MSG_KEEPALIVE","MSG_NEW_CARD",
+			    "MSG_SRV_DATA","MSG_VALUE_09","MSG_NEW_CARD_SIDINFO","MSG_CW_NOK1",
+			    "MSG_CW_NOK2","MSG_NO_HEADER"};
+
+char * cc_get_msgname(uint32_t msg,char *result,uint32_t len){
+	if(msg <= 0x09)
+		return (char*)cc_msg_name[msg];
+	else if(msg == 0x0f)
+		return (char*)cc_msg_name[10];
+	else if(msg == 0xfe)
+		return (char*)cc_msg_name[11];
+	else if(msg == 0xff)
+		return (char*)cc_msg_name[12];
+	else if(msg == 0xffff)
+		return (char*)cc_msg_name[13];
+	else if(msg>=0x0a && msg<=0x0e){
+		snprintf(result,len,"MSG_CMD_%02x",msg);
+		return result;
+	}else{
+		snprintf(result,len,"MSG_VALUE_%02x",msg);
+		return result;
+	}
+}
+
 uint8_t cc_node_id[8];
 
 int32_t cc_cli_connect(struct s_client *cl);
@@ -350,6 +375,10 @@ struct cc_srvid_block *is_sid_blocked(struct cc_card *card, struct cc_srvid *srv
 		{
 			break;
 		}
+		else if(srvid->ecmlen && ((struct cc_srvid_block *)srvid)->blocked_till > time(NULL))
+		{
+			ll_iter_remove_data(&it);
+		}
 	}
 	return srvid;
 }
@@ -384,7 +413,7 @@ struct cc_srvid *is_good_sid(struct cc_card *card, struct cc_srvid *srvid_good)
 	return srvid;
 }
 
-#define BLOCKING_SECONDS 10
+#define BLOCKING_SECONDS 6
 
 void add_sid_block(struct cc_card *card, struct cc_srvid *srvid_blocked, bool temporary)
 {
@@ -899,10 +928,10 @@ int32_t cc_cmd_send(struct s_client *cl, uint8_t *buf, int32_t len, cc_msg_type_
 	return n;
 }
 
-#define CC_DEFAULT_VERSION 9
-#define CC_VERSIONS 10
-static char *version[CC_VERSIONS]  = { "2.0.11", "2.1.1", "2.1.2", "2.1.3", "2.1.4", "2.2.0", "2.2.1", "2.3.0", "2.3.1", "2.3.2"};
-static char *build[CC_VERSIONS]    = { "2892",   "2971",  "3094",  "3165",  "3191",  "3290",  "3316",  "3367",  "9d508a",  "4000"};
+#define CC_DEFAULT_VERSION 1
+#define CC_VERSIONS 11
+static char *version[CC_VERSIONS]  = { "2.0.9", "2.0.11", "2.1.1", "2.1.2", "2.1.3", "2.1.4", "2.2.0", "2.2.1", "2.3.0", "2.3.1", "2.3.2"};
+static char *build[CC_VERSIONS]    = { "2816",   "2892",   "2971",  "3094",  "3165",  "3191",  "3290",  "3316",  "3367",  "9d508a",  "4000"};
 static char extcompat[CC_VERSIONS] = { 0,        0,       0,       0,       0,       1,       1,       1,       1,       1}; // Supporting new card format starting with 2.2.0
 
 /**
@@ -983,6 +1012,14 @@ int32_t cc_send_cli_data(struct s_client *cl)
 
 	// multics seed already detected, now send multics 'WHO' for getting and confirming multics server
 	if(cc->multics_mode == 1)
+	{
+		memcpy(buf + 57, "W", 1);
+		memcpy(buf + 58, "H", 1);
+		memcpy(buf + 59, "O", 1);
+	}
+
+	//newbox seed already detected, now send newbox 'WHO' for getting and confirming newbox server
+	if(cc->newbox_mode == 1)
 	{
 		memcpy(buf + 57, "W", 1);
 		memcpy(buf + 58, "H", 1);
@@ -1312,7 +1349,7 @@ void cc_UA_oscam2cccam(uint8_t *in, uint8_t *out, uint16_t caid)
 	//		//Place here your own adjustments!
 	//}
 
-	if(caid_is_bulcrypt(caid))
+	if(caid_is_bulcrypt(caid) || caid_is_streamguard(caid) || caid_is_tongfang(caid) || caid_is_dvn(caid))
 	{
 		out[4] = in[0];
 		out[5] = in[1];
@@ -1348,7 +1385,7 @@ void cc_UA_cccam2oscam(uint8_t *in, uint8_t *out, uint16_t caid)
 	//		//Place here your own adjustments!
 	//}
 
-	if(caid_is_bulcrypt(caid))
+	if(caid_is_bulcrypt(caid) || caid_is_streamguard(caid) || caid_is_tongfang(caid) || caid_is_dvn(caid))
 	{
 		out[0] = in[4];
 		out[1] = in[5];
@@ -1584,7 +1621,7 @@ struct cc_card *get_matching_card(struct s_client *cl, ECM_REQUEST *cur_er, int8
 
 				while((provider = ll_iter_next(&it2)))
 				{
-					if(!cur_er->prid || (provider->prov == cur_er->prid)) // provid matches
+					if(!cur_er->prid || !provider->prov || (provider->prov == cur_er->prid)) // provid matches
 					{
 						if(rating > best_rating)
 						{
@@ -2679,8 +2716,8 @@ int32_t cc_parse_msg(struct s_client *cl, uint8_t *buf, int32_t l)
 		return -1;
 	}
 
-	cs_log_dbg(cl->typ == 'c' ? D_CLIENT : D_READER, "%s parse_msg=%d", getprefix(), buf[1]);
-
+	char msgname[250];
+	cs_log_dbg(cl->typ == 'c' ? D_CLIENT : D_READER, "%s parse_msg=%s", getprefix(), cc_get_msgname(buf[1],msgname,sizeof(msgname)));
 	uint8_t *data = buf + 4;
 
 	if(l < 4)
@@ -2764,6 +2801,15 @@ int32_t cc_parse_msg(struct s_client *cl, uint8_t *buf, int32_t l)
 				//
 				// 16..43 bytes: RC4 encryption
 				//
+			}
+
+			//newbox server response
+			if(data[33] == 'N' && data[34] == 'B' && data[35] == 'x')
+			{
+				cc->newbox_mode = 2; //newbox server finaly confirmed.
+				cc->newbox_version[0] = data[37];
+				cc->newbox_version[1] = data[38];
+				cs_log_dbg(D_READER, "newbox detected: %s!", getprefix());
 			}
 			else if((l >= 0x10 && l <= 0x1f) || (l >= 0x24 && l <= 0x2b))
 			{
@@ -3148,7 +3194,7 @@ int32_t cc_parse_msg(struct s_client *cl, uint8_t *buf, int32_t l)
 					else if(cc->cmd05NOK) // else MSG_CW_NOK2: can't decode
 					{
 						move_card_to_end(cl, card);
-						if(cwlastresptime < 5000)
+						if(cwlastresptime < 5000 && cfg.cc_autosidblock)
 						{
 							add_sid_block(card, &srvid, true);
 						}
@@ -4575,6 +4621,16 @@ int32_t cc_cli_connect(struct s_client *cl)
 		cs_log_dbg(D_READER, "multics seed detected: %s", rdr->label);
 	}
 
+	// detect newbox seed
+	uint8_t d = (data[0]^'N') + data[1] + data[2];
+	uint8_t e = data[4] + (data[5]^'B') + data[6];
+	uint8_t f = data[8] + data[9] + (data[10]^'x');
+	if((d == data[3]) && (e == data[7]) && (f == data[11]))
+	{
+		cc->newbox_mode = 1; //detected newbox seed.
+		cs_log_dbg(D_READER, "newbox seed detected: %s", rdr->label);
+	}
+
 	cc_xor(data); // XOR init bytes with 'CCcam'
 
 	SHA_CTX ctx;
@@ -4918,6 +4974,11 @@ bool cccam_client_extended_mode(struct s_client *cl)
 bool cccam_client_multics_mode(struct s_client *cl)
 {
 	return cl && cl->cc && ((struct cc_data *)cl->cc)->multics_mode == 2;
+}
+
+bool cccam_client_newbox_mode(struct s_client *cl)
+{
+	return cl && cl->cc && ((struct cc_data *)cl->cc)->newbox_mode == 2;
 }
 
 void module_cccam(struct s_module *ph)
