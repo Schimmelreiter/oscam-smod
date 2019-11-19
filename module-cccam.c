@@ -928,10 +928,10 @@ int32_t cc_cmd_send(struct s_client *cl, uint8_t *buf, int32_t len, cc_msg_type_
 	return n;
 }
 
-#define CC_DEFAULT_VERSION 1
+#define CC_DEFAULT_VERSION 10
 #define CC_VERSIONS 11
-static char *version[CC_VERSIONS]  = { "2.0.9", "2.0.11", "2.1.1", "2.1.2", "2.1.3", "2.1.4", "2.2.0", "2.2.1", "2.3.0", "2.3.1", "2.3.2"};
-static char *build[CC_VERSIONS]    = { "2816",   "2892",   "2971",  "3094",  "3165",  "3191",  "3290",  "3316",  "3367",  "9d508a",  "4000"};
+static char *version[CC_VERSIONS]  = { "2.0.11", "2.1.1", "2.1.2", "2.1.3", "2.1.4", "2.2.0", "2.2.1", "2.3.0", "2.3.1", "2.3.2"};
+static char *build[CC_VERSIONS]    = { "2892",   "2971",  "3094",  "3165",  "3191",  "3290",  "3316",  "3367",  "9d508a",  "4000"};
 static char extcompat[CC_VERSIONS] = { 0,        0,       0,       0,       0,       1,       1,       1,       1,       1}; // Supporting new card format starting with 2.2.0
 
 /**
@@ -1012,14 +1012,6 @@ int32_t cc_send_cli_data(struct s_client *cl)
 
 	// multics seed already detected, now send multics 'WHO' for getting and confirming multics server
 	if(cc->multics_mode == 1)
-	{
-		memcpy(buf + 57, "W", 1);
-		memcpy(buf + 58, "H", 1);
-		memcpy(buf + 59, "O", 1);
-	}
-
-	//newbox seed already detected, now send newbox 'WHO' for getting and confirming newbox server
-	if(cc->newbox_mode == 1)
 	{
 		memcpy(buf + 57, "W", 1);
 		memcpy(buf + 58, "H", 1);
@@ -2802,15 +2794,6 @@ int32_t cc_parse_msg(struct s_client *cl, uint8_t *buf, int32_t l)
 				// 16..43 bytes: RC4 encryption
 				//
 			}
-
-			//newbox server response
-			if(data[33] == 'N' && data[34] == 'B' && data[35] == 'x')
-			{
-				cc->newbox_mode = 2; //newbox server finaly confirmed.
-				cc->newbox_version[0] = data[37];
-				cc->newbox_version[1] = data[38];
-				cs_log_dbg(D_READER, "newbox detected: %s!", getprefix());
-			}
 			else if((l >= 0x10 && l <= 0x1f) || (l >= 0x24 && l <= 0x2b))
 			{
 				cc_init_crypt(&cc->cmd05_cryptkey, data, l);
@@ -3194,7 +3177,7 @@ int32_t cc_parse_msg(struct s_client *cl, uint8_t *buf, int32_t l)
 					else if(cc->cmd05NOK) // else MSG_CW_NOK2: can't decode
 					{
 						move_card_to_end(cl, card);
-						if(cwlastresptime < 5000 && cfg.cc_autosidblock)
+						if(cwlastresptime < 5000)
 						{
 							add_sid_block(card, &srvid, true);
 						}
@@ -4621,16 +4604,6 @@ int32_t cc_cli_connect(struct s_client *cl)
 		cs_log_dbg(D_READER, "multics seed detected: %s", rdr->label);
 	}
 
-	// detect newbox seed
-	uint8_t d = (data[0]^'N') + data[1] + data[2];
-	uint8_t e = data[4] + (data[5]^'B') + data[6];
-	uint8_t f = data[8] + data[9] + (data[10]^'x');
-	if((d == data[3]) && (e == data[7]) && (f == data[11]))
-	{
-		cc->newbox_mode = 1; //detected newbox seed.
-		cs_log_dbg(D_READER, "newbox seed detected: %s", rdr->label);
-	}
-
 	cc_xor(data); // XOR init bytes with 'CCcam'
 
 	SHA_CTX ctx;
@@ -4974,11 +4947,6 @@ bool cccam_client_extended_mode(struct s_client *cl)
 bool cccam_client_multics_mode(struct s_client *cl)
 {
 	return cl && cl->cc && ((struct cc_data *)cl->cc)->multics_mode == 2;
-}
-
-bool cccam_client_newbox_mode(struct s_client *cl)
-{
-	return cl && cl->cc && ((struct cc_data *)cl->cc)->newbox_mode == 2;
 }
 
 void module_cccam(struct s_module *ph)

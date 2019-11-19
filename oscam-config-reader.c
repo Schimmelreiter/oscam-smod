@@ -229,6 +229,55 @@ static void boxid_fn(const char *token, char *value, void *setting, FILE *f)
 		{ fprintf_conf(f, token, "\n"); }
 }
 
+#ifdef READER_JET
+static void jet_authorize_id_fn(const char *token, char *value, void *setting, FILE *f)
+{
+	struct s_reader *rdr = setting;
+	if(value)
+	{
+		int32_t len = strlen(value);
+		if(len != 16)
+		{
+			memset(rdr->jet_authorize_id, 0, sizeof(rdr->jet_authorize_id));
+		}
+		else
+		{
+			if(key_atob_l(value, rdr->jet_authorize_id, len))
+			{
+				fprintf(stderr, "reader jet authoriz id parse error, %s=%s\n", token, value);
+				memset(rdr->jet_authorize_id, 0, sizeof(rdr->jet_authorize_id));
+			}
+		}
+		return;
+	}
+	size_t i;
+	for(i = 0; i < sizeof(rdr->jet_authorize_id) && rdr->jet_authorize_id[i] == 0; i++);
+	if( i < sizeof(rdr->jet_authorize_id))
+	{
+		char tmp[17];
+		fprintf_conf(f, "jet_authorize_id", "%s\n", cs_hexdump(0, rdr->jet_authorize_id, sizeof(rdr->jet_authorize_id), tmp, sizeof(tmp)));
+	}
+	else if(cfg.http_full_cfg)
+		{ fprintf_conf(f, token, "\n"); }
+}
+#endif
+
+#ifdef READER_TONGFANG
+static void tongfang3_calibsn_fn(const char *token, char *value, void *setting, FILE *f)
+{
+	struct s_reader *rdr = setting;
+	if(value)
+	{
+		rdr->tongfang3_calibsn = strlen(value) ? a2i(value, 4) : 0;
+		return;
+	}
+	if(rdr->tongfang3_calibsn)
+		fprintf_conf(f, token, "%08X\n", rdr->tongfang3_calibsn);
+	else if(cfg.http_full_cfg)
+		{ fprintf_conf(f, token, "\n"); }
+}
+#endif
+
 static void cwpkkey_fn(const char *token, char *value, void *setting, FILE *f)
 {
 	struct s_reader *rdr = setting;
@@ -1549,6 +1598,14 @@ static const struct config_list reader_opts[] =
 	DEF_OPT_FUNC("caid"                           , OFS(ctab),                            reader_caid_fn),
 	DEF_OPT_FUNC("atr"                            , 0,                                    atr_fn),
 	DEF_OPT_FUNC("boxid"                          , 0,                                    boxid_fn),
+#ifdef READER_TONGFANG
+	DEF_OPT_FUNC("tongfang3_calibsn"    , 0,                            tongfang3_calibsn_fn),
+#endif
+#ifdef READER_JET
+	DEF_OPT_FUNC("jet_authorize_id"     , 0,                            jet_authorize_id_fn),
+	DEF_OPT_INT8("jet_fix_ecm"          , OFS(jet_fix_ecm),             0),
+	DEF_OPT_INT8("jet_resync_vendorkey" , OFS(jet_resync_vendorkey),    0),
+#endif
 	DEF_OPT_FUNC("boxkey"                         , 0,                                    boxkey_fn),
 	DEF_OPT_FUNC("rsakey"                         , 0,                                    rsakey_fn),
 	DEF_OPT_FUNC("cwpkkey"                        , 0,                                    cwpkkey_fn),
@@ -1636,6 +1693,7 @@ static const struct config_list reader_opts[] =
 	DEF_OPT_INT8("cccreshare"                     , OFS(cc_reshare),                      DEFAULT_CC_RESHARE),
 	DEF_OPT_INT32("cccreconnect"                  , OFS(cc_reconnect),                    DEFAULT_CC_RECONNECT),
 	DEF_OPT_INT8("ccchop"                         , OFS(cc_hop),                          0),
+	DEF_OPT_INT8("ccckeepaliveping"               , OFS(cc_keepaliveping),                30),
 #endif
 #ifdef MODULE_GHTTP
 	DEF_OPT_UINT8("use_ssl"                       , OFS(ghttp_use_ssl),                   0),
@@ -1741,7 +1799,7 @@ static bool reader_check_setting(const struct config_list *UNUSED(clist), void *
 	static const char *cccam_settings[] =
 	{
 		"cccversion", "cccmaxhops", "cccmindown", "cccwantemu", "ccckeepalive",
-		"cccreconnect",
+		"cccreconnect", "ccckeepaliveping",
 		0
 	};
 	// Special settings for CCCAM
@@ -1811,6 +1869,12 @@ int32_t init_readerdb(void)
 	if(!cs_malloc(&token, MAXLINESIZE))
 		{ return 1; }
 
+	if(!configured_readers)
+		configured_readers = ll_create("configured_readers");
+
+	if(cfg.cc_cfgfile)
+		read_cccamcfg(CCCAMCFGREADER);
+	
 	struct s_reader *rdr;
 	if(!cs_malloc(&rdr, sizeof(struct s_reader)))
 	{
@@ -1850,16 +1914,28 @@ int32_t init_readerdb(void)
 	}
 	NULLFREE(token);
 	LL_ITER itr = ll_iter_create(configured_readers);
-	while((rdr = ll_iter_next(&itr))) // build active readers list
+	while((rdr = ll_iter_next(&itr)) && rdr->from_cccam_cfg)   //free duplicate reader
+	{
+		struct s_reader *rdr2;
+		LL_ITER iter = ll_iter_create(configured_readers);
+		while((rdr2 = ll_iter_next(&iter))){
+			if(rdr != rdr2 && !strcmp(rdr->device, rdr2->device)
+			   && rdr->r_port == rdr2->r_port && !strcmp(rdr->r_usr,rdr2->r_usr)
+			   && !strcmp(rdr->r_pwd, rdr2->r_pwd)){
+				rdr = ll_iter_remove(&itr);
+				free_reader(rdr);
+				break;
+			}
+		}
+	}
+
+	itr = ll_iter_create(configured_readers);
+	while((rdr = ll_iter_next(&itr)))   //build active readers list
 	{
 		reader_fixups_fn(rdr);
 		module_reader_set(rdr);
 	}
-	if ( tmp_conf == 1 ){
-		fclose(fp);
-	} else {
-		fclose(fp);
-	}
+	fclose(fp);
 	return (0);
 }
 
