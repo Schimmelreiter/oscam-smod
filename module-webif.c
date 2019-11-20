@@ -1294,49 +1294,45 @@ static char *send_oscam_config_cccam(struct templatevars *vars, struct uriparams
 
 	tpl_printf(vars, TPLADD, "RESHARE", "%d", cfg.cc_reshare);
 
-	if(!strcmp((char *)cfg.cc_version, "2.0.9"))
+	if(!strcmp((char *)cfg.cc_version, "2.0.11"))
 	{
 		tpl_addVar(vars, TPLADD, "VERSIONSELECTED0", "selected");
 	}
-	else if(!strcmp((char *)cfg.cc_version, "2.0.11"))
+	else if(!strcmp((char *)cfg.cc_version, "2.1.1"))
 	{
 		tpl_addVar(vars, TPLADD, "VERSIONSELECTED1", "selected");
 	}
-	else if(!strcmp((char *)cfg.cc_version, "2.1.1"))
+	else if(!strcmp((char *)cfg.cc_version, "2.1.2"))
 	{
 		tpl_addVar(vars, TPLADD, "VERSIONSELECTED2", "selected");
 	}
-	else if(!strcmp((char *)cfg.cc_version, "2.1.2"))
+	else if(!strcmp((char *)cfg.cc_version, "2.1.3"))
 	{
 		tpl_addVar(vars, TPLADD, "VERSIONSELECTED3", "selected");
 	}
-	else if(!strcmp((char *)cfg.cc_version, "2.1.3"))
+	else if(!strcmp((char *)cfg.cc_version, "2.1.4"))
 	{
 		tpl_addVar(vars, TPLADD, "VERSIONSELECTED4", "selected");
 	}
-	else if(!strcmp((char *)cfg.cc_version, "2.1.4"))
+	else if(!strcmp((char *)cfg.cc_version, "2.2.0"))
 	{
 		tpl_addVar(vars, TPLADD, "VERSIONSELECTED5", "selected");
 	}
-	else if(!strcmp((char *)cfg.cc_version, "2.2.0"))
+	else if(!strcmp((char *)cfg.cc_version, "2.2.1"))
 	{
 		tpl_addVar(vars, TPLADD, "VERSIONSELECTED6", "selected");
 	}
-	else if(!strcmp((char *)cfg.cc_version, "2.2.1"))
+	else if(!strcmp((char *)cfg.cc_version, "2.3.0"))
 	{
 		tpl_addVar(vars, TPLADD, "VERSIONSELECTED7", "selected");
 	}
-	else if(!strcmp((char *)cfg.cc_version, "2.3.0"))
+	else if(!strcmp((char *)cfg.cc_version, "2.3.1"))
 	{
 		tpl_addVar(vars, TPLADD, "VERSIONSELECTED8", "selected");
 	}
-	else if(!strcmp((char *)cfg.cc_version, "2.3.1"))
-	{
-		tpl_addVar(vars, TPLADD, "VERSIONSELECTED9", "selected");
-	}
 	else if(!strcmp((char *)cfg.cc_version, "2.3.2"))
 	{
-		tpl_addVar(vars, TPLADD, "VERSIONSELECTED10", "selected");
+		tpl_addVar(vars, TPLADD, "VERSIONSELECTED9", "selected");
 	}
 
 	tpl_printf(vars, TPLADD, "UPDATEINTERVAL", "%d", cfg.cc_update_interval);
@@ -1364,9 +1360,6 @@ static char *send_oscam_config_cccam(struct templatevars *vars, struct uriparams
 
 	tpl_addVar(vars, TPLADD, "KEEPCONNECTED", (cfg.cc_keep_connected == 1) ? "checked" : "");
 	
-	if (cfg.cc_autosidblock)
-		tpl_addVar(vars, TPLADD, "AUTOSIDBLOCK", (cfg.cc_autosidblock == 1) ? "checked" : "");
-
 	tpl_addVar(vars, TPLADDONCE, "CONFIG_CONTROL", tpl_getTpl(vars, "CONFIGCCCAMCTRL"));
 
 	return tpl_getTpl(vars, "CONFIGCCCAM");
@@ -2888,49 +2881,45 @@ static char *send_oscam_reader_config(struct templatevars *vars, struct uriparam
 	free_mk_t(value);
 
 #ifdef MODULE_CCCAM
-	if(!strcmp(rdr->cc_version, "2.0.9"))
- 	{
- 		tpl_addVar(vars, TPLADD, "CCCVERSIONSELECTED0", "selected");
- 	}
-	else if(!strcmp(rdr->cc_version, "2.0.11"))
+	if(!strcmp(rdr->cc_version, "2.0.11"))
 	{
-		tpl_addVar(vars, TPLADD, "CCCVERSIONSELECTED1", "selected");
+		tpl_addVar(vars, TPLADD, "CCCVERSIONSELECTED0", "selected");
 	}
 	else if(!strcmp(rdr->cc_version, "2.1.1"))
 	{
-		tpl_addVar(vars, TPLADD, "CCCVERSIONSELECTED2", "selected");
+		tpl_addVar(vars, TPLADD, "CCCVERSIONSELECTED1", "selected");
 	}
 	else if(!strcmp(rdr->cc_version, "2.1.2"))
 	{
-		tpl_addVar(vars, TPLADD, "CCCVERSIONSELECTED3", "selected");
+		tpl_addVar(vars, TPLADD, "CCCVERSIONSELECTED2", "selected");
 	}
 	else if(!strcmp(rdr->cc_version, "2.1.3"))
 	{
-		tpl_addVar(vars, TPLADD, "CCCVERSIONSELECTED4", "selected");
+		tpl_addVar(vars, TPLADD, "CCCVERSIONSELECTED3", "selected");
 	}
 	else if(!strcmp(rdr->cc_version, "2.1.4"))
 	{
-		tpl_addVar(vars, TPLADD, "CCCVERSIONSELECTED5", "selected");
+		tpl_addVar(vars, TPLADD, "CCCVERSIONSELECTED4", "selected");
 	}
 	else if(!strcmp(rdr->cc_version, "2.2.0"))
 	{
-		tpl_addVar(vars, TPLADD, "CCCVERSIONSELECTED6", "selected");
+		tpl_addVar(vars, TPLADD, "CCCVERSIONSELECTED5", "selected");
 	}
 	else if(!strcmp(rdr->cc_version, "2.2.1"))
 	{
-		tpl_addVar(vars, TPLADD, "CCCVERSIONSELECTED7", "selected");
+		tpl_addVar(vars, TPLADD, "CCCVERSIONSELECTED6", "selected");
 	}
 	else if(!strcmp(rdr->cc_version, "2.3.0"))
 	{
-		tpl_addVar(vars, TPLADD, "CCCVERSIONSELECTED8", "selected");
+		tpl_addVar(vars, TPLADD, "CCCVERSIONSELECTED7", "selected");
 	}
 	else if(!strcmp(rdr->cc_version, "2.3.1"))
 	{
-		tpl_addVar(vars, TPLADD, "CCCVERSIONSELECTED9", "selected");
+		tpl_addVar(vars, TPLADD, "CCCVERSIONSELECTED8", "selected");
 	}
 	else if(!strcmp(rdr->cc_version, "2.3.2"))
 	{
-		tpl_addVar(vars, TPLADD, "CCCVERSIONSELECTED10", "selected");
+		tpl_addVar(vars, TPLADD, "CCCVERSIONSELECTED9", "selected");
 	}
 #endif
 
@@ -3893,21 +3882,12 @@ static void webif_add_client_proto(struct templatevars *vars, struct s_client *c
 			{
 				mcs_ver = cc->multics_version[0] | (cc->multics_version[1] << 8);
 			}
-			uint8_t nbx_ver = 0;
-			if (cc->newbox_version[0] | (cc->newbox_version[1] << 8))
-			{
-				nbx_ver = cc->newbox_version[0] | (cc->newbox_version[1] << 8);
-			}
 
 			tpl_printf(vars, TPLADD, "CLIENTPROTO", "%s (%s-%s)", (char *)proto, cc->remote_version, cc->remote_build);
 			tpl_printf(vars, TPLADD, "CLIENTPROTOSORT", "%s (%s-%s)", (char *)proto, cc->remote_version, cc->remote_build);
 			if(cccam_client_multics_mode(cl))
 			{
 				tpl_printf(vars, TPLADD, "CLIENTPROTOTITLE", "Multics, revision r%d", mcs_ver);
-			}
-			else if(cccam_client_newbox_mode(cl))
-			{
-				tpl_printf(vars, TPLADD, "CLIENTPROTOTITLE", "Newbox, revision r%d", nbx_ver);
 			}
 			else
 			{
@@ -3947,34 +3927,6 @@ static void webif_add_client_proto(struct templatevars *vars, struct s_client *c
 						}
 						break;
 						
-					if(cccam_client_newbox_mode(cl)) { is_other_proto = 1; }
-
-					switch(is_other_proto)
-					{
-						case 1:
-							snprintf(picon_name, sizeof(picon_name) / sizeof(char) - 1, "%s_r_%d", (char *)proto, nbx_ver);
-							if(picon_exists(picon_name))
-							{
-								if (!apicall)
-								{
-									tpl_addVar(vars, TPLADD, "CCA", (char *)proto);
-									tpl_addVar(vars, TPLADD, "CCB", "r");
-									tpl_printf(vars, TPLADD, "CCC", "%d", nbx_ver);
-									tpl_addVar(vars, TPLADD, "CCD", "");
-									tpl_addVar(vars, TPLADD, "CLIENTPROTO", tpl_getTpl(vars, "PROTOCCCAMPIC"));
-								}
-								else
-								{
-									tpl_printf(vars, TPLADDONCE, "PROTOICON", "%s_r_%d",(char *)proto, nbx_ver);
-								}
-							}
-							else
-							{
-								tpl_printf(vars, TPLADD, "CLIENTPROTOTITLE", "Newbox, revision r%d missing icon: IC_%s_r_%d.tpl",
-									 nbx_ver, (char *)proto, nbx_ver);
-							}
-							break;
-
 					default:
 						snprintf(picon_name, sizeof(picon_name) / sizeof(char) - 1, "%s_%s_%s", (char *)proto, cc->remote_version, cc->remote_build);
 						if(picon_exists(picon_name))
@@ -3998,7 +3950,6 @@ static void webif_add_client_proto(struct templatevars *vars, struct s_client *c
 								 cc->extended_mode ? cc->remote_oscam : "", proto, cc->remote_version, cc->remote_build);
 						}
 						break;
-					}	
 				}
 			}
 		}
