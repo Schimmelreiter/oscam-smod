@@ -427,7 +427,6 @@ static void write_versionfile(bool use_stdout)
 	write_conf(IPV6SUPPORT, "IPv6 support");
 	write_conf(WITH_EMU, "Emulator support");
 	write_conf(WITH_SOFTCAM, "Built-in SoftCam.Key");
-	write_conf(WITH_CARDLIST, "Cardlist support");
 
 	fprintf(fp, "\n");
 	write_conf(MODULE_CAMD33, "camd 3.3x");
