@@ -36,7 +36,7 @@ static uint8_t znl_rsakey[64] = {0x0};
 static uint8_t hd_boxkey[8] = {0x0};
 static uint8_t hd_rsakey[64] = {0x0};
 // Tivusat 183D / 183E //
-static uint8_t tivu_rsakey[112] = {0x0};
+static uint8_t tivu_rsakey[120] = {0x0};
 // Unitymedia UM01 / UM02v
 static uint8_t um_boxkey[8] = {0x0};
 static uint8_t um_rsakey[64] = {0x0};
@@ -559,12 +559,12 @@ void findatr(struct s_reader *reader)
 		{
 #ifdef READER_NAGRA
 			// Tivusat 183D / 183E
-			if (tivu_rsakey[112 - 1])
+			if (tivu_rsakey[120 - 1])
 			{
-				if (!reader->mod1[112])
+				if (!reader->rsa_mod_length)
 				{
-					memcpy(reader->rsa_mod, tivu_rsakey, 112);
-					reader->rsa_mod_length = 112;
+					memcpy(reader->rsa_mod, tivu_rsakey, 120);
+					reader->rsa_mod_length = 120;
 				}
 			}
 			else
