@@ -48,7 +48,7 @@ endif
 override STD_LIBS := -lm $(LIB_PTHREAD) $(LIB_DL) $(LIB_RT)
 override STD_DEFS := -D'CS_SVN_VERSION="$(SVN_REV)"'
 ifneq "$(shell ./config.sh --smod-revision)" ""
-override STD_DEFS += -D'CS_SMOD_VERSION="$(shell ./config.sh --smod-revision | cut -d " " -f1-2 | sed -e "s| |:|g")"'
+override STD_DEFS += -D'CS_SMOD_VERSION="$(shell ./config.sh --smod-revision | cut -d " " -f1-3 | sed -e "s| |+|g")"'
 endif
 override STD_DEFS += -D'CS_SMOD_VERSION_HASH="$(shell ./config.sh --smod-revision | cut -d " " -f3)"'
 override STD_DEFS += -D'CS_CONFDIR="$(CONF_DIR)"'
