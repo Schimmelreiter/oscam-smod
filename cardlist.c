@@ -88,7 +88,7 @@ void findatr(struct s_reader *reader) {
 	strcpy(current.info, "recognized");
 
 	/* more providers: ? */
-	if (strncmp(current.atr, "3B F7 11 00 01 40 96 70 70 0A 0E 6C B6 D"6, 42) == 0) {
+	if (strncmp(current.atr, "3B F7 11 00 01 40 96 70 70 0A 0E 6C B6 D6", 42) == 0) {
 		strcpy(current.providername, "Canal Digitaal (NL)");
 #ifdef READER_SECA
 		reader->caid = 0x0100;
@@ -181,7 +181,7 @@ void findatr(struct s_reader *reader) {
 #endif
 	} else if (strncmp(current.atr, "3F 77 18 00 00 D3 8A 40 01 64", 29) == 0) {
 		/* more providers: TNTSAT V6 (FR) (0500:030B00), CANAL+/CANAL (FR) V6 (0500:032830), ORANGE SAT (FR) V6 (0500:032900), SRF (CH) V6 (0500:060200), TELESAT (ex MOBISTAR) (BE) V6 (0500:051900) */
-		strcpy(current.providername, "TNT Viaccess v"6);
+		strcpy(current.providername, "TNT Viaccess v6");
 #ifdef READER_VIACCESS
 		if (tnt6_boxkey[4 - 1]) {
 			if (!reader->boxkey_length) {
