@@ -1647,7 +1647,3 @@ const struct s_cardsystem reader_nagracak7 =
 };
 
 #endif
-<<<<<<< HEAD
-=======
-
->>>>>>> c8027cc... simplifying the reader config cak7
