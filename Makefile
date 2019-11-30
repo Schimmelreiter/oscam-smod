@@ -138,7 +138,7 @@ else
 endif
 
 ifeq ($(uname_S),Cygwin)
-	DEFAULT_PCSC_LIB += -lwinscard
+	DEFAULT_PCSC_LIB = -lwinscard
 endif
 
 DEFAULT_UTF8_FLAGS = -DWITH_UTF8
