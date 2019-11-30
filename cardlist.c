@@ -246,14 +246,10 @@ void findatr(struct s_reader *reader) {
 			strcpy(current.providername, "ICE Irdeto-Mode");
 #ifdef READER_IRDETO
 			if (ice_boxkey[8 - 1] && ice_rsakey[64 - 1]) {
-				if (!reader->boxkey_length) {
-					memcpy(reader->boxkey, ice_boxkey, 8);
-					reader->boxkey_length = 8;
-				}
-				if (!reader->rsa_mod_length) {
-					memcpy(reader->rsa_mod, ice_rsakey, 64);
-					reader->rsa_mod_length = 64;
-				}
+				memcpy(reader->boxkey, ice_boxkey, 8);
+				memcpy(reader->rsa_mod, ice_rsakey, 64);
+				reader->boxkey_length = 8;
+				reader->rsa_mod_length = 64;
 			} else {
 				rdr_log(reader, ", no keys built in, use config values boxkey + rsakey or disable force_irdeto");
 			}
@@ -357,27 +353,13 @@ void findatr(struct s_reader *reader) {
 		strcpy(current.providername, "Astra HD+ HD03/HD04/HD05a");
 #ifdef READER_NAGRA_MERLIN
 		if (mod1[112 - 1]) {
-			if (!reader->mod1[112])	{
-				memcpy(reader->mod1, mod1, 112);
-			}
-			if (!reader->mod2[112]) {
-				memcpy(reader->mod2, mod2, 112);
-			}
-			if (!reader->key3588[136]) {
-				memcpy(reader->key3588, key3588, 136);
-			}
-			if (!reader->data50[80]) {
-				memcpy(reader->data50, data50, 80);
-			}
-			if (!reader->mod50[80]) {
-				memcpy(reader->mod50, mod50, 80);
-			}
-			if (!reader->nuid[4]) {
-				memcpy(reader->nuid, nuid, 4);
-			}
-			if (!reader->cwekey[16]) {
-				memcpy(reader->cwekey, cwpk, 16);
-			}
+			memcpy(reader->mod1, mod1, 112);
+			memcpy(reader->mod2, mod2, 112);
+			memcpy(reader->key3588, key3588, 136);
+			memcpy(reader->data50, data50, 80);
+			memcpy(reader->mod50, mod50, 80);
+			memcpy(reader->nuid, nuid, 4);
+			memcpy(reader->cwekey, cwpk, 16);
 		} else {
 			rdr_log(reader, ", no keys built in, use config values mod1 + mod2 + key3588 + data50 + mod50 + nuid + cwekey");
 		}
