@@ -4,10 +4,8 @@ SHELL = /bin/sh
 .SUFFIXES: .o .c
 .PHONY: all tests help README.build README.config simple default debug config menuconfig allyesconfig allnoconfig defconfig clean distclean
 
-VER          := $(shell ./config.sh --oscam-version)
-SVN_REV      := $(shell ./config.sh --oscam-revision)
-GIT_REV      := $(shell ./config.sh --git-revision)
-GIT_REV_HASH := $(shell ./config.sh --git-revision | cut -d\+ -f2)
+VER     := $(shell ./config.sh --oscam-version)
+SVN_REV := $(shell ./config.sh --oscam-revision)
 
 uname_S := $(shell sh -c 'uname -s 2>/dev/null || echo not')
 
@@ -49,8 +47,10 @@ endif
 
 override STD_LIBS := -lm $(LIB_PTHREAD) $(LIB_DL) $(LIB_RT)
 override STD_DEFS := -D'CS_SVN_VERSION="$(SVN_REV)"'
-override STD_DEFS += -D'CS_GIT_VERSION="$(GIT_REV)"'
-override STD_DEFS += -D'CS_GIT_VERSION_HASH="$(GIT_REV_HASH)"'
+ifneq "$(shell ./config.sh --smod-revision)" ""
+override STD_DEFS += -D'CS_SMOD_VERSION="$(shell ./config.sh --smod-revision | cut -d " " -f1-3 | sed -e "s| |+|g")"'
+endif
+override STD_DEFS += -D'CS_SMOD_VERSION_HASH="$(shell ./config.sh --smod-revision | cut -d " " -f3)"'
 override STD_DEFS += -D'CS_CONFDIR="$(CONF_DIR)"'
 
 # Compiler warnings
@@ -138,7 +138,7 @@ else
 endif
 
 ifeq ($(uname_S),Cygwin)
-	DEFAULT_PCSC_LIB += -lwinscard
+	DEFAULT_PCSC_LIB = -lwinscard
 endif
 
 DEFAULT_UTF8_FLAGS = -DWITH_UTF8
@@ -235,6 +235,8 @@ SRC-$(CONFIG_LIB_BIGNUM) += cscrypt/bn_sqr.c
 SRC-$(CONFIG_LIB_BIGNUM) += cscrypt/bn_word.c
 SRC-$(CONFIG_LIB_BIGNUM) += cscrypt/mem.c
 SRC-$(CONFIG_LIB_DES) += cscrypt/des.c
+SRC-$(CONFIG_LIB_TWOFISH) += cscrypt/jet_twofish.c
+SRC-$(CONFIG_READER_JET) += cscrypt/jet_dh.c
 SRC-$(CONFIG_LIB_IDEA) += cscrypt/i_cbc.c
 SRC-$(CONFIG_LIB_IDEA) += cscrypt/i_ecb.c
 SRC-$(CONFIG_LIB_IDEA) += cscrypt/i_skey.c
@@ -245,7 +247,7 @@ SRC-$(CONFIG_LIB_MDC2) += cscrypt/mdc2.c
 SRC-$(CONFIG_LIB_FAST_AES) += cscrypt/fast_aes.c
 SRC-$(CONFIG_LIB_SHA256) += cscrypt/sha256.c
 
-SRC-$(CONFIG_WITH_CARDREADER) += csctapi/cardlist.c
+SRC-$(CONFIG_WITH_CARDLIST) += cardlist.c
 SRC-$(CONFIG_WITH_CARDREADER) += csctapi/atr.c
 SRC-$(CONFIG_WITH_CARDREADER) += csctapi/icc_async.c
 SRC-$(CONFIG_WITH_CARDREADER) += csctapi/io_serial.c
@@ -352,6 +354,8 @@ SRC-$(CONFIG_READER_NAGRA) += reader-nagra.c
 SRC-$(CONFIG_READER_NAGRA_MERLIN) += reader-nagracak7.c
 SRC-$(CONFIG_READER_SECA) += reader-seca.c
 SRC-$(CONFIG_READER_TONGFANG) += reader-tongfang.c
+SRC-$(CONFIG_READER_STREAMGUARD) += reader-streamguard.c
+SRC-$(CONFIG_READER_JET) += reader-jet.c
 SRC-$(CONFIG_READER_VIACCESS) += reader-viaccess.c
 SRC-$(CONFIG_READER_VIDEOGUARD) += reader-videoguard-common.c
 SRC-$(CONFIG_READER_VIDEOGUARD) += reader-videoguard1.c

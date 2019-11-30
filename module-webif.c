@@ -253,7 +253,7 @@ static void clear_info_clients_stats(void)
 	first_client->cwcache = 0;
 	first_client->cwnot = 0;
 	first_client->cwtun = 0;
-	first_client->cwignored  = 0;
+	first_client->cwignored = 0;
 	first_client->cwtout = 0;
 	first_client->emmok = 0;
 	first_client->emmnok = 0;
@@ -1339,6 +1339,9 @@ static char *send_oscam_config_cccam(struct templatevars *vars, struct uriparams
 	tpl_printf(vars, TPLADD, "RECV_TIMEOUT", "%u", cfg.cc_recv_timeout);
 
 	tpl_addVar(vars, TPLADD, "STEALTH", (cfg.cc_stealth == 1) ? "checked" : "");
+	
+	if (cfg.cc_cfgfile)
+		tpl_printf(vars, TPLADD, "CCCFGFILE", "%s", cfg.cc_cfgfile);
 
 	tpl_printf(vars, TPLADD, "NODEID", "%02X%02X%02X%02X%02X%02X%02X%02X",
 			   cfg.cc_fixed_nodeid[0], cfg.cc_fixed_nodeid[1], cfg.cc_fixed_nodeid[2], cfg.cc_fixed_nodeid[3],
@@ -1356,7 +1359,7 @@ static char *send_oscam_config_cccam(struct templatevars *vars, struct uriparams
 	tpl_addVar(vars, TPLADD, "FORWARDORIGINCARD", (cfg.cc_forward_origin_card == 1) ? "checked" : "");
 
 	tpl_addVar(vars, TPLADD, "KEEPCONNECTED", (cfg.cc_keep_connected == 1) ? "checked" : "");
-
+	
 	tpl_addVar(vars, TPLADDONCE, "CONFIG_CONTROL", tpl_getTpl(vars, "CONFIGCCCAMCTRL"));
 
 	return tpl_getTpl(vars, "CONFIGCCCAM");
@@ -2460,148 +2463,92 @@ static char *send_oscam_reader_config(struct templatevars *vars, struct uriparam
 #endif
 
 #ifdef READER_NAGRA_MERLIN
-	// idird (CAK7)
-	len = rdr->idird_length;
-	if(len > 0)
-	{
-		for(i = 0; i < len ; i++)
-			{ tpl_printf(vars, TPLAPPEND, "IDIRD", "%02X", rdr->idird[i]); }
-	}
-
-	// cmd0e_provider (CAK7)
-	len = rdr->cmd0eprov_length;
-	if(len > 0)
-	{
-		for(i = 0; i < len ; i++)
-			{ tpl_printf(vars, TPLAPPEND, "CMD0EPROV", "%02X", rdr->cmd0eprov[i]); }
-	}
-
 	// mod1 (CAK7)
-	len = rdr->mod1_length;
-	if(len > 0)
+	len = 112;
+	if(rdr->mod1[len])
 	{
 		for(i = 0; i < len ; i++)
 			{ tpl_printf(vars, TPLAPPEND, "MOD1", "%02X", rdr->mod1[i]); }
 	}
 
 	// mod2 (CAK7)
-	len = rdr->mod2_length;
-	if(len > 0)
+	len = 112;
+	if(rdr->mod2[len])
 	{
 		for(i = 0; i < len ; i++)
 			{ tpl_printf(vars, TPLAPPEND, "MOD2", "%02X", rdr->mod2[i]); }
 	}
 
 	// key3588 (CAK7)
-	len = rdr->key3588_length;
-	if(len > 0)
+	len = 136;
+	if(rdr->key3588[len])
 	{
 		for(i = 0; i < len ; i++)
 			{ tpl_printf(vars, TPLAPPEND, "KEY3588", "%02X", rdr->key3588[i]); }
 	}
 
-	// key3310 (CAK7)
-	len = rdr->key3310_length;
-	if(len > 0)
-	{
-		for(i = 0; i < len ; i++)
-		{ tpl_printf(vars, TPLAPPEND, "KEY3310", "%02X", rdr->key3310[i]); }
-	}
-
 	// key3460 (CAK7)
-	len = rdr->key3460_length;
-	if(len > 0)
+	len = 96;
+	if(rdr->key3460[len])
 	{
 		for(i = 0; i < len ; i++)
 			{ tpl_printf(vars, TPLAPPEND, "KEY3460", "%02X", rdr->key3460[i]); }
 	}
 
-	// data50 (CAK7)
-	len = rdr->data50_length;
-	if(len > 0)
+	// key3310 (CAK7)
+	len = 16;
+	if(rdr->key3310[len])
 	{
 		for(i = 0; i < len ; i++)
-			{ tpl_printf(vars, TPLAPPEND, "DATA50", "%02X", rdr->data50[i]); }
+			{ tpl_printf(vars, TPLAPPEND, "KEY3310", "%02X", rdr->key3310[i]); }
 	}
 
 	// mod50 (CAK7)
-	len = rdr->mod50_length;
-	if(len > 0)
+	len = 80;
+	if(rdr->mod50[len])
 	{
 		for(i = 0; i < len ; i++)
 			{ tpl_printf(vars, TPLAPPEND, "MOD50", "%02X", rdr->mod50[i]); }
 	}
 
+	// data50 (CAK7)
+	len = 80;
+	if(rdr->data50[len])
+	{
+		for(i = 0; i < len ; i++)
+			{ tpl_printf(vars, TPLAPPEND, "DATA50", "%02X", rdr->data50[i]); }
+	}
+
+	// idird (CAK7)
+	len = 4;
+	if(rdr->idird[len])
+	{
+		for(i = 0; i < len ; i++)
+			{ tpl_printf(vars, TPLAPPEND, "IDIRD", "%02X", rdr->idird[i]); }
+	}
+
+	// cmd0e_provider (CAK7)
+	len = 2;
+	if(rdr->cmd0eprov[len])
+	{
+		for(i = 0; i < len ; i++)
+			{ tpl_printf(vars, TPLAPPEND, "CMD0EPROV", "%02X", rdr->cmd0eprov[i]); }
+	}
+
 	// nuid (CAK7)
-	len = rdr->nuid_length;
-	if(len > 0)
+	len = 4;
+	if(rdr->nuid[len])
 	{
 		for(i = 0; i < len ; i++)
 			{ tpl_printf(vars, TPLAPPEND, "NUID", "%02X", rdr->nuid[i]); }
 	}
 
-	// cwekey0 (CAK7)
-	len = rdr->cwekey0_length;
-	if(len > 0)
+	// cwekey (CAK7)
+	len = 16;
+	if(rdr->cwekey[len])
 	{
 		for(i = 0; i < len ; i++)
-			{ tpl_printf(vars, TPLAPPEND, "CWEKEY0", "%02X", rdr->cwekey0[i]); }
-	}
-
-	// cwekey1 (CAK7)
-	len = rdr->cwekey1_length;
-	if(len > 0)
-	{
-		for(i = 0; i < len ; i++)
-			{ tpl_printf(vars, TPLAPPEND, "CWEKEY1", "%02X", rdr->cwekey1[i]); }
-	}
-
-	// cwekey2 (CAK7)
-	len = rdr->cwekey2_length;
-	if(len > 0)
-	{
-		for(i = 0; i < len ; i++)
-			{ tpl_printf(vars, TPLAPPEND, "CWEKEY2", "%02X", rdr->cwekey2[i]); }
-	}
-
-	// cwekey3 (CAK7)
-	len = rdr->cwekey3_length;
-	if(len > 0)
-	{
-		for(i = 0; i < len ; i++)
-			{ tpl_printf(vars, TPLAPPEND, "CWEKEY3", "%02X", rdr->cwekey3[i]); }
-	}
-
-	// cwekey4 (CAK7)
-	len = rdr->cwekey4_length;
-	if(len > 0)
-	{
-		for(i = 0; i < len ; i++)
-			{ tpl_printf(vars, TPLAPPEND, "CWEKEY4", "%02X", rdr->cwekey4[i]); }
-	}
-
-	// cwekey5 (CAK7)
-	len = rdr->cwekey5_length;
-	if(len > 0)
-	{
-		for(i = 0; i < len ; i++)
-			{ tpl_printf(vars, TPLAPPEND, "CWEKEY5", "%02X", rdr->cwekey5[i]); }
-	}
-
-	// cwekey6 (CAK7)
-	len = rdr->cwekey6_length;
-	if(len > 0)
-	{
-		for(i = 0; i < len ; i++)
-			{ tpl_printf(vars, TPLAPPEND, "CWEKEY6", "%02X", rdr->cwekey6[i]); }
-	}
-
-	// cwekey7 (CAK7)
-	len = rdr->cwekey7_length;
-	if(len > 0)
-	{
-		for(i = 0; i < len ; i++)
-			{ tpl_printf(vars, TPLAPPEND, "CWEKEY7", "%02X", rdr->cwekey7[i]); }
+			{ tpl_printf(vars, TPLAPPEND, "CWEKEY", "%02X", rdr->cwekey[i]); }
 	}
 
 	// force_cw_swap
@@ -2932,12 +2879,28 @@ static char *send_oscam_reader_config(struct templatevars *vars, struct uriparam
 	if(rdr->detect_seca_nagra_tunneled_card)
 		{ tpl_addVar(vars, TPLADD, "NAGRADETECTSECACARDCHECKED", "checked"); }
 
+#ifdef READER_TONGFANG
+	if(rdr->tongfang3_calibsn)
+		{ tpl_printf(vars, TPLADD, "TONGFANGCALIBSN", "%08X", rdr->tongfang3_calibsn); }
+
+#endif
+#ifdef READER_JET
+	for(i = 0; (size_t)i < sizeof(rdr->jet_authorize_id) && rdr->jet_authorize_id[i] == 0; i++);
+	if((size_t)i <  sizeof(rdr->jet_authorize_id))
+	{
+		for(i = 0; (size_t)i <  sizeof(rdr->jet_authorize_id) ; i++)
+			{ tpl_printf(vars, TPLAPPEND, "JETAUTHORIZEID", "%02X", rdr->jet_authorize_id[i]); }
+	}
+	tpl_addVar(vars, TPLADD, "JETFIXECM", (rdr->jet_fix_ecm == 1) ? "checked" : "");
+#endif
+
 #ifdef MODULE_CCCAM
 	tpl_printf(vars, TPLADD, "CCCMAXHOPS",   "%d", rdr->cc_maxhops);
 	tpl_printf(vars, TPLADD, "CCCMINDOWN",   "%d", rdr->cc_mindown);
 	tpl_printf(vars, TPLADD, "CCCRESHARE",   "%d", rdr->cc_reshare);
 	tpl_printf(vars, TPLADD, "RESHARE",      "%d", cfg.cc_reshare);
 	tpl_printf(vars, TPLADD, "CCCRECONNECT", "%d", rdr->cc_reconnect);
+	tpl_printf(vars, TPLADD, "CCCKEEPALIVEPING",   "%d", rdr->cc_keepaliveping);
 
 	if(rdr->cc_want_emu)
 		{ tpl_addVar(vars, TPLADD, "CCCWANTEMUCHECKED", "checked"); }
@@ -3858,11 +3821,17 @@ static void webif_add_client_proto(struct templatevars *vars, struct s_client *c
 		struct cc_data *cc = cl->cc;
 		if(cc && *cc->remote_version && *cc->remote_build)
 		{
-			tpl_printf(vars, TPLADD, "CLIENTPROTO", "%s (%s-%s)", proto, cc->remote_version, cc->remote_build);
-			tpl_printf(vars, TPLADD, "CLIENTPROTOSORT", "%s (%s-%s)", proto, cc->remote_version, cc->remote_build);
+			uint8_t mcs_ver = 0;
+			if (cc->multics_version[0] | (cc->multics_version[1] << 8))
+			{
+				mcs_ver = cc->multics_version[0] | (cc->multics_version[1] << 8);
+			}
+
+			tpl_printf(vars, TPLADD, "CLIENTPROTO", "%s (%s-%s)", (char *)proto, cc->remote_version, cc->remote_build);
+			tpl_printf(vars, TPLADD, "CLIENTPROTOSORT", "%s (%s-%s)", (char *)proto, cc->remote_version, cc->remote_build);
 			if(cccam_client_multics_mode(cl))
 			{
-				tpl_printf(vars, TPLADD, "CLIENTPROTOTITLE", "Multics, revision r%d", cc->multics_version[0] | (cc->multics_version[1] << 8));
+				tpl_printf(vars, TPLADD, "CLIENTPROTOTITLE", "Multics, revision r%d", mcs_ver);
 			}
 			else
 			{
@@ -3879,31 +3848,31 @@ static void webif_add_client_proto(struct templatevars *vars, struct s_client *c
 				switch(is_other_proto)
 				{
 					case 1:
-						snprintf(picon_name, sizeof(picon_name) / sizeof(char) - 1, "%s_r_%d", proto, cc->multics_version[0] | (cc->multics_version[1] << 8));
+						snprintf(picon_name, sizeof(picon_name) / sizeof(char) - 1, "%s_r_%d", (char *)proto, mcs_ver);
 						if(picon_exists(picon_name))
 						{
 							if (!apicall)
 							{
 								tpl_addVar(vars, TPLADD, "CCA", (char *)proto);
 								tpl_addVar(vars, TPLADD, "CCB", "r");
-								tpl_printf(vars, TPLADD, "CCC", "%d", cc->multics_version[0] | (cc->multics_version[1] << 8));
+								tpl_printf(vars, TPLADD, "CCC", "%d", mcs_ver);
 								tpl_addVar(vars, TPLADD, "CCD", "");
 								tpl_addVar(vars, TPLADD, "CLIENTPROTO", tpl_getTpl(vars, "PROTOCCCAMPIC"));
 							}
 							else
 							{
-								tpl_printf(vars, TPLADDONCE, "PROTOICON", "%s_r_%d",(char *)proto, cc->multics_version[0] | (cc->multics_version[1] << 8));
+								tpl_printf(vars, TPLADDONCE, "PROTOICON", "%s_r_%d",(char *)proto, mcs_ver);
 							}
 						}
 						else
 						{
 							tpl_printf(vars, TPLADD, "CLIENTPROTOTITLE", "Multics, revision r%d missing icon: IC_%s_r_%d.tpl",
-								cc->multics_version[0] | (cc->multics_version[1] << 8), proto, cc->multics_version[0] | (cc->multics_version[1] << 8));
+								 mcs_ver, (char *)proto, mcs_ver);
 						}
 						break;
-
+						
 					default:
-						snprintf(picon_name, sizeof(picon_name) / sizeof(char) - 1, "%s_%s_%s", proto, cc->remote_version, cc->remote_build);
+						snprintf(picon_name, sizeof(picon_name) / sizeof(char) - 1, "%s_%s_%s", (char *)proto, cc->remote_version, cc->remote_build);
 						if(picon_exists(picon_name))
 						{
 							if (!apicall)
@@ -8614,8 +8583,8 @@ static int32_t process_request(FILE * f, IN_ADDR_T in)
 
 			tpl_addVar(vars, TPLADD, "CS_VERSION", CS_VERSION);
 			tpl_addVar(vars, TPLADD, "CS_SVN_VERSION", CS_SVN_VERSION);
-			tpl_addVar(vars, TPLADD, "CS_GIT_VERSION", CS_GIT_VERSION);
-			tpl_addVar(vars, TPLADD, "CS_GIT_VERSION_HASH", CS_GIT_VERSION_HASH);
+			tpl_addVar(vars, TPLADD, "CS_SMOD_VERSION", CS_SMOD_VERSION);
+			tpl_addVar(vars, TPLADD, "CS_SMOD_VERSION_HASH", CS_SMOD_VERSION_HASH);
 			tpl_addVar(vars, TPLADD, "CS_TARGET", CS_TARGET);
 			tpl_addVar(vars, TPLADD, "HTTPOSCAMLABEL", xml_encode(vars,cfg.http_oscam_label));
 			if (!boxtype_is("generic"))

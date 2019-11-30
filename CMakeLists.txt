@@ -669,6 +669,12 @@ add_custom_target (
 execute_process (COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/config.sh --oscam-revision COMMAND tr -d '\n' OUTPUT_VARIABLE CS_SVN_VERSION)
 add_definitions ("-D'CS_SVN_VERSION=\"${CS_SVN_VERSION}\"'")
 
+execute_process (COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/config.sh --smod-revision COMMAND cut -d " " -f1-3 COMMAND sed -e "s| |+|g" COMMAND tr -d '\n' OUTPUT_VARIABLE CS_SMOD_VERSION)
+add_definitions ("-D'CS_SMOD_VERSION=\"${CS_SMOD_VERSION}\"'")
+
+execute_process (COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/config.sh --smod-revision COMMAND cut -d " " -f3 COMMAND tr -d '\n' OUTPUT_VARIABLE CS_SMOD_VERSION_HASH)
+add_definitions ("-D'CS_SMOD_VERSION_HASH=\"${CS_SMOD_VERSION_HASH}\"'")
+
 execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpmachine COMMAND tr -d '\n' OUTPUT_VARIABLE CS_TARGET)
 add_definitions ("-D'CS_TARGET=\"${CS_TARGET}\"'")
 #----------------------- global compile and link options ------------------------------

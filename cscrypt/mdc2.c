@@ -31,6 +31,7 @@
         PERM_OP(l,r,tt, 4,0x0f0f0f0fL); \
         }
 
+#if !OPENSSL_MIN_API || defined(OPENSSL_NO_DES)
 //OPENSSL_GLOBAL const DES_LONG DES_SPtrans[8][64] =
 const DES_LONG DES_SPtrans[8][64] =
 {
@@ -187,6 +188,7 @@ const DES_LONG DES_SPtrans[8][64] =
 		0x20000000L, 0x20800080L, 0x00020000L, 0x00820080L,
 	}
 };
+#endif
 
 
 
@@ -497,6 +499,7 @@ void DES_set_odd_parity(DES_cblock *key)
 }
 
 
+#if !OPENSSL_MIN_API || defined(OPENSSL_NO_DES)
 void DES_encrypt1(DES_LONG *data, DES_key_schedule *ks, int enc)
 {
 	register DES_LONG l, r, t, u;
@@ -571,6 +574,7 @@ void DES_encrypt1(DES_LONG *data, DES_key_schedule *ks, int enc)
 	data[1] = r;
 	l = r = t = u = 0;
 }
+#endif
 
 
 

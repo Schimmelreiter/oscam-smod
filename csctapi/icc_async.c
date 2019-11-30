@@ -1,7 +1,5 @@
 #include "../globals.h"
 #ifdef WITH_CARDREADER
-#include "cardlist.h"
-struct atrlist current;
 #include "../oscam-lock.h"
 #include "../oscam-string.h"
 #include "icc_async.h"
@@ -14,6 +12,10 @@ struct atrlist current;
 #include "../cscrypt/sha256.h"
 #include "../cscrypt/mdc2.h"
 #include "../cscrypt/idea.h"
+#endif
+#ifdef WITH_CARDLIST
+#include "../cardlist.h"
+struct atrlist current;
 #endif
 
 #define OK 0
@@ -279,12 +281,13 @@ int32_t ICC_Async_Activate(struct s_reader *reader, ATR *atr, uint16_t deprecate
 	rdr_log(reader, "ATR: %s", cs_hexdump(1, atrarr, atr_size, tmp, sizeof(tmp)));
 	memcpy(reader->card_atr, atrarr, atr_size);
 	reader->card_atr_length = atr_size;
+#ifdef WITH_CARDLIST
 	memcpy(current.atr, cs_hexdump(1, atrarr, atr_size, tmp, sizeof(tmp)), atr_size * 3 - 1);
 	findatr(reader);
 	if ( current.found == 1 ) {
-		rdr_log(reader, "%s recognized %s", current.providername, current.info);
+		rdr_log(reader, "%s %s", current.providername, current.info);
 	}
-
+#endif
 	// Get ICC reader->convention
 	if(ATR_GetConvention(atr, &(reader->convention)) != ATR_OK)
 	{

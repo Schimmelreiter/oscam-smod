@@ -229,6 +229,55 @@ static void boxid_fn(const char *token, char *value, void *setting, FILE *f)
 		{ fprintf_conf(f, token, "\n"); }
 }
 
+#ifdef READER_JET
+static void jet_authorize_id_fn(const char *token, char *value, void *setting, FILE *f)
+{
+	struct s_reader *rdr = setting;
+	if(value)
+	{
+		int32_t len = strlen(value);
+		if(len != 16)
+		{
+			memset(rdr->jet_authorize_id, 0, sizeof(rdr->jet_authorize_id));
+		}
+		else
+		{
+			if(key_atob_l(value, rdr->jet_authorize_id, len))
+			{
+				fprintf(stderr, "reader jet authoriz id parse error, %s=%s\n", token, value);
+				memset(rdr->jet_authorize_id, 0, sizeof(rdr->jet_authorize_id));
+			}
+		}
+		return;
+	}
+	size_t i;
+	for(i = 0; i < sizeof(rdr->jet_authorize_id) && rdr->jet_authorize_id[i] == 0; i++);
+	if( i < sizeof(rdr->jet_authorize_id))
+	{
+		char tmp[17];
+		fprintf_conf(f, "jet_authorize_id", "%s\n", cs_hexdump(0, rdr->jet_authorize_id, sizeof(rdr->jet_authorize_id), tmp, sizeof(tmp)));
+	}
+	else if(cfg.http_full_cfg)
+		{ fprintf_conf(f, token, "\n"); }
+}
+#endif
+
+#ifdef READER_TONGFANG
+static void tongfang3_calibsn_fn(const char *token, char *value, void *setting, FILE *f)
+{
+	struct s_reader *rdr = setting;
+	if(value)
+	{
+		rdr->tongfang3_calibsn = strlen(value) ? a2i(value, 4) : 0;
+		return;
+	}
+	if(rdr->tongfang3_calibsn)
+		fprintf_conf(f, token, "%08X\n", rdr->tongfang3_calibsn);
+	else if(cfg.http_full_cfg)
+		{ fprintf_conf(f, token, "\n"); }
+}
+#endif
+
 static void cwpkkey_fn(const char *token, char *value, void *setting, FILE *f)
 {
 	struct s_reader *rdr = setting;
@@ -373,656 +422,6 @@ static void boxkey_fn(const char *token, char *value, void *setting, FILE *f)
 	else if(cfg.http_full_cfg)
 		{ fprintf_conf(f, "boxkey", "\n"); }
 }
-
-#ifdef READER_NAGRA_MERLIN
-static void mod1_fn(const char *token, char *value, void *setting, FILE *f)
-{
-	struct s_reader *rdr = setting;
-	if(value)
-	{
-		int32_t len = strlen(value);
-		if(len != 224)
-		{
-			rdr->mod1_length = 0;
-			memset(rdr->mod1, 0, 112);
-		}
-		else
-		{
-			if(key_atob_l(value, rdr->mod1, len))
-			{
-				fprintf(stderr, "reader mod1 parse error, %s=%s\n", token, value);
-				rdr->mod1_length = 0;
-				memset(rdr->mod1, 0, sizeof(rdr->mod1));
-			}
-			else
-			{
-				rdr->mod1_length = len/2;
-			}
-		}
-		return;
-	}
-	int32_t len = rdr->mod1_length;
-	if(len > 0)
-	{
-		char tmp[len * 2 + 1];
-		fprintf_conf(f, "mod1", "%s\n", cs_hexdump(0, rdr->mod1, len, tmp, sizeof(tmp)));
-	}
-	else if(cfg.http_full_cfg)
-		{ fprintf_conf(f, "mod1", "\n"); }
-}
-
-static void mod2_fn(const char *token, char *value, void *setting, FILE *f)
-{
-	struct s_reader *rdr = setting;
-	if(value)
-	{
-		int32_t len = strlen(value);
-		if(len != 224)
-		{
-			rdr->mod2_length = 0;
-			memset(rdr->mod2, 0, 112);
-		}
-		else
-		{
-			if(key_atob_l(value, rdr->mod2, len))
-			{
-				fprintf(stderr, "reader mod2 parse error, %s=%s\n", token, value);
-				rdr->mod2_length = 0;
-				memset(rdr->mod2, 0, sizeof(rdr->mod2));
-			}
-			else
-			{
-				rdr->mod2_length = len/2;
-			}
-		}
-	return;
-	}
-	int32_t len = rdr->mod2_length;
-	if(len > 0)
-	{
-		char tmp[len * 2 + 1];
-		fprintf_conf(f, "mod2", "%s\n", cs_hexdump(0, rdr->mod2, len, tmp, sizeof(tmp)));
-	}
-	else if(cfg.http_full_cfg)
-		{ fprintf_conf(f, "mod2", "\n"); }
-}
-
-static void idird_fn(const char *token, char *value, void *setting, FILE *f)
-{
-	struct s_reader *rdr = setting;
-	if(value)
-	{
-		int32_t len = strlen(value);
-		if(len != 8)
-		{
-			rdr->idird_length = 0;
-			memset(rdr->idird, 0, 4);
-		}
-		else
-		{
-			if(key_atob_l(value, rdr->idird, len))
-			{
-				fprintf(stderr, "reader idird parse error, %s=%s\n", token, value);
-				rdr->idird_length = 0;
-				memset(rdr->idird, 0, sizeof(rdr->idird));
-			}
-			else
-			{
-				rdr->idird_length = len/2;
-			}
-		}
-		return;
-	}
-	int32_t len = rdr->idird_length;
-	if(len > 0)
-	{
-		char tmp[len * 2 + 1];
-		fprintf_conf(f, "idird", "%s\n", cs_hexdump(0, rdr->idird, len, tmp, sizeof(tmp)));
-	}
-	else if(cfg.http_full_cfg)
-		{ fprintf_conf(f, "idird", "\n"); }
-}
-
-static void cmd0eprov_fn(const char *token, char *value, void *setting, FILE *f)
-{
-	struct s_reader *rdr = setting;
-	if(value)
-	{
-		int32_t len = strlen(value);
-		if(len != 4)
-		{
-			rdr->cmd0eprov_length = 0;
-			memset(rdr->cmd0eprov, 0, 2);
-		}
-		else
-		{
-			if(key_atob_l(value, rdr->cmd0eprov, len))
-			{
-				fprintf(stderr, "reader cmd0eprov parse error, %s=%s\n", token, value);
-				rdr->cmd0eprov_length = 0;
-				memset(rdr->cmd0eprov, 0, sizeof(rdr->cmd0eprov));
-			}
-			else
-			{
-				rdr->cmd0eprov_length = len/2;
-			}
-		}
-		return;
-	}
-	int32_t len = rdr->cmd0eprov_length;
-	if(len > 0)
-	{
-		char tmp[len * 2 + 1];
-		fprintf_conf(f, "cmd0eprov", "%s\n", cs_hexdump(0, rdr->cmd0eprov, len, tmp, sizeof(tmp)));
-	}
-	else if(cfg.http_full_cfg)
-		{ fprintf_conf(f, "cmd0eprov", "\n"); }
-}
-
-static void key3588_fn(const char *token, char *value, void *setting, FILE *f)
-{
-	struct s_reader *rdr = setting;
-	if(value)
-	{
-		int32_t len = strlen(value);
-		if(len != 272)
-		{
-			rdr->key3588_length = 0;
-			memset(rdr->key3588, 0, 136);
-		}
-		else
-		{
-			if(key_atob_l(value, rdr->key3588, len))
-			{
-				fprintf(stderr, "reader key3588 parse error, %s=%s\n", token, value);
-				rdr->key3588_length = 0;
-				memset(rdr->key3588, 0, sizeof(rdr->key3588));
-			}
-			else
-			{
-				rdr->key3588_length = len/2;
-			}
-		}
-		return;
-	}
-	int32_t len = rdr->key3588_length;
-	if(len > 0)
-	{
-		char tmp[len * 2 + 1];
-		fprintf_conf(f, "key3588", "%s\n", cs_hexdump(0, rdr->key3588, len, tmp, sizeof(tmp)));
-	}
-	else if(cfg.http_full_cfg)
-		{ fprintf_conf(f, "key3588", "\n"); }
-}
-
-static void data50_fn(const char *token, char *value, void *setting, FILE *f)
-{
-	struct s_reader *rdr = setting;
-	if(value)
-	{
-		int32_t len = strlen(value);
-		if(len != 160)
-		{
-			rdr->data50_length = 0;
-			memset(rdr->data50, 0, 80);
-		}
-		else
-		{
-			if(key_atob_l(value, rdr->data50, len))
-			{
-				fprintf(stderr, "reader data50 parse error, %s=%s\n", token, value);
-				rdr->data50_length = 0;
-				memset(rdr->data50, 0, sizeof(rdr->data50));
-			}
-			else
-			{
-				rdr->data50_length = len/2;
-			}
-		}
-		return;
-	}
-	int32_t len = rdr->data50_length;
-	if(len > 0)
-	{
-		char tmp[len * 2 + 1];
-		fprintf_conf(f, "data50", "%s\n", cs_hexdump(0, rdr->data50, len, tmp, sizeof(tmp)));
-	}
-	else if(cfg.http_full_cfg)
-		{ fprintf_conf(f, "data50", "\n"); }
-}
-
-static void mod50_fn(const char *token, char *value, void *setting, FILE *f)
-{
-	struct s_reader *rdr = setting;
-	if(value)
-	{
-		int32_t len = strlen(value);
-		if(len != 160)
-		{
-			rdr->mod50_length = 0;
-			memset(rdr->mod50, 0, 80);
-		}
-		else
-		{
-			if(key_atob_l(value, rdr->mod50, len))
-			{
-				fprintf(stderr, "reader mod50 parse error, %s=%s\n", token, value);
-				rdr->mod50_length = 0;
-				memset(rdr->mod50, 0, sizeof(rdr->mod50));
-			}
-			else
-			{
-				rdr->mod50_length = len/2;
-			}
-		}
-		return;
-	}
-	int32_t len = rdr->mod50_length;
-	if(len > 0)
-	{
-		char tmp[len * 2 + 1];
-		fprintf_conf(f, "mod50", "%s\n", cs_hexdump(0, rdr->mod50, len, tmp, sizeof(tmp)));
-	}
-	else if(cfg.http_full_cfg)
-		{ fprintf_conf(f, "mod50", "\n"); }
-}
-
-static void key3460_fn(const char *token, char *value, void *setting, FILE *f)
-{
-	struct s_reader *rdr = setting;
-	if(value)
-	{
-		int32_t len = strlen(value);
-		if(len != 192)
-		{
-			rdr->key3460_length = 0;
-			memset(rdr->key3460, 0, 96);
-		}
-		else
-		{
-			if(key_atob_l(value, rdr->key3460, len))
-			{
-				fprintf(stderr, "reader key3460 parse error, %s=%s\n", token, value);
-				rdr->key3460_length = 0;
-				memset(rdr->key3460, 0, sizeof(rdr->key3460));
-			}
-			else
-			{
-				rdr->key3460_length = len/2;
-			}
-		}
-		return;
-	}
-	int32_t len = rdr->key3460_length;
-	if(len > 0)
-	{
-		char tmp[len * 2 + 1];
-		fprintf_conf(f, "key3460", "%s\n", cs_hexdump(0, rdr->key3460, len, tmp, sizeof(tmp)));
-	}
-	else if(cfg.http_full_cfg)
-		{ fprintf_conf(f, "key3460", "\n"); }
-}
-
-static void key3310_fn(const char *token, char *value, void *setting, FILE *f)
-{
-	struct s_reader *rdr = setting;
-	if(value)
-	{
-		int32_t len = strlen(value);
-		if(len != 32)
-		{
-			rdr->key3310_length = 0;
-			memset(rdr->key3310, 0, 16);
-		}
-		else
-		{
-			if(key_atob_l(value, rdr->key3310, len))
-			{
-				fprintf(stderr, "reader key3310 parse error, %s=%s\n", token, value);
-				rdr->key3310_length = 0;
-				memset(rdr->key3310, 0, sizeof(rdr->key3310));
-			}
-			else
-			{
-				rdr->key3310_length = len/2;
-			}
-		}
-		return;
-	}
-	int32_t len = rdr->key3310_length;
-	if(len > 0)
-	{
-		char tmp[len * 2 + 1];
-		fprintf_conf(f, "key3310", "%s\n", cs_hexdump(0, rdr->key3310, len, tmp, sizeof(tmp)));
-	}
-	else if(cfg.http_full_cfg)
-		{ fprintf_conf(f, "key3310", "\n"); }
-}
-
-static void nuid_fn(const char *token, char *value, void *setting, FILE *f)
-{
-	struct s_reader *rdr = setting;
-	if(value)
-	{
-		int32_t len = strlen(value);
-		if(len != 8)
-		{
-			rdr->nuid_length = 0;
-			memset(rdr->nuid, 0, 4);
-		}
-		else
-		{
-			if(key_atob_l(value, rdr->nuid, len))
-			{
-				fprintf(stderr, "reader nuid parse error, %s=%s\n", token, value);
-				rdr->nuid_length = 0;
-				memset(rdr->nuid, 0, sizeof(rdr->nuid));
-			}
-			else
-			{
-				rdr->nuid_length = len/2;
-			}
-		}
-		return;
-	}
-	int32_t len = rdr->nuid_length;
-	if(len > 0)
-	{
-		char tmp[len * 2 + 1];
-		fprintf_conf(f, "nuid", "%s\n", cs_hexdump(0, rdr->nuid, len, tmp, sizeof(tmp)));
-	}
-	else if(cfg.http_full_cfg)
-		{ fprintf_conf(f, "nuid", "\n"); }
-}
-
-static void cwekey0_fn(const char *token, char *value, void *setting, FILE *f)
-{
-	struct s_reader *rdr = setting;
-	if(value)
-	{
-		int32_t len = strlen(value);
-		if(len != 32)
-		{
-			rdr->cwekey0_length = 0;
-			memset(rdr->cwekey0, 0, 16);
-		}
-		else
-		{
-			if(key_atob_l(value, rdr->cwekey0, len))
-			{
-				fprintf(stderr, "reader cwekey0 parse error, %s=%s\n", token, value);
-				rdr->cwekey0_length = 0;
-				memset(rdr->cwekey0, 0, sizeof(rdr->cwekey0));
-			}
-			else
-			{
-				rdr->cwekey0_length = len/2;
-			}
-		}
-		return;
-	}
-	int32_t len = rdr->cwekey0_length;
-	if(len > 0)
-	{
-		char tmp[len * 2 + 1];
-		fprintf_conf(f, "cwekey0", "%s\n", cs_hexdump(0, rdr->cwekey0, len, tmp, sizeof(tmp)));
-	}
-	else if(cfg.http_full_cfg)
-		{ fprintf_conf(f, "cwekey0", "\n"); }
-}
-
-static void cwekey1_fn(const char *token, char *value, void *setting, FILE *f)
-{
-	struct s_reader *rdr = setting;
-	if(value)
-	{
-		int32_t len = strlen(value);
-		if(len != 32)
-		{
-			rdr->cwekey1_length = 0;
-			memset(rdr->cwekey1, 0, 16);
-		}
-		else
-		{
-			if(key_atob_l(value, rdr->cwekey1, len))
-			{
-				fprintf(stderr, "reader cwekey1 parse error, %s=%s\n", token, value);
-				rdr->cwekey1_length = 0;
-				memset(rdr->cwekey1, 0, sizeof(rdr->cwekey1));
-			}
-			else
-			{
-				rdr->cwekey1_length = len/2;
-			}
-		}
-		return;
-	}
-	int32_t len = rdr->cwekey1_length;
-	if(len > 0)
-	{
-		char tmp[len * 2 + 1];
-		fprintf_conf(f, "cwekey1", "%s\n", cs_hexdump(0, rdr->cwekey1, len, tmp, sizeof(tmp)));
-	}
-	else if(cfg.http_full_cfg)
-		{ fprintf_conf(f, "cwekey1", "\n"); }
-}
-
-static void cwekey2_fn(const char *token, char *value, void *setting, FILE *f)
-{
-	struct s_reader *rdr = setting;
-	if(value)
-	{
-		int32_t len = strlen(value);
-		if(len != 32)
-		{
-			rdr->cwekey2_length = 0;
-			memset(rdr->cwekey2, 0, 16);
-		}
-		else
-		{
-			if(key_atob_l(value, rdr->cwekey2, len))
-			{
-				fprintf(stderr, "reader cwekey2 parse error, %s=%s\n", token, value);
-				rdr->cwekey2_length = 0;
-				memset(rdr->cwekey2, 0, sizeof(rdr->cwekey2));
-			}
-			else
-			{
-				rdr->cwekey2_length = len/2;
-			}
-		}
-		return;
-	}
-	int32_t len = rdr->cwekey2_length;
-	if(len > 0)
-	{
-		char tmp[len * 2 + 1];
-		fprintf_conf(f, "cwekey2", "%s\n", cs_hexdump(0, rdr->cwekey2, len, tmp, sizeof(tmp)));
-	}
-	else if(cfg.http_full_cfg)
-		{ fprintf_conf(f, "cwekey2", "\n"); }
-}
-
-static void cwekey3_fn(const char *token, char *value, void *setting, FILE *f)
-{
-	struct s_reader *rdr = setting;
-	if(value)
-	{
-		int32_t len = strlen(value);
-		if(len != 32)
-		{
-			rdr->cwekey3_length = 0;
-			memset(rdr->cwekey3, 0, 16);
-		}
-		else
-		{
-			if(key_atob_l(value, rdr->cwekey3, len))
-			{
-				fprintf(stderr, "reader cwekey3 parse error, %s=%s\n", token, value);
-				rdr->cwekey3_length = 0;
-				memset(rdr->cwekey3, 0, sizeof(rdr->cwekey3));
-			}
-			else
-			{
-				rdr->cwekey3_length = len/2;
-			}
-		}
-		return;
-	}
-	int32_t len = rdr->cwekey3_length;
-	if(len > 0)
-	{
-		char tmp[len * 2 + 1];
-		fprintf_conf(f, "cwekey3", "%s\n", cs_hexdump(0, rdr->cwekey3, len, tmp, sizeof(tmp)));
-	}
-	else if(cfg.http_full_cfg)
-		{ fprintf_conf(f, "cwekey3", "\n"); }
-}
-
-static void cwekey4_fn(const char *token, char *value, void *setting, FILE *f)
-{
-	struct s_reader *rdr = setting;
-	if(value)
-	{
-		int32_t len = strlen(value);
-		if(len != 32)
-		{
-			rdr->cwekey4_length = 0;
-			memset(rdr->cwekey4, 0, 16);
-		}
-		else
-		{
-			if(key_atob_l(value, rdr->cwekey4, len))
-			{
-				fprintf(stderr, "reader cwekey4 parse error, %s=%s\n", token, value);
-				rdr->cwekey4_length = 0;
-				memset(rdr->cwekey4, 0, sizeof(rdr->cwekey4));
-			}
-			else
-			{
-				rdr->cwekey4_length = len/2;
-			}
-		}
-		return;
-	}
-	int32_t len = rdr->cwekey4_length;
-	if(len > 0)
-	{
-		char tmp[len * 2 + 1];
-		fprintf_conf(f, "cwekey4", "%s\n", cs_hexdump(0, rdr->cwekey4, len, tmp, sizeof(tmp)));
-	}
-	else if(cfg.http_full_cfg)
-	{ fprintf_conf(f, "cwekey4", "\n"); }
-}
-
-static void cwekey5_fn(const char *token, char *value, void *setting, FILE *f)
-{
-	struct s_reader *rdr = setting;
-	if(value)
-	{
-		int32_t len = strlen(value);
-		if(len != 32)
-		{
-			rdr->cwekey5_length = 0;
-			memset(rdr->cwekey5, 0, 16);
-		}
-		else
-		{
-			if(key_atob_l(value, rdr->cwekey5, len))
-			{
-				fprintf(stderr, "reader cwekey5 parse error, %s=%s\n", token, value);
-				rdr->cwekey5_length = 0;
-				memset(rdr->cwekey5, 0, sizeof(rdr->cwekey5));
-			}
-			else
-			{
-				rdr->cwekey5_length = len/2;
-			}
-		}
-		return;
-	}
-	int32_t len = rdr->cwekey5_length;
-	if(len > 0)
-	{
-		char tmp[len * 2 + 1];
-		fprintf_conf(f, "cwekey5", "%s\n", cs_hexdump(0, rdr->cwekey5, len, tmp, sizeof(tmp)));
-	}
-	else if(cfg.http_full_cfg)
-		{ fprintf_conf(f, "cwekey5", "\n"); }
-}
-
-static void cwekey6_fn(const char *token, char *value, void *setting, FILE *f)
-{
-	struct s_reader *rdr = setting;
-	if(value)
-	{
-		int32_t len = strlen(value);
-		if(len != 32)
-		{
-			rdr->cwekey6_length = 0;
-			memset(rdr->cwekey6, 0, 16);
-		}
-		else
-		{
-			if(key_atob_l(value, rdr->cwekey6, len))
-			{
-				fprintf(stderr, "reader cwekey6 parse error, %s=%s\n", token, value);
-				rdr->cwekey6_length = 0;
-				memset(rdr->cwekey6, 0, sizeof(rdr->cwekey6));
-			}
-			else
-			{
-				rdr->cwekey6_length = len/2;
-			}
-		}
-		return;
-	}
-	int32_t len = rdr->cwekey6_length;
-	if(len > 0)
-	{
-		char tmp[len * 2 + 1];
-		fprintf_conf(f, "cwekey6", "%s\n", cs_hexdump(0, rdr->cwekey6, len, tmp, sizeof(tmp)));
-	}
-	else if(cfg.http_full_cfg)
-		{ fprintf_conf(f, "cwekey6", "\n"); }
-}
-
-static void cwekey7_fn(const char *token, char *value, void *setting, FILE *f)
-{
-	struct s_reader *rdr = setting;
-	if(value)
-	{
-		int32_t len = strlen(value);
-		if(len != 32)
-		{
-			rdr->cwekey7_length = 0;
-			memset(rdr->cwekey7, 0, 16);
-		}
-		else
-		{
-			if(key_atob_l(value, rdr->cwekey7, len))
-			{
-				fprintf(stderr, "reader cwekey7 parse error, %s=%s\n", token, value);
-				rdr->cwekey7_length = 0;
-				memset(rdr->cwekey7, 0, sizeof(rdr->cwekey7));
-			}
-			else
-			{
-				rdr->cwekey7_length = len/2;
-			}
-		}
-		return;
-	}
-	int32_t len = rdr->cwekey7_length;
-	if(len > 0)
-	{
-		char tmp[len * 2 + 1];
-		fprintf_conf(f, "cwekey7", "%s\n", cs_hexdump(0, rdr->cwekey7, len, tmp, sizeof(tmp)));
-	}
-	else if(cfg.http_full_cfg)
-		{ fprintf_conf(f, "cwekey7", "\n"); }
-}
-#endif
 
 static void flags_fn(const char *token, char *value, void *setting, long flag, FILE *f)
 {
@@ -1549,29 +948,30 @@ static const struct config_list reader_opts[] =
 	DEF_OPT_FUNC("caid"                           , OFS(ctab),                            reader_caid_fn),
 	DEF_OPT_FUNC("atr"                            , 0,                                    atr_fn),
 	DEF_OPT_FUNC("boxid"                          , 0,                                    boxid_fn),
+#ifdef READER_TONGFANG
+	DEF_OPT_FUNC("tongfang3_calibsn"    , 0,                            tongfang3_calibsn_fn),
+#endif
+#ifdef READER_JET
+	DEF_OPT_FUNC("jet_authorize_id"     , 0,                            jet_authorize_id_fn),
+	DEF_OPT_INT8("jet_fix_ecm"          , OFS(jet_fix_ecm),             0),
+	DEF_OPT_INT8("jet_resync_vendorkey" , OFS(jet_resync_vendorkey),    0),
+#endif
 	DEF_OPT_FUNC("boxkey"                         , 0,                                    boxkey_fn),
 	DEF_OPT_FUNC("rsakey"                         , 0,                                    rsakey_fn),
 	DEF_OPT_FUNC("cwpkkey"                        , 0,                                    cwpkkey_fn),
 	DEF_OPT_FUNC("deskey"                         , 0,                                    deskey_fn),
 #ifdef READER_NAGRA_MERLIN
-	DEF_OPT_FUNC("mod1"                           , 0,                                    mod1_fn),
-	DEF_OPT_FUNC("idird"                          , 0,                                    idird_fn),
-	DEF_OPT_FUNC("cmd0eprov"                      , 0,                                    cmd0eprov_fn),
-	DEF_OPT_FUNC("mod2"                           , 0,                                    mod2_fn),
-	DEF_OPT_FUNC("key3588"                        , 0,                                    key3588_fn),
-	DEF_OPT_FUNC("key3460"                        , 0,                                    key3460_fn),
-	DEF_OPT_FUNC("key3310"                        , 0,                                    key3310_fn),
-	DEF_OPT_FUNC("data50"                         , 0,                                    data50_fn),
-	DEF_OPT_FUNC("mod50"                          , 0,                                    mod50_fn),
-	DEF_OPT_FUNC("nuid"                           , 0,                                    nuid_fn),
-	DEF_OPT_FUNC("cwekey0"                        , 0,                                    cwekey0_fn),
-	DEF_OPT_FUNC("cwekey1"                        , 0,                                    cwekey1_fn),
-	DEF_OPT_FUNC("cwekey2"                        , 0,                                    cwekey2_fn),
-	DEF_OPT_FUNC("cwekey3"                        , 0,                                    cwekey3_fn),
-	DEF_OPT_FUNC("cwekey4"                        , 0,                                    cwekey4_fn),
-	DEF_OPT_FUNC("cwekey5"                        , 0,                                    cwekey5_fn),
-	DEF_OPT_FUNC("cwekey6"                        , 0,                                    cwekey6_fn),
-	DEF_OPT_FUNC("cwekey7"                        , 0,                                    cwekey7_fn),
+	DEF_OPT_FUNC_X("mod1"                         , OFS(mod1),                            ins7E_fn, SIZEOF(mod1)),
+	DEF_OPT_FUNC_X("mod2"                         , OFS(mod2),                            ins7E_fn, SIZEOF(mod2)),
+	DEF_OPT_FUNC_X("key3588"                      , OFS(key3588),                         ins7E_fn, SIZEOF(key3588)),
+	DEF_OPT_FUNC_X("key3460"                      , OFS(key3460),                         ins7E_fn, SIZEOF(key3460)),
+	DEF_OPT_FUNC_X("key3310"                      , OFS(key3310),                         ins7E_fn, SIZEOF(key3310)),
+	DEF_OPT_FUNC_X("data50"                       , OFS(data50),                          ins7E_fn, SIZEOF(data50)),
+	DEF_OPT_FUNC_X("mod50"                        , OFS(mod50),                           ins7E_fn, SIZEOF(mod50)),
+	DEF_OPT_FUNC_X("idird"                        , OFS(idird),                           ins7E_fn, SIZEOF(idird)),
+	DEF_OPT_FUNC_X("cmd0eprov"                    , OFS(cmd0eprov),                       ins7E_fn, SIZEOF(cmd0eprov)),
+	DEF_OPT_FUNC_X("nuid"                         , OFS(nuid),                            ins7E_fn, SIZEOF(nuid)),
+	DEF_OPT_FUNC_X("cwekey"                       , OFS(cwekey),                          ins7E_fn, SIZEOF(cwekey)),
 	DEF_OPT_INT8("forcecwswap"                    , OFS(forcecwswap),                     0),
 	DEF_OPT_INT8("evensa"                         , OFS(evensa),                          0),
 	DEF_OPT_INT8("forceemmg"                      , OFS(forceemmg),                       0),
@@ -1636,6 +1036,7 @@ static const struct config_list reader_opts[] =
 	DEF_OPT_INT8("cccreshare"                     , OFS(cc_reshare),                      DEFAULT_CC_RESHARE),
 	DEF_OPT_INT32("cccreconnect"                  , OFS(cc_reconnect),                    DEFAULT_CC_RECONNECT),
 	DEF_OPT_INT8("ccchop"                         , OFS(cc_hop),                          0),
+	DEF_OPT_INT8("ccckeepaliveping"               , OFS(cc_keepaliveping),                30),
 #endif
 #ifdef MODULE_GHTTP
 	DEF_OPT_UINT8("use_ssl"                       , OFS(ghttp_use_ssl),                   0),
@@ -1688,7 +1089,7 @@ static bool reader_check_setting(const struct config_list *UNUSED(clist), void *
 		"fix9993", "rsakey", "deskey", "ins7e", "ins7e11", "ins2e06", "force_irdeto", "needsemmfirst", "boxkey",
 		"atr", "detect", "nagra_read", "mhz", "cardmhz", "readtiers", "read_old_classes", "use_gpio", "needsglobalfirst",
 #ifdef READER_NAGRA_MERLIN
-		"mod1", "idird", "cmd0eprov", "mod2", "key3588", "key3460", "key3310", "data50", "mod50", "nuid", "cwekey0", "cwekey1", "cwekey2", "cwekey3", "cwekey4", "cwekey5", "cwekey6", "cwekey7",
+		"mod1", "mod2", "key3588", "key3460", "key3310", "data50", "mod50", "idird", "cmd0eprov", "nuid", "cwekey",
 #endif
 #if defined(READER_DRE) || defined(READER_DRECAS)
 		"exec_cmd_file",
@@ -1741,7 +1142,7 @@ static bool reader_check_setting(const struct config_list *UNUSED(clist), void *
 	static const char *cccam_settings[] =
 	{
 		"cccversion", "cccmaxhops", "cccmindown", "cccwantemu", "ccckeepalive",
-		"cccreconnect",
+		"cccreconnect", "ccckeepaliveping",
 		0
 	};
 	// Special settings for CCCAM
@@ -1811,6 +1212,12 @@ int32_t init_readerdb(void)
 	if(!cs_malloc(&token, MAXLINESIZE))
 		{ return 1; }
 
+	if(!configured_readers)
+		configured_readers = ll_create("configured_readers");
+
+	if(cfg.cc_cfgfile)
+		read_cccamcfg(CCCAMCFGREADER);
+	
 	struct s_reader *rdr;
 	if(!cs_malloc(&rdr, sizeof(struct s_reader)))
 	{
@@ -1850,16 +1257,28 @@ int32_t init_readerdb(void)
 	}
 	NULLFREE(token);
 	LL_ITER itr = ll_iter_create(configured_readers);
-	while((rdr = ll_iter_next(&itr))) // build active readers list
+	while((rdr = ll_iter_next(&itr)) && rdr->from_cccam_cfg)   //free duplicate reader
+	{
+		struct s_reader *rdr2;
+		LL_ITER iter = ll_iter_create(configured_readers);
+		while((rdr2 = ll_iter_next(&iter))){
+			if(rdr != rdr2 && !strcmp(rdr->device, rdr2->device)
+			   && rdr->r_port == rdr2->r_port && !strcmp(rdr->r_usr,rdr2->r_usr)
+			   && !strcmp(rdr->r_pwd, rdr2->r_pwd)){
+				rdr = ll_iter_remove(&itr);
+				free_reader(rdr);
+				break;
+			}
+		}
+	}
+
+	itr = ll_iter_create(configured_readers);
+	while((rdr = ll_iter_next(&itr)))   //build active readers list
 	{
 		reader_fixups_fn(rdr);
 		module_reader_set(rdr);
 	}
-	if ( tmp_conf == 1 ){
-		fclose(fp);
-	} else {
-		fclose(fp);
-	}
+	fclose(fp);
 	return (0);
 }
 
