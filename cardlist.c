@@ -357,13 +357,13 @@ void findatr(struct s_reader *reader) {
 		strcpy(current.providername, "Astra HD+ HD03/HD04/HD05a");
 #ifdef READER_NAGRA_MERLIN
 		if (mod1[112 - 1]) {
-			memcpy(reader->mod1, mod1, 112);
-			memcpy(reader->mod2, mod2, 112);
-			memcpy(reader->key3588, key3588, 136);
-			memcpy(reader->data50, data50, 80);
-			memcpy(reader->mod50, mod50, 80);
-			memcpy(reader->nuid, nuid, 4);
-			memcpy(reader->cwekey, cwpk, 16);
+			memcpy(reader->mod1, mod1, 113);
+			memcpy(reader->mod2, mod2, 113);
+			memcpy(reader->key3588, key3588, 137);
+			memcpy(reader->data50, data50, 81);
+			memcpy(reader->mod50, mod50, 81);
+			memcpy(reader->nuid, nuid, 5);
+			memcpy(reader->cwekey, cwpk, 17);
 		} else {
 			rdr_log(reader, ", no keys built in, use config values mod1 + mod2 + key3588 + data50 + mod50 + nuid + cwekey");
 		}
@@ -379,25 +379,25 @@ void findatr(struct s_reader *reader) {
 #ifdef READER_NAGRA_MERLIN
 		if (maxtv_mod1[112 - 1]) {
 			if (!reader->mod1[112])	{
-				memcpy(reader->mod1, maxtv_mod1, 112);
+				memcpy(reader->mod1, maxtv_mod1, 113);
 			}
 			if (!reader->mod2[112])	{
-				memcpy(reader->mod2, maxtv_mod2, 112);
+				memcpy(reader->mod2, maxtv_mod2, 113);
 			}
 			if (!reader->key3588[136]) {
-				memcpy(reader->key3588, maxtv_key3588, 136);
+				memcpy(reader->key3588, maxtv_key3588, 137);
 			}
 			if (!reader->data50[80]) {
-				memcpy(reader->data50, maxtv_data50, 80);
+				memcpy(reader->data50, maxtv_data50, 81);
 			}
 			if (!reader->mod50[80])	{
-				memcpy(reader->mod50, maxtv_mod50, 80);
+				memcpy(reader->mod50, maxtv_mod50, 81);
 			}
 			if (!reader->nuid[4]) {
-				memcpy(reader->nuid, maxtv_nuid, 4);
+				memcpy(reader->nuid, maxtv_nuid, 5);
 			}
 			if (!reader->cwekey[16]) {
-				memcpy(reader->cwekey, maxtv_cwpk, 16);
+				memcpy(reader->cwekey, maxtv_cwpk, 17);
 			}
 		} else {
 			rdr_log(reader, ", no keys built in, use config values mod1 + mod2 + key3588 + data50 + mod50 + nuid + cwekey");
