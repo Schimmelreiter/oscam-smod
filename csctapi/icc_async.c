@@ -134,20 +134,44 @@ void do_cak7_cmd(struct s_reader *reader,unsigned char *cta_res, uint16_t *p_cta
 					}
 					else if(cta_res[*p_cta_lr - 2]  == 0x6F && cta_res[*p_cta_lr - 1] == 0x01)
 					{
-						rdr_log(reader, "card answered 6F01 - needs reinit");
+						rdr_log(reader, "card needs reinit");
 					}
 				}
 				else
 				{
-				*p_cta_lr=0;
+					*p_cta_lr=0;
 				}
 			}
 		}
 		else
 		{
-			AesCtx ctx;
-			AesCtxIni(&ctx, reader->cak7_aes_iv, &reader->cak7_aes_key[16], KEY128, CBC);
-			AesDecrypt(&ctx, cta_res, cta_res, *p_cta_lr-2);
+			if(cta_res[*p_cta_lr - 2] == 0x6F && cta_res[*p_cta_lr - 1] == 0x01)
+			{
+				rdr_log(reader, "card answered 6F01 - trying one more time");
+				if(!ICC_Async_CardWrite(reader, req, sizeof(req), cta_res, p_cta_lr))
+				{
+					if(cta_res[*p_cta_lr - 2] == 0x6F && cta_res[*p_cta_lr - 1] == 0x01)
+					{
+						rdr_log(reader, "card needs reinit");
+					}
+					else
+					{
+						AesCtx ctx;
+						AesCtxIni(&ctx, reader->cak7_aes_iv, &reader->cak7_aes_key[16], KEY128, CBC);
+						AesDecrypt(&ctx, cta_res, cta_res, *p_cta_lr-2);
+					}
+				}
+				else
+				{
+					*p_cta_lr=0;
+				}
+			}
+			else
+			{
+				AesCtx ctx;
+				AesCtxIni(&ctx, reader->cak7_aes_iv, &reader->cak7_aes_key[16], KEY128, CBC);
+				AesDecrypt(&ctx, cta_res, cta_res, *p_cta_lr-2);
+			}
 		}
 	}
 	else
