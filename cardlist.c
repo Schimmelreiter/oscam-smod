@@ -30,7 +30,7 @@ static uint8_t tnt6_deskey[16] = {0x0};
 /* ICE Irdeto-Mode */
 static uint8_t ice_boxkey[8] = {0x0};
 static uint8_t ice_rsakey[64] = {0x0};
-// Ziggo NL //
+/* Ziggo NL */
 static uint8_t znl_boxkey[8] = {0x0};
 static uint8_t znl_rsakey[64] = {0x0};
 #endif
