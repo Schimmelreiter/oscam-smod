@@ -412,13 +412,18 @@ static int32_t conax_do_ecm(struct s_reader *reader, const ECM_REQUEST *er, stru
 				else
 					{ rc = -4; } /*card has no right to decode this channel*/
 			}
-			if(0x01 == ppp && 0x00 == cta_res[cta_lr - 1])
+			else if(0x01 == ppp)
 			{
-			/*trying to decode using CWPK*/
-			rc = CWPK_CNX(reader, cta_res);		/*enabled when no loging needed*/
+				if(0x00 == cta_res[cta_lr - 1])
+				{
+					/*trying to decode using CWPK*/
+					rc = CWPK_CNX(reader, cta_res);		/*enabled when no loging needed*/
+				}
+				else
+				{
+					rc = -4;
+				}
 			}
-			if(0x12 == cta_res[cta_lr - 1])
-			{ rc = -4; }
 
 			if(0 == rc)
 			{
