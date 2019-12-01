@@ -60,7 +60,7 @@ int32_t nagra_get_emm_type(EMM_PACKET *ep, struct s_reader *rdr)
 		{
 			case 0x82:
 				ep->type = GLOBAL;
-				if(rdr->emm82 == 1)
+				if(rdr->emm82 == 1 && ep->emm[3] == 0x00 && ep->emm[4] == 0x00 && ep->emm[5] == 0x00)
 				{
 					return 1;
 				}
@@ -110,7 +110,7 @@ int32_t nagra_get_emm_type(EMM_PACKET *ep, struct s_reader *rdr)
 
 				for(i = 0; i < rdr->nemm87; i++)
 				{
-					if(!memcmp(rdr->emm87[i] + 1, ep->emm + 3, 0x03))
+					if(!memcmp(rdr->emm87[i] + 1, ep->emm + 3, 0x04))
 					{
 						return 1;
 					}
@@ -129,7 +129,11 @@ int32_t nagra_get_emm_type(EMM_PACKET *ep, struct s_reader *rdr)
 		{
 			case 0x82:
 				ep->type = GLOBAL;
-				return 1;
+                                if(ep->emm[3] == 0x00 && ep->emm[4] == 0x00 && ep->emm[5] == 0x00)
+                                {
+                                        return 1;
+                                }
+                                return 0;
 
 			case 0x83:
 				memset(ep->hexserial, 0x00, 0x08);
@@ -171,6 +175,7 @@ int32_t nagra_get_emm_type(EMM_PACKET *ep, struct s_reader *rdr)
 				ep->hexserial[0] = ep->emm[5];
 				ep->hexserial[1] = ep->emm[4];
 				ep->hexserial[2] = ep->emm[3];
+				ep->hexserial[3] = ep->emm[6];
 				ep->type = SHARED;
 
 				for(i = 0; i < rdr->nprov; i++)
@@ -179,7 +184,7 @@ int32_t nagra_get_emm_type(EMM_PACKET *ep, struct s_reader *rdr)
 					{
 						continue;
 					}
-					if(!memcmp(rdr->sa[i], ep->hexserial, 0x03))
+					if(!memcmp(rdr->sa[i], ep->hexserial, 0x04))
 					{
 						return 1;
 					}
@@ -398,7 +403,7 @@ int32_t nagra_get_emm_filter(struct s_reader *rdr, struct s_csystem_emm_filter *
 			filters[idx].filter[1] = rdr->sa[i][2];
 			filters[idx].filter[2] = rdr->sa[i][1];
 			filters[idx].filter[3] = rdr->sa[i][0];
-			filters[idx].filter[4] = 0x00;
+			filters[idx].filter[4] = rdr->sa[i][3];
 			filters[idx].filter[5] = 0x10;
 			memset(&filters[idx].mask[0], 0xFF, 6);
 			idx++;

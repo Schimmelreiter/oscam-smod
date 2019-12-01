@@ -110,7 +110,7 @@ static void addSA(struct s_reader *reader, uint8_t *cta_res)
 
 		for(i = 0; i < reader->nsa; i++)
 		{
-			if((cta_res[1] == reader->sa[i][2]) && (cta_res[2] == reader->sa[i][1]) && (cta_res[3] == reader->sa[i][0]))
+			if((cta_res[1] == reader->sa[i][2]) && (cta_res[2] == reader->sa[i][1]) && (cta_res[3] == reader->sa[i][0]) && (cta_res[4] == reader->sa[i][3]))
 			{
 				toadd = false;
 			}
@@ -121,7 +121,7 @@ static void addSA(struct s_reader *reader, uint8_t *cta_res)
 			reader->sa[reader->nsa][0] = cta_res[3];
 			reader->sa[reader->nsa][1] = cta_res[2];
 			reader->sa[reader->nsa][2] = cta_res[1];
-			reader->sa[reader->nsa][3] = 0;
+			reader->sa[reader->nsa][3] = cta_res[4];
 
 			reader->nsa += 1;
 		}
@@ -425,6 +425,13 @@ static int32_t ParseDataType(struct s_reader *reader, uint8_t dt, uint8_t *cta_r
 
 				switch(reader->caid)
 				{
+					case 0x1843: // HD02
+						start_date = b2i(0x04, cta_res + 42);
+						expire_date1 = b2i(0x04, cta_res + 28);
+						expire_date2 = b2i(0x04, cta_res + 46);
+						expire_date = expire_date1 <= expire_date2 ? expire_date1 : expire_date2;
+						break;
+
 					case 0x1860: // HD03
 						start_date = b2i(0x04, cta_res + 42);
 						expire_date1 = b2i(0x04, cta_res + 28);
@@ -498,9 +505,15 @@ static int32_t CAK7GetDataType(struct s_reader *reader, uint8_t dt)
 	while(1)
 	{
 		CAK7do_cmd(reader, dt, 0x10, cta_res, &cta_lr, sub, retlen);
-		rdr_log_dump_dbg(reader, D_READER, cta_res, cta_lr, "RAW Answer:");
+		rdr_log_dump_dbg(reader, D_READER, cta_res, cta_lr, "Decrypted Answer:");
 		// hier eigentlich check auf 90 am ende usw... obs halt klarging ...
 
+		if(cta_res[cta_lr-2] == 0x6F && cta_res[cta_lr-1] == 0x01)
+		{
+			reader->card_status = CARD_NEED_INIT;
+			add_job(reader->client, ACTION_READER_RESTART, NULL, 0);
+			break;
+		}
 		uint32_t newsub = (cta_res[9] << 16) + (cta_res[10] << 8) + (cta_res[11]);
 		if(newsub == 0xFFFFFF)
 		{
@@ -1152,7 +1165,7 @@ static int32_t CAK7_GetCamKey(struct s_reader *reader)
 	{
 		srand(time(NULL));
 	}
-	uint32_t data1r = rand() % 4294967294;
+	uint32_t data1r = rand() % 4294967294u;
 
 	reader->timestmp1[0]=(data1r>>24)&0xFF;
 	reader->timestmp1[1]=(data1r>>16)&0xFF;
@@ -1275,22 +1288,6 @@ static int32_t CAK7_GetCamKey(struct s_reader *reader)
 	return OK;
 }
 
-static int32_t fastreinit(struct s_reader *reader)
-{
-	ATR newatr[ATR_MAX_SIZE];
-	memset(newatr, 0, 1);
-	if(ICC_Async_Activate(reader, newatr, 0))
-	{
-		return ERROR;
-	}
-	reader->cak7_seq = 0;
-	if(!CAK7_GetCamKey(reader))
-	{
-		return ERROR;
-	}
-	return OK;
-}
-
 static int32_t nagra3_card_init(struct s_reader *reader, ATR *newatr)
 {
 	get_atr;
@@ -1324,11 +1321,11 @@ static int32_t nagra3_card_init(struct s_reader *reader, ATR *newatr)
 	}
 
 	reader->nprov   = 1;
-	reader->nsa     = 0;
+	/*reader->nsa     = 0;
 	reader->nemm84  = 0;
 	reader->nemm83u = 0;
 	reader->nemm83s = 0;
-	reader->nemm87  = 0;
+	reader->nemm87  = 0;*/
 
 	CAK7GetDataType(reader, 0x02);
 	CAK7GetDataType(reader, 0x05);
@@ -1354,6 +1351,12 @@ static int32_t nagra3_card_info(struct s_reader *reader)
 	CAK7GetDataType(reader, 0x03);
 	CAK7GetDataType(reader, 0x0C);
 	rdr_log(reader, "-----------------------------------------");
+
+	reader->nsa     = 0;
+	reader->nemm84  = 0;
+	reader->nemm83u = 0;
+	reader->nemm83s = 0;
+	reader->nemm87  = 0;
 
 	CAK7GetDataType(reader, 0x04);
 	if(reader->forceemmg)
@@ -1418,13 +1421,9 @@ static void nagra3_post_process(struct s_reader *reader)
 		rdr_log(reader, "negotiating new Session Key");
 		if(!CAK7_GetCamKey(reader))
 		{
-			rdr_log(reader, "negotiations failed - trying FASTreinit");
-			if(!fastreinit(reader))
-			{
-				rdr_log(reader, "FASTreinit failed - need to restart reader");
-				reader->card_status = CARD_NEED_INIT;
-				add_job(reader->client, ACTION_READER_RESTART, NULL, 0);
-			}
+			rdr_log(reader, "negotiations failed - need to restart reader");
+			reader->card_status = CARD_NEED_INIT;
+			add_job(reader->client, ACTION_READER_RESTART, NULL, 0);
 		}
 	}
 }
@@ -1455,7 +1454,7 @@ static int32_t nagra3_do_ecm(struct s_reader *reader, const ECM_REQUEST *er, str
 
 	do_cak7_cmd(reader, cta_res, &cta_lr, ecmreq, sizeof(ecmreq), 0xB0);
 
-	rdr_log_dump_dbg(reader, D_READER, cta_res, 0xB0, "ECM Answer decrypted:");
+	rdr_log_dump_dbg(reader, D_READER, cta_res, 0xB0, "Decrypted ECM Answer:");
 
 	if((cta_res[cta_lr - 2] != 0x90 && cta_res[cta_lr - 1] != 0x00) || cta_lr == 0)
 	{
@@ -1465,6 +1464,9 @@ static int32_t nagra3_do_ecm(struct s_reader *reader, const ECM_REQUEST *er, str
 	}
 	else if(cta_res[27] != 0x00)
 	{
+		memcpy(reader->ecmheader, cta_res + 9, 4);
+		reader->cak7_camstate = cta_res[4];
+
 		uint8_t _cwe0[8];
 		uint8_t _cwe1[8];
 
@@ -1521,14 +1523,13 @@ static int32_t nagra3_do_ecm(struct s_reader *reader, const ECM_REQUEST *er, str
 			rdr_log_dbg(reader, D_READER, "CW1 checksum error [1]");
 		}
 
-		memcpy(reader->ecmheader, cta_res + 9, 4);
-
-		reader->cak7_camstate = cta_res[4];
-
 		if(chkok == 0 && cta_res[27] == 0x5C)
 		{
 			rdr_log(reader, "CW checksum error - NUID-cwekey pair is wrong");
-			return ERROR;
+		}
+		else if(chkok == 0 && cta_res[27] == 0x58)
+		{
+			rdr_log(reader, "CW checksum error - Calculated(DT05_20) 3DESkey is wrong");
 		}
 
 		if(chkok == 1)
@@ -1542,7 +1543,6 @@ static int32_t nagra3_do_ecm(struct s_reader *reader, const ECM_REQUEST *er, str
 	else
 	{
 		memcpy(reader->ecmheader, cta_res + 9, 4);
-
 		reader->cak7_camstate = cta_res[4];
 
 		if((reader->pairtype == 0x40 || reader->pairtype == 0x80) && reader->pairbyte == 0x40)
@@ -1554,7 +1554,6 @@ static int32_t nagra3_do_ecm(struct s_reader *reader, const ECM_REQUEST *er, str
 			rdr_log(reader, "card has no right to decode this channel");
 		}
 	}
-
 	return ERROR;
 }
 
@@ -1628,7 +1627,16 @@ static int32_t nagra3_do_emm(struct s_reader *reader, EMM_PACKET *ep)
 	{
 		memcpy(reader->ecmheader, cta_res + 9, 4);
 
-		reader->cak7_camstate = cta_res[4];
+		if((cta_res[4] & 64) == 64)
+		{
+			rdr_log(reader, "negotiating new Session Key");
+			if(!CAK7_GetCamKey(reader))
+			{
+				rdr_log(reader, "negotiations failed - need to restart reader");
+				reader->card_status = CARD_NEED_INIT;
+				add_job(reader->client, ACTION_READER_RESTART, NULL, 0);
+			}
+		}
 	}
 	return OK;
 }
