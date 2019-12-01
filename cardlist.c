@@ -483,7 +483,8 @@ void findatr(struct s_reader *reader) {
 	}
 #endif
 	if ( current.found == 1 ) {
-		if(reader->grp < 1) { reader->grp = 0x1ULL; }
+		// if(reader->grp < 1) { reader->grp = 0x1ULL; }
+		if(reader->grp < 1) { reader->grp = 0xFFFFFFFFFFFFFFFFULL; };
 	}
 	return;
 }
