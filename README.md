@@ -8,6 +8,7 @@ This variant of oscam combines the benefits of
 - Gorgone's modern interface (http://www.streamboard.tv/oscam-addons/changeset/1532/modern)
 and
 - oscam-emu (https://github.com/oscam-emu/oscam-patched/commits/master)
+- auto-configuration for many cards incl. HD+, Sky DE, TivuSat, ...  (WITH_CARDLIST)
 
 License
 -------
