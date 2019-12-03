@@ -103,7 +103,7 @@ void findatr(struct s_reader *reader) {
 		/* Mega Elite Royale V5 (INT) (0500:043800,050F00) */
 		strcpy(current.providername, "Redlight Mega Elite");
 #ifdef READER_VIACCESS
-		if (rlme_boxkey[4 - 1]) {
+		if (rlme_boxkey[4]) {
 			memcpy(reader->boxkey, rlme_boxkey, 4);
 			reader->boxkey_length = 4;
 			memcpy(reader->des_key, rlme_deskey, 16);
@@ -124,7 +124,7 @@ void findatr(struct s_reader *reader) {
 			strncmp(current.atr, "3F 77 18 00 00 C2 EB 45 02 6C 90 00", 35) == 0) {
 		strcpy(current.providername, "Redlight Mega Royale");
 #ifdef READER_VIACCESS
-		if (rlmr_boxkey[4 - 1])	{
+		if (rlmr_boxkey[4])	{
 			memcpy(reader->boxkey, rlmr_boxkey, 4);
 			memcpy(reader->des_key, rlmr_deskey, 16);
 			reader->boxkey_length = 4;
@@ -161,7 +161,7 @@ void findatr(struct s_reader *reader) {
 		/* more providers: TNTSAT V4/V5 (FR) (0500:030B00), NTV+ (RU) V6 (0500:050100), SRF (CH) V5 (0500:050800), TVSAT AFRICA (INT) V5 (0500:042840) */
 		strcpy(current.providername, "TNT Viaccess v5");
 #ifdef READER_VIACCESS
-		if (tnt_boxkey[4 - 1]) {
+		if (tnt_boxkey[4]) {
 			if (!reader->boxkey_length) {
 				memcpy(reader->boxkey, tnt_boxkey, 4);
 				reader->boxkey_length = 4;
@@ -183,7 +183,7 @@ void findatr(struct s_reader *reader) {
 		/* more providers: TNTSAT V6 (FR) (0500:030B00), CANAL+/CANAL (FR) V6 (0500:032830), ORANGE SAT (FR) V6 (0500:032900), SRF (CH) V6 (0500:060200), TELESAT (ex MOBISTAR) (BE) V6 (0500:051900) */
 		strcpy(current.providername, "TNT Viaccess v6");
 #ifdef READER_VIACCESS
-		if (tnt6_boxkey[4 - 1]) {
+		if (tnt6_boxkey[4]) {
 			if (!reader->boxkey_length) {
 				memcpy(reader->boxkey, tnt6_boxkey, 4);
 				reader->boxkey_length = 4;
@@ -205,7 +205,7 @@ void findatr(struct s_reader *reader) {
 		/* Ziggo NL ? */
 		strcpy(current.providername, "Ziggo NL");
 #ifdef READER_IRDETO
-		if (znl_boxkey[8 - 1]) {
+		if (znl_boxkey[8]) {
 			if (!reader->boxkey_length) {
 				memcpy(reader->boxkey, znl_boxkey, 8);
 				reader->boxkey_length = 8;
@@ -245,7 +245,7 @@ void findatr(struct s_reader *reader) {
 		} else {
 			strcpy(current.providername, "ICE Irdeto-Mode");
 #ifdef READER_IRDETO
-			if (ice_boxkey[8 - 1] && ice_rsakey[64 - 1]) {
+			if (ice_boxkey[8] && ice_rsakey[64]) {
 				if (!reader->boxkey_length) {
 					memcpy(reader->boxkey, ice_boxkey, 8);
 					reader->boxkey_length = 8;
@@ -268,7 +268,7 @@ void findatr(struct s_reader *reader) {
 			/* Tivusat (IT) (183x/Sat) */
 		strcpy(current.providername, "Tivusat 183D / 183E");
 #ifdef READER_NAGRA
-		if (tivu_rsakey[120 - 1]) {
+		if (tivu_rsakey[120]) {
 			if (!reader->rsa_mod_length) {
 				memcpy(reader->rsa_mod, tivu_rsakey, 120);
 				reader->rsa_mod_length = 120;
@@ -288,7 +288,7 @@ void findatr(struct s_reader *reader) {
 			 strncmp(current.atr, "3F FF 95 00 FF 91 81 71 FE 47 00 44 4E 41 53 50 31 34 32 20 52 65 76 47 30 36 12", 80) == 0) {
 		strcpy(current.providername, "Unitymedia UM01 / UM02");
 #ifdef READER_NAGRA
-		if (um_boxkey[8 - 1]) {
+		if (um_boxkey[8]) {
 			memcpy(reader->boxkey, um_boxkey, 8);
 			memcpy(reader->rsa_mod, um_rsakey, 64);
 			reader->boxkey_length = 8;
@@ -305,7 +305,7 @@ void findatr(struct s_reader *reader) {
 		/* more providers: ? */
 		strcpy(current.providername, "Vodafone D0x Ix2");
 #ifdef READER_NAGRA
-		if (vf_boxkey[8 - 1]) {
+		if (vf_boxkey[8]) {
 			memcpy(reader->boxkey, vf_boxkey, 8);
 			memcpy(reader->rsa_mod, vf_rsakey, 64);
 			reader->boxkey_length = 8;
@@ -327,7 +327,7 @@ void findatr(struct s_reader *reader) {
 			strncmp(current.atr, "3F FF 95 00 FF 91 81 71 A0 47 00 44 4E 41 53 50 31 38 30 20 4D 65 72 30 30 30 28", 80) == 0) {
 		strcpy(current.providername, "Astra HD+ HD01/HD02");
 #ifdef READER_NAGRA
-		if (hd_boxkey[8 - 1]) {
+		if (hd_boxkey[8]) {
 			memcpy(reader->boxkey, hd_boxkey, 8);
 			memcpy(reader->rsa_mod, hd_rsakey, 64);
 			reader->boxkey_length = 8;
