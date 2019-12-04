@@ -86,7 +86,9 @@ struct atrlist current;
 void findatr(struct s_reader *reader) {
 	current.found = 1;
 	strcpy(current.info, "recognized");
-
+#if defined(READER_VIACCESS) || defined(READER_IRDETO) || defined(READER_NAGRA)
+	int len;
+#endif
 	/* more providers: ? */
 	if (strncmp(current.atr, "3B F7 11 00 01 40 96 70 70 0A 0E 6C B6 D6", 42) == 0) {
 		strcpy(current.providername, "Canal Digitaal (NL)");
@@ -103,11 +105,13 @@ void findatr(struct s_reader *reader) {
 		/* Mega Elite Royale V5 (INT) (0500:043800,050F00) */
 		strcpy(current.providername, "Redlight Mega Elite");
 #ifdef READER_VIACCESS
-		if (rlme_boxkey[4 - 1]) {
-			memcpy(reader->boxkey, rlme_boxkey, 4);
-			reader->boxkey_length = 4;
-			memcpy(reader->des_key, rlme_deskey, 16);
-			reader->des_key_length = 16;
+		len = sizeof(rlme_boxkey);
+		if (rlme_boxkey[len - 1]) {
+			memcpy(reader->boxkey, rlme_boxkey, len);
+			reader->boxkey_length = len;
+			len = sizeof(rlme_deskey);
+			memcpy(reader->des_key, rlme_deskey, len);
+			reader->des_key_length = len;
 		} else {
 			rdr_log(reader, "no keys built in, use config values boxkey + deskey");
 		}
@@ -124,11 +128,13 @@ void findatr(struct s_reader *reader) {
 			strncmp(current.atr, "3F 77 18 00 00 C2 EB 45 02 6C 90 00", 35) == 0) {
 		strcpy(current.providername, "Redlight Mega Royale");
 #ifdef READER_VIACCESS
-		if (rlmr_boxkey[4 - 1])	{
-			memcpy(reader->boxkey, rlmr_boxkey, 4);
-			memcpy(reader->des_key, rlmr_deskey, 16);
-			reader->boxkey_length = 4;
-			reader->des_key_length = 16;
+		len = sizeof(rlmr_boxkey);
+		if (rlmr_boxkey[len - 1]) {
+			memcpy(reader->boxkey, rlmr_boxkey, len);
+			reader->boxkey_length = len;
+			len = sizeof(rlmr_deskey);
+			memcpy(reader->des_key, rlmr_deskey, len);
+			reader->des_key_length = len;
 		} else {
 			rdr_log(reader, "no keys built in, use config values boxkey + deskey");
 		}
@@ -161,14 +167,16 @@ void findatr(struct s_reader *reader) {
 		/* more providers: TNTSAT V4/V5 (FR) (0500:030B00), NTV+ (RU) V6 (0500:050100), SRF (CH) V5 (0500:050800), TVSAT AFRICA (INT) V5 (0500:042840) */
 		strcpy(current.providername, "TNT Viaccess v5");
 #ifdef READER_VIACCESS
-		if (tnt_boxkey[4 - 1]) {
+		len = sizeof(tnt_boxkey);
+		if (tnt_boxkey[len - 1]) {
 			if (!reader->boxkey_length) {
-				memcpy(reader->boxkey, tnt_boxkey, 4);
-				reader->boxkey_length = 4;
+				memcpy(reader->boxkey, tnt_boxkey, len);
+				reader->boxkey_length = len;
 			}
 			if (!reader->des_key_length) {
-				memcpy(reader->des_key, tnt_deskey, 16);
-				reader->des_key_length = 16;
+				len = sizeof(tnt_deskey);
+				memcpy(reader->des_key, tnt_deskey, len);
+				reader->des_key_length = len;
 			}
 		} else {
 			rdr_log(reader, "no keys built in, use config values boxkey + deskey");
@@ -183,14 +191,16 @@ void findatr(struct s_reader *reader) {
 		/* more providers: TNTSAT V6 (FR) (0500:030B00), CANAL+/CANAL (FR) V6 (0500:032830), ORANGE SAT (FR) V6 (0500:032900), SRF (CH) V6 (0500:060200), TELESAT (ex MOBISTAR) (BE) V6 (0500:051900) */
 		strcpy(current.providername, "TNT Viaccess v6");
 #ifdef READER_VIACCESS
-		if (tnt6_boxkey[4 - 1]) {
+		len = sizeof(tnt6_boxkey);
+		if (tnt6_boxkey[len - 1]) {
 			if (!reader->boxkey_length) {
-				memcpy(reader->boxkey, tnt6_boxkey, 4);
-				reader->boxkey_length = 4;
+				memcpy(reader->boxkey, tnt6_boxkey, len);
+				reader->boxkey_length = len;
 			}
 			if (!reader->des_key_length) {
-				memcpy(reader->des_key, tnt6_deskey, 16);
-				reader->des_key_length = 16;
+				len = sizeof(tnt6_deskey);
+				memcpy(reader->des_key, tnt6_deskey, len);
+				reader->des_key_length = len;
 			}
 		} else {
 			rdr_log(reader, "no keys built in, use config values boxkey + deskey");
@@ -205,14 +215,16 @@ void findatr(struct s_reader *reader) {
 		/* Ziggo NL ? */
 		strcpy(current.providername, "Ziggo NL");
 #ifdef READER_IRDETO
-		if (znl_boxkey[8 - 1]) {
+		len = sizeof(znl_boxkey);
+		if (znl_boxkey[len - 1]) {
 			if (!reader->boxkey_length) {
-				memcpy(reader->boxkey, znl_boxkey, 8);
-				reader->boxkey_length = 8;
+				memcpy(reader->boxkey, znl_boxkey, len);
+				reader->boxkey_length = len;
 			}
 			if (!reader->rsa_mod_length) {
-				memcpy(reader->rsa_mod, znl_rsakey, 64);
-				reader->rsa_mod_length = 64;
+				len = sizeof(znl_rsakey);
+				memcpy(reader->rsa_mod, znl_rsakey, len);
+				reader->rsa_mod_length = len;
 			}
 		} else {
 			rdr_log(reader, "no keys built in, use config values boxkey + rsakey");
@@ -245,14 +257,16 @@ void findatr(struct s_reader *reader) {
 		} else {
 			strcpy(current.providername, "ICE Irdeto-Mode");
 #ifdef READER_IRDETO
-			if (ice_boxkey[8 - 1] && ice_rsakey[64 - 1]) {
+			if (ice_boxkey[sizeof(ice_boxkey) - 1] && ice_rsakey[sizeof(ice_rsakey) - 1]) {
 				if (!reader->boxkey_length) {
-					memcpy(reader->boxkey, ice_boxkey, 8);
-					reader->boxkey_length = 8;
+					len = sizeof(ice_boxkey);
+					memcpy(reader->boxkey, ice_boxkey, len);
+					reader->boxkey_length = len;
 				}
 				if (!reader->rsa_mod_length) {
-					memcpy(reader->rsa_mod, ice_rsakey, 64);
-					reader->rsa_mod_length = 64;
+					len = sizeof(ice_rsakey);
+					memcpy(reader->rsa_mod, ice_rsakey, len);
+					reader->rsa_mod_length = len;
 				}
 			} else {
 				rdr_log(reader, "no keys built in, use config values boxkey + rsakey or disable force_irdeto");
@@ -268,10 +282,11 @@ void findatr(struct s_reader *reader) {
 			/* Tivusat (IT) (183x/Sat) */
 		strcpy(current.providername, "Tivusat 183D / 183E");
 #ifdef READER_NAGRA
-		if (tivu_rsakey[120 - 1]) {
+		len = sizeof(tivu_rsakey);
+		if (tivu_rsakey[len - 1]) {
 			if (!reader->rsa_mod_length) {
-				memcpy(reader->rsa_mod, tivu_rsakey, 120);
-				reader->rsa_mod_length = 120;
+				memcpy(reader->rsa_mod, tivu_rsakey, len);
+				reader->rsa_mod_length = len;
 			}
 		} else {
 			rdr_log(reader, "no keys built in, use config value rsakey");
@@ -288,11 +303,13 @@ void findatr(struct s_reader *reader) {
 			 strncmp(current.atr, "3F FF 95 00 FF 91 81 71 FE 47 00 44 4E 41 53 50 31 34 32 20 52 65 76 47 30 36 12", 80) == 0) {
 		strcpy(current.providername, "Unitymedia UM01 / UM02");
 #ifdef READER_NAGRA
-		if (um_boxkey[8 - 1]) {
-			memcpy(reader->boxkey, um_boxkey, 8);
-			memcpy(reader->rsa_mod, um_rsakey, 64);
-			reader->boxkey_length = 8;
-			reader->rsa_mod_length = 64;
+		len = sizeof(um_boxkey);
+		if (um_boxkey[len - 1]) {
+			memcpy(reader->boxkey, um_boxkey, len);
+			reader->boxkey_length = len;
+			len = sizeof(um_rsakey);
+			memcpy(reader->rsa_mod, um_rsakey, len);
+			reader->rsa_mod_length = len;
 		} else {
 			rdr_log(reader, "no keys built in, use config values boxkey + rsakey");
 		}
@@ -305,11 +322,13 @@ void findatr(struct s_reader *reader) {
 		/* more providers: ? */
 		strcpy(current.providername, "Vodafone D0x Ix2");
 #ifdef READER_NAGRA
-		if (vf_boxkey[8 - 1]) {
-			memcpy(reader->boxkey, vf_boxkey, 8);
-			memcpy(reader->rsa_mod, vf_rsakey, 64);
-			reader->boxkey_length = 8;
-			reader->rsa_mod_length = 64;
+		len = sizeof(vf_boxkey);
+		if (vf_boxkey[len - 1]) {
+			memcpy(reader->boxkey, vf_boxkey, len);
+			reader->boxkey_length = len;
+			len = sizeof(vf_rsakey);
+			memcpy(reader->rsa_mod, vf_rsakey, len);
+			reader->rsa_mod_length = len;
 		} else {
 			rdr_log(reader, "no keys built in, use config values boxkey + rsakey");
 		}
@@ -327,11 +346,13 @@ void findatr(struct s_reader *reader) {
 			(strncmp(current.atr, "3F FF 95 00 FF 91 81 71 A0 47 00 44 4E 41 53 50 31 38 30 20 4D 65 72 30 30 30 28", 80) == 0 && (!reader->cak7_mode))) {
 		strcpy(current.providername, "Astra HD+ HD01/HD02");
 #ifdef READER_NAGRA
-		if (hd_boxkey[8 - 1]) {
-			memcpy(reader->boxkey, hd_boxkey, 8);
-			memcpy(reader->rsa_mod, hd_rsakey, 64);
-			reader->boxkey_length = 8;
-			reader->rsa_mod_length = 64;
+		len = sizeof(hd_boxkey);
+		if (hd_boxkey[len - 1]) {
+			memcpy(reader->boxkey, hd_boxkey, len);
+			reader->boxkey_length = len;
+			len = sizeof(hd_rsakey);
+			memcpy(reader->rsa_mod, hd_rsakey, len);
+			reader->rsa_mod_length = len;
 		} else {
 			rdr_log(reader, "no keys built in, use config values boxkey + rsakey");
 		}
@@ -358,14 +379,14 @@ void findatr(struct s_reader *reader) {
 			strncmp(current.atr, "3F FF 95 00 FF 91 81 71 FE 57 00 44 4E 41 53 50 34 35 30 20 52 65 76 57 36 30 14", 80) == 0) {
 		strcpy(current.providername, "Astra HD+ HD03/HD04/HD05a");
 #ifdef READER_NAGRA_MERLIN
-		if (mod1[112]) {
-			memcpy(reader->mod1, mod1, 112 + 1);
-			memcpy(reader->mod2, mod2, 112 + 1);
-			memcpy(reader->key3588, key3588, 136 + 1);
-			memcpy(reader->data50, data50, 80 + 1);
-			memcpy(reader->mod50, mod50, 80 + 1);
-			memcpy(reader->nuid, nuid, 4 + 1);
-			memcpy(reader->cwekey, cwpk, 16 + 1);
+		if (mod1[sizeof(mod1) - 1]) {
+			memcpy(reader->mod1, mod1, sizeof(mod1));
+			memcpy(reader->mod2, mod2, sizeof(mod2));
+			memcpy(reader->key3588, key3588, sizeof(key3588));
+			memcpy(reader->data50, data50, sizeof(data50));
+			memcpy(reader->mod50, mod50, sizeof(mod50));
+			memcpy(reader->nuid, nuid, sizeof(nuid));
+			memcpy(reader->cwekey, cwpk, sizeof(cwpk));
 		} else {
 			rdr_log(reader, "no keys built in, use config values mod1 + mod2 + key3588 + data50 + mod50 + nuid + cwekey");
 		}
@@ -380,28 +401,14 @@ void findatr(struct s_reader *reader) {
 		/* MAXTV (HR) (1830/Sat) */
 		strcpy(current.providername, "Max TV");
 #ifdef READER_NAGRA_MERLIN
-		if (maxtv_mod1[112]) {
-			if (!reader->mod1[112])	{
-				memcpy(reader->mod1, maxtv_mod1, 112 + 1);
-			}
-			if (!reader->mod2[112])	{
-				memcpy(reader->mod2, maxtv_mod2, 112 + 1);
-			}
-			if (!reader->key3588[136]) {
-				memcpy(reader->key3588, maxtv_key3588, 136 + 1);
-			}
-			if (!reader->data50[80]) {
-				memcpy(reader->data50, maxtv_data50, 80 + 1);
-			}
-			if (!reader->mod50[80])	{
-				memcpy(reader->mod50, maxtv_mod50, 80 + 1);
-			}
-			if (!reader->nuid[4]) {
-				memcpy(reader->nuid, maxtv_nuid, 4 + 1);
-			}
-			if (!reader->cwekey[16]) {
-				memcpy(reader->cwekey, maxtv_cwpk, 16 + 1);
-			}
+		if (maxtv_mod1[sizeof(maxtv_mod1) - 1]) {
+			memcpy(reader->mod1, maxtv_mod1, sizeof(maxtv_mod1));
+			memcpy(reader->mod2, maxtv_mod2, sizeof(maxtv_mod2));
+			memcpy(reader->key3588, maxtv_key3588, sizeof(maxtv_key3588));
+			memcpy(reader->data50, maxtv_data50, sizeof(maxtv_data50));
+			memcpy(reader->mod50, maxtv_mod50, sizeof(maxtv_mod50));
+			memcpy(reader->nuid, maxtv_nuid, sizeof(maxtv_nuid));
+			memcpy(reader->cwekey, maxtv_cwpk, sizeof(maxtv_cwpk));
 		} else {
 			rdr_log(reader, "no keys built in, use config values mod1 + mod2 + key3588 + data50 + mod50 + nuid + cwekey");
 		}
