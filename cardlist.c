@@ -68,7 +68,30 @@ static uint8_t maxtv_cwpk[16 + 1] = {0x0};
 
 //
 //
-// End section
+// Sky section
+//
+//
+
+#ifdef READER_VIDEOGUARD
+/* Sky V13 / V14 / V15 */
+
+static uint32_t v13_boxid = 0x12345678;
+static uint8_t  v13_ins7E[26 + 1] = {0x0};
+static uint8_t  v13_k1_generic[16 + 1] = {0x0};
+static uint8_t  v13_k1_unique[16 + 1] = {0x0};
+static uint32_t v14_boxid = 0x12345678;
+static uint8_t  v14_ins7E[26 + 1] = {0x0};
+static uint8_t  v14_k1_generic[16 + 1] = {0x0};
+static uint8_t  v14_k1_unique[16 + 1] = {0x0};
+static uint32_t v15_boxid = 0x12345678;
+static uint8_t  v15_ins7E[26 + 1] = {0x0};
+static uint8_t  v15_k1_generic[16 + 1] = {0x0};
+static uint8_t  v15_k1_unique[16 + 1] = {0x0};
+#endif
+
+//
+//
+// End Sky section
 //
 //
 
@@ -432,8 +455,23 @@ void findatr(struct s_reader *reader) {
 				strcpy(current.providername, "Sky Deutschland V13");
 				reader->caid = 0x09C4;
 				reader->disablecrccws = 1;
-				if (!reader->boxid) {
-					reader->boxid = 0x12345678;
+				if (v13_k1_generic[16]) {
+					if (!reader->boxid || reader->boxid == 0x12345678) {
+						reader->boxid = v13_boxid;
+					}
+					if (!reader->ins7E[26])	{
+						memcpy(reader->ins7E, v13_ins7E, 26 + 1);
+					}
+					if (!reader->k1_generic[16])	{
+						memcpy(reader->k1_generic, v13_k1_generic, 16 + 1);
+					}
+					if (v13_k1_unique[16]) {
+						if (!reader->k1_unique[16]) {
+							memcpy(reader->k1_unique, v13_k1_unique, 16 + 1);
+						}
+					}
+				} else {
+					rdr_log(reader, "no keys built in, use config values boxid + ins7e + k1_generic + k1_unique");
 				}
 				reader->saveemm = (1 | reader->saveemm);
 				reader->blockemm = 15;
@@ -445,8 +483,23 @@ void findatr(struct s_reader *reader) {
 				strcpy(current.providername, "Sky Deutschland V14");
 				reader->caid = 0x098C;
 				reader->disablecrccws = 1;
-				if (!reader->boxid) {
-					reader->boxid = 0x12345678;
+				if (v14_k1_generic[16]) {
+					if (!reader->boxid || reader->boxid == 0x12345678) {
+						reader->boxid = v14_boxid;
+					}
+					if (!reader->ins7E[26])	{
+						memcpy(reader->ins7E, v14_ins7E, 26 + 1);
+					}
+					if (!reader->k1_generic[16])	{
+						memcpy(reader->k1_generic, v14_k1_generic, 16 + 1);
+					}
+					if (v14_k1_unique[16]) {
+						if (!reader->k1_unique[16]) {
+							memcpy(reader->k1_unique, v14_k1_unique, 16 + 1);
+						}
+					}
+				} else {
+					rdr_log(reader, "no keys built in, use config values boxid + ins7e + k1_generic + k1_unique");
 				}
 				reader->saveemm = (1 | reader->saveemm);
 				reader->blockemm = 15;
@@ -458,8 +511,23 @@ void findatr(struct s_reader *reader) {
 				strcpy(current.providername, "Sky Deutschland V15");
 				reader->caid = 0x098D;
 				reader->disablecrccws = 1;
-				if (!reader->boxid) {
-					reader->boxid = 0x12345678;
+				if (v15_k1_generic[16]) {
+					if (!reader->boxid || reader->boxid == 0x12345678) {
+						reader->boxid = v15_boxid;
+					}
+					if (!reader->ins7E[26])	{
+						memcpy(reader->ins7E, v15_ins7E, 26 + 1);
+					}
+					if (!reader->k1_generic[16])	{
+						memcpy(reader->k1_generic, v15_k1_generic, 16 + 1);
+					}
+					if (v15_k1_unique[16]) {
+						if (!reader->k1_unique[16]) {
+							memcpy(reader->k1_unique, v15_k1_unique, 16 + 1);
+						}
+					}
+				} else {
+					rdr_log(reader, "no keys built in, use config values boxid + ins7e + k1_generic + k1_unique");
 				}
 				reader->saveemm = (1 | reader->saveemm);
 				reader->blockemm = 15;
