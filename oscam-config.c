@@ -31,7 +31,7 @@ extern char cs_confdir[];
 
 char *get_config_filename(char *dest, size_t destlen, const char *filename)
 {
-	if (filename == "CCcam.cfg") {
+	if (filename == (char*)"CCcam.cfg") {
 		if (cfg.cc_cfgfile) {
 			// Path to CCcam.cfg already configured
 			snprintf(dest, destlen, "%s", cfg.cc_cfgfile);
