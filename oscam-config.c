@@ -1626,9 +1626,12 @@ void * read_cccamcfg(int32_t mode)
 			ret=0;
 			unsigned int ncd_key[14];
 			memset(ncd_key, 0, sizeof(ncd_key));
+#if defined(MODULE_NEWCAMD) || defined(MODULE_CAMD35) || defined(MODULE_RADEGAST)
 			int32_t reshare=-1;
+#endif
 			switch(line[0]){
 				case 'N':
+#ifdef MODULE_NEWCAMD
 					//proto = "newcamd|newcamd524|newcamd525|mgcamd|cccam";
 					proto = "newcamd";
 					ret=sscanf(line,"%c:%s%d%s%s%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%d",&typ,host,&port,uname,upass,
@@ -1636,21 +1639,28 @@ void * read_cccamcfg(int32_t mode)
 						&ncd_key[5], &ncd_key[6], &ncd_key[7], &ncd_key[8],&ncd_key[9],
 						&ncd_key[10],&ncd_key[11],&ncd_key[12],&ncd_key[13],&reshare);
 					paracount=5;
+#endif
 					break;
 				case 'C':
+#ifdef MODULE_CCCAM
 					proto = "cccam";
 					ret=sscanf(line,"%c:%s%d%s%s",&typ,host,&port,uname,upass);
 					paracount=5;
+#endif
 					break;
 				case 'L':
+#ifdef MODULE_CAMD35
 					proto = "camd35";
 					ret=sscanf(line,"%c:%s%d%s%s%x%x%d",&typ,host,&port,uname,upass,&caid,&prid,&reshare);
 					paracount=5;
+#endif
 					break;
 				case 'R':
+#ifdef MODULE_RADEGAST
 					proto = "radegast";
 					ret=sscanf(line,"%c:%s%d%x%x%d",&typ,host,&port,&caid,&prid,&reshare);
 					paracount=3;
+#endif
 					break;
 			}
 
