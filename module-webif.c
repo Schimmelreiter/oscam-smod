@@ -138,9 +138,10 @@ static bool use_srvid2 = false;
 #define MNU_GBX_FSTAINF     27
 #define MNU_GBX_FEXPINF     28
 #define MNU_GBX_INFOLOG     29
-#define MNU_CFG_FSOFTCAMKEY 30
+#define MNU_CFG_CCCAMCFG    30
+#define MNU_CFG_FSOFTCAMKEY 31
 
-#define MNU_CFG_TOTAL_ITEMS 31 // sum of items above. Use it for "All inactive" in function calls too.
+#define MNU_CFG_TOTAL_ITEMS 32 // sum of items above. Use it for "All inactive" in function calls too.
 
 static void set_status_info_var(struct templatevars *vars, char *varname, int no_data, char *fmt, double value)
 {
@@ -6778,8 +6779,9 @@ static char *send_oscam_files(struct templatevars * vars, struct uriparams * par
 		{ "expired.info",    MNU_GBX_FEXPINF,   FTYPE_GBOX },     // id 28
 		{ "info.log",        MNU_GBX_INFOLOG,   FTYPE_GBOX },     // id 29
 #endif
+		{ "CCcam.cfg",       MNU_CFG_CCCAMCFG,  FTYPE_CONFIG },   // id 30
 #ifdef WITH_EMU
-		{ "SoftCam.Key",     MNU_CFG_FSOFTCAMKEY,FTYPE_CONFIG },  // id 30
+		{ "SoftCam.Key",     MNU_CFG_FSOFTCAMKEY,FTYPE_CONFIG },  // id 31
 #endif
 		{ NULL, 0, 0 },
 	};

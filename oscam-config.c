@@ -31,8 +31,19 @@ extern char cs_confdir[];
 
 char *get_config_filename(char *dest, size_t destlen, const char *filename)
 {
-	// cs_confdir is always terminated with /
-	snprintf(dest, destlen, "%s%s", cs_confdir, filename);
+	if (filename == "CCcam.cfg") {
+		if (cfg.cc_cfgfile) {
+			// Path to CCcam.cfg already configured
+			snprintf(dest, destlen, "%s", cfg.cc_cfgfile);
+		} else {
+			// Path to CCcam.cfg not configured, use CCcam.cfg in oscam config dir
+			snprintf(dest, destlen, "%s%s", cs_confdir, "CCcam.cfg");
+			// TODO: Set cfg.cc_cfgfile = cs_confdir+CCcam.cfg
+		}
+	} else {
+		// cs_confdir is always terminated with /
+		snprintf(dest, destlen, "%s%s", cs_confdir, filename);
+	}
 	return dest;
 }
 
