@@ -355,7 +355,7 @@ static int32_t ParseDataType(struct s_reader *reader, uint8_t dt, uint8_t *cta_r
 			if(reader->dt5num == 0x00)
 			{
 				IDEA_KEY_SCHEDULE ks;
-				rsa_decrypt(reader->edata, 0x70, reader->out, reader->mod1, 112);
+				rsa_decrypt(reader->edata, 0x70, reader->out, reader->mod1, sizeof(reader->mod1) - 1);
 				memcpy(reader->kdt05_00,&reader->out[18], 0x5C + 2);
 				memcpy(&reader->kdt05_00[0x5C + 2], cta_res + 26 + 0x70, 6);
 				memcpy(reader->ideakey1, reader->out, 16);
@@ -390,7 +390,7 @@ static int32_t ParseDataType(struct s_reader *reader, uint8_t dt, uint8_t *cta_r
 			if(reader->dt5num == 0x10)
 			{
 				IDEA_KEY_SCHEDULE ks;
-				rsa_decrypt(reader->edata, 0x70, reader->out, reader->mod1, 112);
+				rsa_decrypt(reader->edata, 0x70, reader->out, reader->mod1, sizeof(reader->mod1) - 1);
 				memcpy(reader->kdt05_10, &reader->out[16], 6 * 16);
 				memcpy(reader->ideakey1, reader->out, 16);
 				memcpy(reader->block3, cta_res + 26 + 0x70, 8);
@@ -403,7 +403,7 @@ static int32_t ParseDataType(struct s_reader *reader, uint8_t dt, uint8_t *cta_r
 
 			if(reader->dt5num == 0x20)
 			{
-				rsa_decrypt(reader->edata, 0x70, reader->out, reader->mod2, 112);
+				rsa_decrypt(reader->edata, 0x70, reader->out, reader->mod2, sizeof(reader->mod2) - 1);
 				memcpy(reader->tmprsa, reader->out, 0x70);
 				reader->pairbyte = 0x40;
 				rdr_log(reader, "OSCam will try UNIQUE mode");
@@ -950,7 +950,7 @@ static int32_t CAK7_cmd03_global(struct s_reader *reader)
 	BIGNUM *bnEs  = BN_CTX_get(ctxs);
 	BIGNUM *bnCTs = BN_CTX_get(ctxs);
 	BIGNUM *bnPTs = BN_CTX_get(ctxs);
-	BN_bin2bn(&reader->mod50[0], 80, bnNs);
+	BN_bin2bn(&reader->mod50[0], sizeof(reader->mod50) - 1, bnNs);
 	BN_bin2bn(&reader->cak7expo[0], 0x11, bnEs);
 	BN_bin2bn(&reader->stillencrypted[0], 0x50, bnCTs);
 	BN_mod_exp(bnPTs, bnCTs, bnEs, bnNs, ctxs);
@@ -1098,7 +1098,7 @@ static int32_t CAK7_cmd03_unique(struct s_reader *reader)
 	BIGNUM *bnEs  = BN_CTX_get(ctxs);
 	BIGNUM *bnCTs = BN_CTX_get(ctxs);
 	BIGNUM *bnPTs = BN_CTX_get(ctxs);
-	BN_bin2bn(&reader->mod50[0], 80, bnNs);
+	BN_bin2bn(&reader->mod50[0], sizeof(reader->mod50) - 1, bnNs);
 	BN_bin2bn(&reader->cak7expo[0], 0x11, bnEs);
 	BN_bin2bn(&reader->stillencrypted[0], 0x50, bnCTs);
 	BN_mod_exp(bnPTs, bnCTs, bnEs, bnNs, ctxs);
@@ -1134,7 +1134,7 @@ static int32_t CAK7_GetCamKey(struct s_reader *reader)
 	0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,
 	0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0x00,0x00,0x00,0x00,0x00,0x08,0x00,0x00,0xCC,0xCC,0xCC,0xCC};
 
-	if(!reader->nuid[4])
+	if(!reader->nuid[sizeof(reader->nuid) - 1])
 	{
 		uint8_t cmd021[] = {0x02,0x7B};
 		uint8_t cmd022[] = {0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC};
@@ -1146,12 +1146,12 @@ static int32_t CAK7_GetCamKey(struct s_reader *reader)
 	}
 	else
 	{
-		memcpy(cmd0e + 132, reader->nuid, 4); // inject NUID
+		memcpy(cmd0e + 132, reader->nuid, sizeof(reader->nuid) - 1); // inject NUID
 	}
 
 	memcpy(cmd0e + 13, &reader->pairbyte, 1);
 	memcpy(cmd0e + 14, reader->idird, 4);
-	if(reader->cmd0eprov[2])
+	if(reader->cmd0eprov[sizeof(reader->cmd0eprov) - 1])
 	{
 		memcpy(cmd0e + 18, reader->cmd0eprov, 2);
 	}
@@ -1483,7 +1483,7 @@ static int32_t nagra3_do_ecm(struct s_reader *reader, const ECM_REQUEST *er, str
 
 		if(cta_res[27] == 0x5C)
 		{
-			if(!reader->cwekey[16])
+			if(!reader->cwekey[sizeof(reader->cwekey) - 1])
 			{
 				rdr_log(reader, "ERROR: CWPK is not set, can not decrypt CW");
 				return ERROR;
