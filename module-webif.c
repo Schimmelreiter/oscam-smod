@@ -2465,7 +2465,7 @@ static char *send_oscam_reader_config(struct templatevars *vars, struct uriparam
 
 #ifdef READER_NAGRA_MERLIN
 	// mod1 (CAK7)
-	len = 112;
+	len = sizeof(rdr->mod1) - 1;
 	if(rdr->mod1[len])
 	{
 		for(i = 0; i < len ; i++)
@@ -2473,7 +2473,7 @@ static char *send_oscam_reader_config(struct templatevars *vars, struct uriparam
 	}
 
 	// mod2 (CAK7)
-	len = 112;
+	len = sizeof(rdr->mod2) - 1;
 	if(rdr->mod2[len])
 	{
 		for(i = 0; i < len ; i++)
@@ -2481,7 +2481,7 @@ static char *send_oscam_reader_config(struct templatevars *vars, struct uriparam
 	}
 
 	// key3588 (CAK7)
-	len = 136;
+	len = sizeof(rdr->key3588) - 1;
 	if(rdr->key3588[len])
 	{
 		for(i = 0; i < len ; i++)
@@ -2489,7 +2489,7 @@ static char *send_oscam_reader_config(struct templatevars *vars, struct uriparam
 	}
 
 	// key3460 (CAK7)
-	len = 96;
+	len = sizeof(rdr->key3460) - 1;
 	if(rdr->key3460[len])
 	{
 		for(i = 0; i < len ; i++)
@@ -2497,7 +2497,7 @@ static char *send_oscam_reader_config(struct templatevars *vars, struct uriparam
 	}
 
 	// key3310 (CAK7)
-	len = 16;
+	len = sizeof(rdr->key3310) - 1;
 	if(rdr->key3310[len])
 	{
 		for(i = 0; i < len ; i++)
@@ -2505,7 +2505,7 @@ static char *send_oscam_reader_config(struct templatevars *vars, struct uriparam
 	}
 
 	// mod50 (CAK7)
-	len = 80;
+	len = sizeof(rdr->mod50) - 1;
 	if(rdr->mod50[len])
 	{
 		for(i = 0; i < len ; i++)
@@ -2513,7 +2513,7 @@ static char *send_oscam_reader_config(struct templatevars *vars, struct uriparam
 	}
 
 	// data50 (CAK7)
-	len = 80;
+	len = sizeof(rdr->data50) - 1;
 	if(rdr->data50[len])
 	{
 		for(i = 0; i < len ; i++)
@@ -2521,7 +2521,7 @@ static char *send_oscam_reader_config(struct templatevars *vars, struct uriparam
 	}
 
 	// idird (CAK7)
-	len = 4;
+	len = sizeof(rdr->idird) - 1;
 	if(rdr->idird[len])
 	{
 		for(i = 0; i < len ; i++)
@@ -2529,7 +2529,7 @@ static char *send_oscam_reader_config(struct templatevars *vars, struct uriparam
 	}
 
 	// cmd0e_provider (CAK7)
-	len = 2;
+	len = sizeof(rdr->cmd0eprov) - 1;
 	if(rdr->cmd0eprov[len])
 	{
 		for(i = 0; i < len ; i++)
@@ -2537,7 +2537,7 @@ static char *send_oscam_reader_config(struct templatevars *vars, struct uriparam
 	}
 
 	// nuid (CAK7)
-	len = 4;
+	len = sizeof(rdr->nuid) - 1;
 	if(rdr->nuid[len])
 	{
 		for(i = 0; i < len ; i++)
@@ -2545,7 +2545,7 @@ static char *send_oscam_reader_config(struct templatevars *vars, struct uriparam
 	}
 
 	// cwekey (CAK7)
-	len = 16;
+	len = sizeof(rdr->cwekey) - 1;
 	if(rdr->cwekey[len])
 	{
 		for(i = 0; i < len ; i++)
