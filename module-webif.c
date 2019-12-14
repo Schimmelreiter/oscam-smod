@@ -138,9 +138,10 @@ static bool use_srvid2 = false;
 #define MNU_GBX_FSTAINF     27
 #define MNU_GBX_FEXPINF     28
 #define MNU_GBX_INFOLOG     29
-#define MNU_CFG_FSOFTCAMKEY 30
+#define MNU_CFG_CCCAMCFG    30
+#define MNU_CFG_FSOFTCAMKEY 31
 
-#define MNU_CFG_TOTAL_ITEMS 31 // sum of items above. Use it for "All inactive" in function calls too.
+#define MNU_CFG_TOTAL_ITEMS 32 // sum of items above. Use it for "All inactive" in function calls too.
 
 static void set_status_info_var(struct templatevars *vars, char *varname, int no_data, char *fmt, double value)
 {
@@ -2584,6 +2585,18 @@ static char *send_oscam_reader_config(struct templatevars *vars, struct uriparam
 	if(rdr->ins2e06[0x04])
 	{
 		for(i = 0; i < 4 ; i++) { tpl_printf(vars, TPLAPPEND, "INS2E06", "%02X", rdr->ins2e06[i]); }
+	}
+
+	// k1 for generic pairing mode
+	if(rdr->k1_generic[0x10])
+	{
+		for(i = 0; i < rdr->k1_generic[0x10] ; i++) { tpl_printf(vars, TPLAPPEND, "K1_GENERIC", "%02X", rdr->k1_generic[i]); }
+	}
+
+	// k1 for unique pairing mode
+	if(rdr->k1_unique[0x10])
+	{
+		for(i = 0; i < rdr->k1_unique[0x10] ; i++) { tpl_printf(vars, TPLAPPEND, "K1_UNIQUE", "%02X", rdr->k1_unique[i]); }
 	}
 
 	// ATR
@@ -6766,8 +6779,9 @@ static char *send_oscam_files(struct templatevars * vars, struct uriparams * par
 		{ "expired.info",    MNU_GBX_FEXPINF,   FTYPE_GBOX },     // id 28
 		{ "info.log",        MNU_GBX_INFOLOG,   FTYPE_GBOX },     // id 29
 #endif
+		{ "CCcam.cfg",       MNU_CFG_CCCAMCFG,  FTYPE_CONFIG },   // id 30
 #ifdef WITH_EMU
-		{ "SoftCam.Key",     MNU_CFG_FSOFTCAMKEY,FTYPE_CONFIG },  // id 30
+		{ "SoftCam.Key",     MNU_CFG_FSOFTCAMKEY,FTYPE_CONFIG },  // id 31
 #endif
 		{ NULL, 0, 0 },
 	};

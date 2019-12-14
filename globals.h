@@ -1674,8 +1674,8 @@ struct s_reader										// contains device info, reader info and card info
 	int8_t			cc_hop;							// For non-cccam reader: hop for virtual cards
 	int8_t			cc_reshare;
 	int32_t			cc_reconnect;					// reconnect on ecm-request timeout
-	int8_t			from_cccam_cfg;					// created from cccam.cfg
 #endif
+	int8_t			from_cccam_cfg;					// created from cccam.cfg
 	int8_t			tcp_connected;
 	int32_t			tcp_ito;						// inactivity timeout
 	int32_t			tcp_rto;						// reconnect timeout
@@ -1798,6 +1798,8 @@ struct s_reader										// contains device info, reader info and card info
 	uint8_t			ins7E11[0x01 + 1];
 	uint8_t			ins2e06[0x04 + 1];
 	int8_t			ins7e11_fast_reset;
+	uint8_t			k1_generic[0x10 + 1];			// k1 for generic pairing mode
+	uint8_t			k1_unique[0x10 + 1];			// k1 for unique pairing mode
 	uint8_t			sc8in1_dtrrts_patch;			// fix for kernel commit 6a1a82df91fa0eb1cc76069a9efe5714d087eccd
 
 #ifdef READER_VIACCESS
