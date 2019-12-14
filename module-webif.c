@@ -2464,92 +2464,148 @@ static char *send_oscam_reader_config(struct templatevars *vars, struct uriparam
 #endif
 
 #ifdef READER_NAGRA_MERLIN
-	// mod1 (CAK7)
-	len = 112;
-	if(rdr->mod1[len])
-	{
-		for(i = 0; i < len ; i++)
-			{ tpl_printf(vars, TPLAPPEND, "MOD1", "%02X", rdr->mod1[i]); }
-	}
-
-	// mod2 (CAK7)
-	len = 112;
-	if(rdr->mod2[len])
-	{
-		for(i = 0; i < len ; i++)
-			{ tpl_printf(vars, TPLAPPEND, "MOD2", "%02X", rdr->mod2[i]); }
-	}
-
-	// key3588 (CAK7)
-	len = 136;
-	if(rdr->key3588[len])
-	{
-		for(i = 0; i < len ; i++)
-			{ tpl_printf(vars, TPLAPPEND, "KEY3588", "%02X", rdr->key3588[i]); }
-	}
-
-	// key3460 (CAK7)
-	len = 96;
-	if(rdr->key3460[len])
-	{
-		for(i = 0; i < len ; i++)
-			{ tpl_printf(vars, TPLAPPEND, "KEY3460", "%02X", rdr->key3460[i]); }
-	}
-
-	// key3310 (CAK7)
-	len = 16;
-	if(rdr->key3310[len])
-	{
-		for(i = 0; i < len ; i++)
-			{ tpl_printf(vars, TPLAPPEND, "KEY3310", "%02X", rdr->key3310[i]); }
-	}
-
-	// mod50 (CAK7)
-	len = 80;
-	if(rdr->mod50[len])
-	{
-		for(i = 0; i < len ; i++)
-			{ tpl_printf(vars, TPLAPPEND, "MOD50", "%02X", rdr->mod50[i]); }
-	}
-
-	// data50 (CAK7)
-	len = 80;
-	if(rdr->data50[len])
-	{
-		for(i = 0; i < len ; i++)
-			{ tpl_printf(vars, TPLAPPEND, "DATA50", "%02X", rdr->data50[i]); }
-	}
-
 	// idird (CAK7)
-	len = 4;
-	if(rdr->idird[len])
+	len = rdr->idird_length;
+	if(len > 0)
 	{
 		for(i = 0; i < len ; i++)
 			{ tpl_printf(vars, TPLAPPEND, "IDIRD", "%02X", rdr->idird[i]); }
 	}
 
 	// cmd0e_provider (CAK7)
-	len = 2;
-	if(rdr->cmd0eprov[len])
+	len = rdr->cmd0eprov_length;
+	if(len > 0)
 	{
 		for(i = 0; i < len ; i++)
 			{ tpl_printf(vars, TPLAPPEND, "CMD0EPROV", "%02X", rdr->cmd0eprov[i]); }
 	}
 
+	// mod1 (CAK7)
+	len = rdr->mod1_length;
+	if(len > 0)
+	{
+		for(i = 0; i < len ; i++)
+			{ tpl_printf(vars, TPLAPPEND, "MOD1", "%02X", rdr->mod1[i]); }
+	}
+
+	// mod2 (CAK7)
+	len = rdr->mod2_length;
+	if(len > 0)
+	{
+		for(i = 0; i < len ; i++)
+			{ tpl_printf(vars, TPLAPPEND, "MOD2", "%02X", rdr->mod2[i]); }
+	}
+
+	// key3588 (CAK7)
+	len = rdr->key3588_length;
+	if(len > 0)
+	{
+		for(i = 0; i < len ; i++)
+			{ tpl_printf(vars, TPLAPPEND, "KEY3588", "%02X", rdr->key3588[i]); }
+	}
+
+	// key3310 (CAK7)
+	len = rdr->key3310_length;
+	if(len > 0)
+	{
+		for(i = 0; i < len ; i++)
+		{ tpl_printf(vars, TPLAPPEND, "KEY3310", "%02X", rdr->key3310[i]); }
+	}
+
+	// key3460 (CAK7)
+	len = rdr->key3460_length;
+	if(len > 0)
+	{
+		for(i = 0; i < len ; i++)
+			{ tpl_printf(vars, TPLAPPEND, "KEY3460", "%02X", rdr->key3460[i]); }
+	}
+
+	// data50 (CAK7)
+	len = rdr->data50_length;
+	if(len > 0)
+	{
+		for(i = 0; i < len ; i++)
+			{ tpl_printf(vars, TPLAPPEND, "DATA50", "%02X", rdr->data50[i]); }
+	}
+
+	// mod50 (CAK7)
+	len = rdr->mod50_length;
+	if(len > 0)
+	{
+		for(i = 0; i < len ; i++)
+			{ tpl_printf(vars, TPLAPPEND, "MOD50", "%02X", rdr->mod50[i]); }
+	}
+
 	// nuid (CAK7)
-	len = 4;
-	if(rdr->nuid[len])
+	len = rdr->nuid_length;
+	if(len > 0)
 	{
 		for(i = 0; i < len ; i++)
 			{ tpl_printf(vars, TPLAPPEND, "NUID", "%02X", rdr->nuid[i]); }
 	}
 
-	// cwekey (CAK7)
-	len = 16;
-	if(rdr->cwekey[len])
+	// cwekey0 (CAK7)
+	len = rdr->cwekey0_length;
+	if(len > 0)
 	{
 		for(i = 0; i < len ; i++)
-			{ tpl_printf(vars, TPLAPPEND, "CWEKEY", "%02X", rdr->cwekey[i]); }
+			{ tpl_printf(vars, TPLAPPEND, "CWEKEY0", "%02X", rdr->cwekey0[i]); }
+	}
+
+	// cwekey1 (CAK7)
+	len = rdr->cwekey1_length;
+	if(len > 0)
+	{
+		for(i = 0; i < len ; i++)
+			{ tpl_printf(vars, TPLAPPEND, "CWEKEY1", "%02X", rdr->cwekey1[i]); }
+	}
+
+	// cwekey2 (CAK7)
+	len = rdr->cwekey2_length;
+	if(len > 0)
+	{
+		for(i = 0; i < len ; i++)
+			{ tpl_printf(vars, TPLAPPEND, "CWEKEY2", "%02X", rdr->cwekey2[i]); }
+	}
+
+	// cwekey3 (CAK7)
+	len = rdr->cwekey3_length;
+	if(len > 0)
+	{
+		for(i = 0; i < len ; i++)
+			{ tpl_printf(vars, TPLAPPEND, "CWEKEY3", "%02X", rdr->cwekey3[i]); }
+	}
+
+	// cwekey4 (CAK7)
+	len = rdr->cwekey4_length;
+	if(len > 0)
+	{
+		for(i = 0; i < len ; i++)
+			{ tpl_printf(vars, TPLAPPEND, "CWEKEY4", "%02X", rdr->cwekey4[i]); }
+	}
+
+	// cwekey5 (CAK7)
+	len = rdr->cwekey5_length;
+	if(len > 0)
+	{
+		for(i = 0; i < len ; i++)
+			{ tpl_printf(vars, TPLAPPEND, "CWEKEY5", "%02X", rdr->cwekey5[i]); }
+	}
+
+	// cwekey6 (CAK7)
+	len = rdr->cwekey6_length;
+	if(len > 0)
+	{
+		for(i = 0; i < len ; i++)
+			{ tpl_printf(vars, TPLAPPEND, "CWEKEY6", "%02X", rdr->cwekey6[i]); }
+	}
+
+	// cwekey7 (CAK7)
+	len = rdr->cwekey7_length;
+	if(len > 0)
+	{
+		for(i = 0; i < len ; i++)
+			{ tpl_printf(vars, TPLAPPEND, "CWEKEY7", "%02X", rdr->cwekey7[i]); }
 	}
 
 	// force_cw_swap
