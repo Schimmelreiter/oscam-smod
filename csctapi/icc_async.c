@@ -370,7 +370,7 @@ int32_t ICC_Async_Activate(struct s_reader *reader, ATR *atr, uint16_t deprecate
 	if((memcmp(atrarr + 8, "DNASP4", 6) == 0) || (memcmp(atrarr + 11, "DNASP4", 6) == 0))
 	{
 		rdr_log(reader, "detected card in CAK7 mode");
- 		calculate_cak7_vars(reader, atr);
+		calculate_cak7_vars(reader, atr);
 		reader->cak7type = 1;
 	}
 	else if(((memcmp(atrarr + 7, "pp", 2) == 0 && ((atrarr[9]&0x0F) >= 10)) || (memcmp(atrarr + 11, "DNASP18", 7) == 0) || (memcmp(atrarr + 11, "DNASP19", 7) == 0) || (memcmp(atrarr + 11, "DNASP1A", 7) == 0)) && reader->cak7_mode)

@@ -403,7 +403,7 @@ int32_t nagra_get_emm_filter(struct s_reader *rdr, struct s_csystem_emm_filter *
 			filters[idx].filter[1] = rdr->sa[i][2];
 			filters[idx].filter[2] = rdr->sa[i][1];
 			filters[idx].filter[3] = rdr->sa[i][0];
-			filters[idx].filter[4] = rdr->sa[i][3];
+			filters[idx].filter[4] = 0x00;
 			filters[idx].filter[5] = 0x10;
 			memset(&filters[idx].mask[0], 0xFF, 6);
 			idx++;
@@ -414,7 +414,7 @@ int32_t nagra_get_emm_filter(struct s_reader *rdr, struct s_csystem_emm_filter *
 			filters[idx].filter[1] = rdr->sa[i][2];
 			filters[idx].filter[2] = rdr->sa[i][1];
 			filters[idx].filter[3] = rdr->sa[i][0];
-			filters[idx].filter[4] = 0x00;
+			filters[idx].filter[4] = rdr->sa[i][3];
 			filters[idx].filter[5] = 0x00;
 			memset(&filters[idx].mask[0], 0xFF, 6);
 			idx++;
