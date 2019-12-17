@@ -784,6 +784,42 @@ static void nuid_fn(const char *token, char *value, void *setting, FILE *f)
 		{ fprintf_conf(f, "nuid", "\n"); }
 }
 
+static void cwpkcaid_fn(const char *token, char *value, void *setting, FILE *f)
+{
+	struct s_reader *rdr = setting;
+	if(value)
+	{
+		int32_t len = strlen(value);
+		if(len != 4)
+		{
+			rdr->cwpkcaid_length = 0;
+			memset(rdr->cwpkcaid, 0, 2);
+		}
+		else
+		{
+			if(key_atob_l(value, rdr->cwpkcaid, len))
+			{
+				fprintf(stderr, "reader cwpkcaid parse error, %s=%s\n", token, value);
+				rdr->cwpkcaid_length = 0;
+				memset(rdr->cwpkcaid, 0, sizeof(rdr->cwpkcaid));
+			}
+			else
+			{
+				rdr->cwpkcaid_length = len/2;
+			}
+		}
+		return;
+	}
+	int32_t len = rdr->cwpkcaid_length;
+	if(len > 0)
+	{
+		char tmp[len * 2 + 1];
+		fprintf_conf(f, "cwpkcaid", "%s\n", cs_hexdump(0, rdr->cwpkcaid, len, tmp, sizeof(tmp)));
+	}
+	else if(cfg.http_full_cfg)
+		{ fprintf_conf(f, "cwpkcaid", "\n"); }
+}
+
 static void cwekey0_fn(const char *token, char *value, void *setting, FILE *f)
 {
 	struct s_reader *rdr = setting;
@@ -1648,6 +1684,7 @@ static const struct config_list reader_opts[] =
 	DEF_OPT_FUNC("data50"                         , 0,                                    data50_fn),
 	DEF_OPT_FUNC("mod50"                          , 0,                                    mod50_fn),
 	DEF_OPT_FUNC("nuid"                           , 0,                                    nuid_fn),
+	DEF_OPT_FUNC("cwpkcaid"                       , 0,                                    cwpkcaid_fn),
 	DEF_OPT_FUNC("cwekey0"                        , 0,                                    cwekey0_fn),
 	DEF_OPT_FUNC("cwekey1"                        , 0,                                    cwekey1_fn),
 	DEF_OPT_FUNC("cwekey2"                        , 0,                                    cwekey2_fn),
@@ -1775,7 +1812,7 @@ static bool reader_check_setting(const struct config_list *UNUSED(clist), void *
 		"fix9993", "rsakey", "deskey", "ins7e", "ins7e11", "ins2e06", "k1_generic", "k1_unique", "force_irdeto", "needsemmfirst", "boxkey",
 		"atr", "detect", "nagra_read", "mhz", "cardmhz", "readtiers", "read_old_classes", "use_gpio", "needsglobalfirst",
 #ifdef READER_NAGRA_MERLIN
-		"mod1", "idird", "cmd0eprov", "mod2", "key3588", "key3460", "key3310", "data50", "mod50", "nuid", "cwekey0", "cwekey1", "cwekey2", "cwekey3", "cwekey4", "cwekey5", "cwekey6", "cwekey7",
+		"mod1", "idird", "cmd0eprov", "mod2", "key3588", "key3460", "key3310", "data50", "mod50", "nuid", "cwpkcaid", "cwekey0", "cwekey1", "cwekey2", "cwekey3", "cwekey4", "cwekey5", "cwekey6", "cwekey7",
 #endif
 #if defined(READER_DRE) || defined(READER_DRECAS)
 		"exec_cmd_file",

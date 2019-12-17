@@ -2621,6 +2621,14 @@ static char *send_oscam_reader_config(struct templatevars *vars, struct uriparam
 		{ tpl_addVar(vars, TPLADD, "FORCEEMMGCHECKED", "checked"); }
 #endif
 
+	// CWPK CaID (CAK7)
+	len = rdr->cwpkcaid_length;
+	if(len > 0)
+	{
+		for(i = 0; i < len ; i++)
+			{ tpl_printf(vars, TPLAPPEND, "CWPKCAID", "%02X", rdr->cwpkcaid[i]); }
+	}
+
 	// cak7_mode
 	if(rdr->cak7_mode)
 		{ tpl_addVar(vars, TPLADD, "NAGRACAK7MODECHECKED", "checked"); }
