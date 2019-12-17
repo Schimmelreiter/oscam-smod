@@ -109,9 +109,7 @@ struct atrlist current;
 void findatr(struct s_reader *reader) {
 	current.found = 1;
 	strcpy(current.info, "recognized");
-#if defined(READER_VIACCESS) || defined(READER_IRDETO) || defined(READER_NAGRA)
-	int len;
-#endif
+
 	/* more providers: ? */
 	if (strncmp(current.atr, "3B F7 11 00 01 40 96 70 70 0A 0E 6C B6 D6", 42) == 0) {
 		strcpy(current.providername, "Canal Digitaal (NL)");
@@ -344,7 +342,7 @@ void findatr(struct s_reader *reader) {
 		strcpy(current.info, " - but card system NAGRA not built in!");
 #endif
 	} else if (
-			// HD+ HD01 RevGC4
+			// HD+ HD01 RevGC4 (DE) (1830/Sat)
 			strncmp(current.atr, "3F FF 95 00 FF 91 81 71 FE 47 00 44 4E 41 53 50 31 34 32 20 52 65 76 47 43 34 63", 80) == 0 ||
 			// HD+ HD01 RevGC6 (DE) (1830/Sat)
 			strncmp(current.atr, "3F FF 95 00 FF 91 81 71 FE 47 00 44 4E 41 53 50 31 34 32 20 52 65 76 47 43 36 61", 80) == 0 ||
@@ -355,7 +353,6 @@ void findatr(struct s_reader *reader) {
 		if (hd_boxkey[sizeof(hd_boxkey) - 1]) {
 			memcpy(reader->boxkey, hd_boxkey, sizeof(hd_boxkey));
 			reader->boxkey_length = sizeof(hd_boxkey);
-			len = sizeof(hd_rsakey);
 			memcpy(reader->rsa_mod, hd_rsakey, sizeof(hd_rsakey));
 			reader->rsa_mod_length = sizeof(hd_rsakey);
 		} else {
@@ -370,19 +367,23 @@ void findatr(struct s_reader *reader) {
 	} else if (
 			// HD+ HD02 (DE) (1843/Sat)
 			(strncmp(current.atr, "3F FF 95 00 FF 91 81 71 A0 47 00 44 4E 41 53 50 31 38 30 20 4D 65 72 30 30 30 28", 80) == 0 && (reader->cak7_mode)) ||
-			// HD+ HD03 (DE)
+			// HD+ HD03 (DE) (1860/Sat)
 			strncmp(current.atr, "3F FF 95 00 FF 91 81 71 A0 47 00 44 4E 41 53 50 31 39 30 20 4D 65 72 51 32 35 4F", 80) == 0 ||
-			// HD03a (1860/Sat)
+			// HD03a (DE) (1860/Sat)
 			strncmp(current.atr, "3F FF 95 00 FF 91 81 71 FE 57 00 44 4E 41 53 50 34 31 30 20 52 65 76 51 32 35 17", 80) == 0 ||
-			// HD03b
+			// HD03b (DE) (1860/Sat)
 			strncmp(current.atr, "3F FF 95 00 FF 91 81 71 FE 57 00 44 4E 41 53 50 34 32 30 20 52 65 76 51 32 35 17", 80) == 0 ||
-			// HD04a|b
+			// HD04a|b (DE) (186A/Sat)
 			strncmp(current.atr, "3F FF 95 00 FF 91 81 71 FE 57 00 44 4E 41 53 50 34 32 30 20 52 65 76 53 36 30 17", 80) == 0 ||
-			// HD04h
+			// HD04h (DE) (186A/Sat)
 			strncmp(current.atr, "3F FF 95 00 FF 91 81 71 FE 57 00 44 4E 41 53 50 34 32 30 20 52 65 76 53 36 34 13", 80) == 0 ||
-			// HD05
+			// HD05 (DE) (186A/Sat)
 			strncmp(current.atr, "3F FF 95 00 FF 91 81 71 FE 57 00 44 4E 41 53 50 34 35 30 20 52 65 76 57 36 30 14", 80) == 0) {
-		strcpy(current.providername, "Astra HD+ HD03/HD04/HD05a");
+		if (reader->cak7_mode) {
+			strcpy(current.providername, "Astra HD+ HD02/HD03/HD04/HD05");
+		} else {
+			strcpy(current.providername, "Astra HD+ HD03/HD04/HD05");
+		}
 #ifdef READER_NAGRA_MERLIN
 		if (mod1[sizeof(mod1) - 1]) {
 			memcpy(reader->mod1, mod1, sizeof(mod1));

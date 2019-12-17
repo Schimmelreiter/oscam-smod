@@ -62,7 +62,7 @@ CC_OPTS = -O2 -ggdb -pipe -ffunction-sections -fdata-sections
 CC = $(CROSS_DIR)$(CROSS)gcc
 STRIP = $(CROSS_DIR)$(CROSS)strip
 
-LDFLAGS = -Wl,--gc-sections
+LDFLAGS += -Wl,--gc-sections
 
 TARGETHELP := $(shell $(CC) --target-help 2>&1)
 ifneq (,$(findstring sse2,$(TARGETHELP)))
