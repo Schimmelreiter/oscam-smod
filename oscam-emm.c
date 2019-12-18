@@ -165,6 +165,16 @@ int32_t emm_reader_match(struct s_reader *reader, uint16_t caid, uint32_t provid
 	if(reader->audisabled)
 		{ return 0; }
 
+	if(reader->cwpkcaid_length)
+	{
+		uint8_t check[1];
+		check[0] = caid & 0xFF;
+		if(check[0] == reader->cwpkcaid[1])
+		{
+			return 1;
+		}
+	}
+
 	if(reader->caid != caid)
 	{
 		int caid_found = 0;

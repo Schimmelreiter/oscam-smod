@@ -1410,7 +1410,7 @@ static int32_t nagra3_card_info(struct s_reader *reader)
 
 static void nagra3_post_process(struct s_reader *reader)
 {
-	if(reader->cak7_seq >= 0x00FFF0)
+	if(reader->cak7_seq >= 0x008C9F)
 	{
 		rdr_log(reader, "Card needs reinit to prevent crash");
 		reader->card_status = CARD_NEED_INIT;
@@ -1498,47 +1498,10 @@ static int32_t nagra3_do_ecm(struct s_reader *reader, const ECM_REQUEST *er, str
 			des_ecb3_decrypt(_cwe1, reader->key3des);
 		}
 
-		int chkok = 1;
-		if(((_cwe0[0] + _cwe0[1] + _cwe0[2]) & 0xFF) != _cwe0[3])
-		{
-			chkok = 0;
-			rdr_log_dbg(reader, D_READER, "CW0 checksum error [0]");
-		}
-
-		if(((_cwe0[4] + _cwe0[5] + _cwe0[6]) & 0xFF) != _cwe0[7])
-		{
-			chkok = 0;
-			rdr_log_dbg(reader, D_READER, "CW0 checksum error [1]");
-		}
-
-		if(((_cwe1[0] + _cwe1[1] + _cwe1[2]) & 0xFF) != _cwe1[3])
-		{
-			chkok = 0;
-			rdr_log_dbg(reader, D_READER, "CW1 checksum error [0]");
-		}
-
-		if(((_cwe1[4] + _cwe1[5] + _cwe1[6]) & 0xFF) != _cwe1[7])
-		{
-			chkok = 0;
-			rdr_log_dbg(reader, D_READER, "CW1 checksum error [1]");
-		}
-
-		if(chkok == 0 && cta_res[27] == 0x5C)
-		{
-			rdr_log(reader, "CW checksum error - NUID-cwekey pair is wrong");
-		}
-		else if(chkok == 0 && cta_res[27] == 0x58)
-		{
-			rdr_log(reader, "CW checksum error - Calculated(DT05_20) 3DESkey is wrong");
-		}
-
-		if(chkok == 1)
-		{
-			rdr_log_dbg(reader, D_READER, "CW Decrypt ok");
-			memcpy(ea->cw, _cwe0, 0x08);
-			memcpy(ea->cw + 8, _cwe1, 0x08);
-			return OK;
-		}
+		rdr_log_dbg(reader, D_READER, "CW Decrypt ok");
+		memcpy(ea->cw, _cwe0, 0x08);
+		memcpy(ea->cw + 8, _cwe1, 0x08);
+		return OK;
 	}
 	else
 	{
@@ -1559,8 +1522,18 @@ static int32_t nagra3_do_ecm(struct s_reader *reader, const ECM_REQUEST *er, str
 
 static int32_t nagra3_do_emm(struct s_reader *reader, EMM_PACKET *ep)
 {
-	def_resp;
+def_resp;
 
+if(ep->emm[0] == 0x90)
+{
+	rdr_log(reader, "OSCam got your BoxEMM");
+	char tmp[128];
+	rdr_log(reader, "NUID: %s", cs_hexdump(1, ep->emm + 3, 4, tmp, sizeof(tmp)));
+	rdr_log(reader, "Index: %s", cs_hexdump(1, ep->emm + 10, 1, tmp, sizeof(tmp)));
+	rdr_log(reader, "eCWPK: %s", cs_hexdump(1, ep->emm + 11, 16, tmp, sizeof(tmp)));
+}
+else
+{
 	uint8_t emmreq[0xC0];
 	memset(emmreq, 0xCC, 0xC0);
 
@@ -1627,7 +1600,13 @@ static int32_t nagra3_do_emm(struct s_reader *reader, EMM_PACKET *ep)
 	{
 		memcpy(reader->ecmheader, cta_res + 9, 4);
 
-		if((cta_res[4] & 64) == 64)
+		if(reader->cak7_seq >= 0x008C9F)
+		{
+			rdr_log(reader, "Card needs reinit to prevent crash");
+			reader->card_status = CARD_NEED_INIT;
+			add_job(reader->client, ACTION_READER_RESTART, NULL, 0);
+		}
+		else if((cta_res[4] & 64) == 64)
 		{
 			rdr_log(reader, "negotiating new Session Key");
 			if(!CAK7_GetCamKey(reader))
@@ -1638,7 +1617,8 @@ static int32_t nagra3_do_emm(struct s_reader *reader, EMM_PACKET *ep)
 			}
 		}
 	}
-	return OK;
+}
+return OK;
 }
 
 const struct s_cardsystem reader_nagracak7 =

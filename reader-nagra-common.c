@@ -48,6 +48,14 @@ int32_t nagra_get_emm_type(EMM_PACKET *ep, struct s_reader *rdr)
 				uint8_t filtr[] = {0x83, 0x00, 0x74};
 				return (!memcmp(ep->emm, filtr, 3));
 
+			case 0x90:
+				ep->type = UNIQUE;
+				if(rdr->cwpkcaid_length)
+				{
+					return (!memcmp(ep->emm + 3, rdr->nuid, 4));
+				}
+				return 0;
+
 			default:
 				ep->type = UNKNOWN;
 				return 0;
@@ -117,6 +125,14 @@ int32_t nagra_get_emm_type(EMM_PACKET *ep, struct s_reader *rdr)
 				}
 				return 0;
 
+			case 0x90:
+				ep->type = UNIQUE;
+				if(rdr->cwpkcaid_length)
+				{
+					return (!memcmp(ep->emm + 3, rdr->nuid, 4));
+				}
+				return 0;
+
 			default:
 				ep->type = UNKNOWN;
 				return 0;
@@ -129,11 +145,11 @@ int32_t nagra_get_emm_type(EMM_PACKET *ep, struct s_reader *rdr)
 		{
 			case 0x82:
 				ep->type = GLOBAL;
-                                if(ep->emm[3] == 0x00 && ep->emm[4] == 0x00 && ep->emm[5] == 0x00)
-                                {
-                                        return 1;
-                                }
-                                return 0;
+				if(ep->emm[3] == 0x00 && ep->emm[4] == 0x00 && ep->emm[5] == 0x00)
+				{
+					return 1;
+				}
+				return 0;
 
 			case 0x83:
 				memset(ep->hexserial, 0x00, 0x08);
@@ -219,7 +235,11 @@ int32_t nagra_get_emm_type(EMM_PACKET *ep, struct s_reader *rdr)
 
 			case 0x82:
 				ep->type = GLOBAL;
-				return 1;
+				if(ep->emm[3] == 0x00 && ep->emm[4] == 0x00 && ep->emm[5] == 0x00)
+				{
+					return 1;
+				}
+				return 0;
 
 			default:
 				ep->type = UNKNOWN;
@@ -234,7 +254,7 @@ int32_t nagra_get_emm_filter(struct s_reader *rdr, struct s_csystem_emm_filter *
 	{
 		if(*emm_filters == NULL)
 		{
-			const unsigned int max_filter_count = 1 + (2 * rdr->nprov);
+			const unsigned int max_filter_count = 2 + (2 * rdr->nprov);
 			if(!cs_malloc(emm_filters, max_filter_count * sizeof(struct s_csystem_emm_filter)))
 			{
 				return ERROR;
@@ -280,6 +300,17 @@ int32_t nagra_get_emm_filter(struct s_reader *rdr, struct s_csystem_emm_filter *
 				idx++;
 			}
 
+			if(rdr->cwpkcaid_length)
+			{
+				filters[idx].type = EMM_UNIQUE;
+				filters[idx].enabled = 1;
+				filters[idx].filter[0] = 0x90;
+				filters[idx].mask[0] = 0xFF;
+				memcpy(&filters[idx].filter[1], rdr->nuid, 4);
+				memset(&filters[idx].mask[1], 0xFF, 4);
+				idx++;
+			}
+
 			*filter_count = idx;
 		}
 
@@ -289,7 +320,7 @@ int32_t nagra_get_emm_filter(struct s_reader *rdr, struct s_csystem_emm_filter *
 	{
 		if(*emm_filters == NULL)
 		{
-			const unsigned int max_filter_count = 1 + (4 * rdr->nprov);
+			const unsigned int max_filter_count = 2 + (4 * rdr->nprov);
 			if(!cs_malloc(emm_filters, max_filter_count * sizeof(struct s_csystem_emm_filter)))
 			{
 				return ERROR;
@@ -343,6 +374,17 @@ int32_t nagra_get_emm_filter(struct s_reader *rdr, struct s_csystem_emm_filter *
 				filters[idx].enabled = 1;
 				memcpy(&filters[idx].filter[0], rdr->emm87[i], 6);
 				memset(&filters[idx].mask[0], 0xFF, 6);
+				idx++;
+			}
+
+			if(rdr->cwpkcaid_length)
+			{
+				filters[idx].type = EMM_UNIQUE;
+				filters[idx].enabled = 1;
+				filters[idx].filter[0] = 0x90;
+				filters[idx].mask[0] = 0xFF;
+				memcpy(&filters[idx].filter[1], rdr->nuid, 4);
+				memset(&filters[idx].mask[1], 0xFF, 4);
 				idx++;
 			}
 
