@@ -292,10 +292,8 @@ void findatr(struct s_reader *reader) {
 		strcpy(current.providername, "Tivusat 183D / 183E");
 #ifdef READER_NAGRA
 		if (tivu_rsakey[sizeof(tivu_rsakey) - 1]) {
-			if (!reader->rsa_mod_length) {
-				memcpy(reader->rsa_mod, tivu_rsakey, sizeof(tivu_rsakey));
-				reader->rsa_mod_length = sizeof(tivu_rsakey);
-			}
+			memcpy(reader->rsa_mod, tivu_rsakey, sizeof(tivu_rsakey));
+			reader->rsa_mod_length = sizeof(tivu_rsakey);
 		} else {
 			rdr_log(reader, "no keys built in, use config value rsakey");
 		}
