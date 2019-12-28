@@ -181,7 +181,7 @@ void findatr(struct s_reader *reader) {
 		strcpy(current.info, " - but card system VIACCESS not built in!");
 #endif
 	} else if (strncmp(current.atr, "3F 77 18 00 00 C2 EB 41 02 6C", 29) == 0) {
-		/* more providers: TNTSAT V4/V5 (FR) (0500:030B00), NTV+ (RU) V6 (0500:050100), SRF (CH) V5 (0500:050800), TVSAT AFRICA (INT) V5 (0500:042840) */
+		/* more providers: TNTSAT V4/V5 (FR) (0500:030B00), NTV+ (RU) V6 (0500:050100), TVSAT AFRICA (INT) V5 (0500:042840) */
 		strcpy(current.providername, "TNT Viaccess v5");
 #ifdef READER_VIACCESS
 		if (tnt_boxkey[sizeof(tnt_boxkey) - 1]) {
