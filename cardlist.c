@@ -537,9 +537,7 @@ void findatr(struct s_reader *reader) {
 			snprintf(buf, 66, "3F FF %i 25 03 10 80 54 B0 01 69 FF 4A 50 70 00 00 4B 57 01 00 00", i);
 			if (strncmp(current.atr, buf, 65) == 0) {
 				strcpy(current.providername, "Sky/Unitymedia V23");
-				if (!reader->boxid) {
-					reader->boxid = 0x12345678;
-				}
+				reader->boxid = 0x12345678;
 				reader->saveemm = (0 | reader->saveemm);
 				reader->blockemm = (12 | reader->blockemm);
 				current.found = 1;
@@ -548,9 +546,7 @@ void findatr(struct s_reader *reader) {
 			snprintf(buf, 63, "3F FD %i 25 02 50 00 03 33 B0 15 69 FF 4A 50 F0 80 03 4B 4C 03", i);
 			if (strncmp(current.atr, buf, 62) == 0) {
 				strcpy(current.providername, "Vodafone G09");
-				if (!reader->boxid) {
-					reader->boxid = 0x12345678;
-				}
+				reader->boxid = 0x12345678;
 				reader->saveemm = (0 | reader->saveemm);
 				reader->blockemm = (12 | reader->blockemm);
 				reader->deprecated = 1;
