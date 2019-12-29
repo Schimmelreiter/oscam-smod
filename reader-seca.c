@@ -441,7 +441,14 @@ static int32_t seca_do_ecm(struct s_reader *reader, const ECM_REQUEST *er, struc
 		if((cta_res[0] == 0x93) && (cta_res[1] == 0x02))
 		{
 			write_cmd(ins3a, NULL); // get cw
-			snprintf(ea->msglog, MSGLOGSIZE, "unsubscribed 93 02");
+			if(er->ecm[2] > 0x61 && er->ecm[7] == 0x5C && er->ecm[0x64] == 0x0B)
+			{
+				rdr_log(reader, "card won't decode this channel - reinit card in CAK7 mode");
+			}
+			else
+			{
+				snprintf(ea->msglog, MSGLOGSIZE, "unsubscribed 93 02");
+			}
 			return ERROR;
 		} // exit if unsubscribed
 

@@ -784,6 +784,114 @@ static void nuid_fn(const char *token, char *value, void *setting, FILE *f)
 		{ fprintf_conf(f, "nuid", "\n"); }
 }
 
+static void forcepair_fn(const char *token, char *value, void *setting, FILE *f)
+{
+	struct s_reader *rdr = setting;
+	if(value)
+	{
+		int32_t len = strlen(value);
+		if(len != 2)
+		{
+			rdr->forcepair_length = 0;
+			memset(rdr->forcepair, 0, 1);
+		}
+		else
+		{
+			if(key_atob_l(value, rdr->forcepair, len))
+			{
+				fprintf(stderr, "reader forcepair parse error, %s=%s\n", token, value);
+				rdr->forcepair_length = 0;
+				memset(rdr->forcepair, 0, sizeof(rdr->forcepair));
+			}
+			else
+			{
+				rdr->forcepair_length = len/2;
+			}
+		}
+		return;
+	}
+	int32_t len = rdr->forcepair_length;
+	if(len > 0)
+	{
+		char tmp[len * 2 + 1];
+		fprintf_conf(f, "forcepair", "%s\n", cs_hexdump(0, rdr->forcepair, len, tmp, sizeof(tmp)));
+	}
+	else if(cfg.http_full_cfg)
+		{ fprintf_conf(f, "forcepair", "\n"); }
+}
+
+static void otpcsc_fn(const char *token, char *value, void *setting, FILE *f)
+{
+	struct s_reader *rdr = setting;
+	if(value)
+	{
+		int32_t len = strlen(value);
+		if(len != 4)
+		{
+			rdr->otpcsc_length = 0;
+			memset(rdr->otpcsc, 0, 2);
+		}
+		else
+		{
+			if(key_atob_l(value, rdr->otpcsc, len))
+			{
+				fprintf(stderr, "reader otpcsc parse error, %s=%s\n", token, value);
+				rdr->otpcsc_length = 0;
+				memset(rdr->otpcsc, 0, sizeof(rdr->otpcsc));
+			}
+			else
+			{
+				rdr->otpcsc_length = len/2;
+			}
+		}
+		return;
+	}
+	int32_t len = rdr->otpcsc_length;
+	if(len > 0)
+	{
+		char tmp[len * 2 + 1];
+		fprintf_conf(f, "otpcsc", "%s\n", cs_hexdump(0, rdr->otpcsc, len, tmp, sizeof(tmp)));
+	}
+	else if(cfg.http_full_cfg)
+		{ fprintf_conf(f, "otpcsc", "\n"); }
+}
+
+static void otacsc_fn(const char *token, char *value, void *setting, FILE *f)
+{
+	struct s_reader *rdr = setting;
+	if(value)
+	{
+		int32_t len = strlen(value);
+		if(len != 4)
+		{
+			rdr->otacsc_length = 0;
+			memset(rdr->otacsc, 0, 2);
+		}
+		else
+		{
+			if(key_atob_l(value, rdr->otacsc, len))
+			{
+				fprintf(stderr, "reader otacsc parse error, %s=%s\n", token, value);
+				rdr->otacsc_length = 0;
+				memset(rdr->otacsc, 0, sizeof(rdr->otacsc));
+			}
+			else
+			{
+				rdr->otacsc_length = len/2;
+			}
+		}
+		return;
+	}
+	int32_t len = rdr->otacsc_length;
+	if(len > 0)
+	{
+		char tmp[len * 2 + 1];
+		fprintf_conf(f, "otacsc", "%s\n", cs_hexdump(0, rdr->otacsc, len, tmp, sizeof(tmp)));
+	}
+	else if(cfg.http_full_cfg)
+		{ fprintf_conf(f, "otacsc", "\n"); }
+}
+
 static void cwpkcaid_fn(const char *token, char *value, void *setting, FILE *f)
 {
 	struct s_reader *rdr = setting;
@@ -1684,6 +1792,9 @@ static const struct config_list reader_opts[] =
 	DEF_OPT_FUNC("data50"                         , 0,                                    data50_fn),
 	DEF_OPT_FUNC("mod50"                          , 0,                                    mod50_fn),
 	DEF_OPT_FUNC("nuid"                           , 0,                                    nuid_fn),
+	DEF_OPT_FUNC("forcepair"                      , 0,                                    forcepair_fn),
+	DEF_OPT_FUNC("otpcsc"                         , 0,                                    otpcsc_fn),
+	DEF_OPT_FUNC("otacsc"                         , 0,                                    otacsc_fn),
 	DEF_OPT_FUNC("cwpkcaid"                       , 0,                                    cwpkcaid_fn),
 	DEF_OPT_FUNC("cwekey0"                        , 0,                                    cwekey0_fn),
 	DEF_OPT_FUNC("cwekey1"                        , 0,                                    cwekey1_fn),
@@ -1812,7 +1923,7 @@ static bool reader_check_setting(const struct config_list *UNUSED(clist), void *
 		"fix9993", "rsakey", "deskey", "ins7e", "ins7e11", "ins2e06", "k1_generic", "k1_unique", "force_irdeto", "needsemmfirst", "boxkey",
 		"atr", "detect", "nagra_read", "mhz", "cardmhz", "readtiers", "read_old_classes", "use_gpio", "needsglobalfirst",
 #ifdef READER_NAGRA_MERLIN
-		"mod1", "idird", "cmd0eprov", "mod2", "key3588", "key3460", "key3310", "data50", "mod50", "nuid", "cwpkcaid", "cwekey0", "cwekey1", "cwekey2", "cwekey3", "cwekey4", "cwekey5", "cwekey6", "cwekey7",
+		"mod1", "idird", "cmd0eprov", "mod2", "key3588", "key3460", "key3310", "data50", "mod50", "nuid", "forcepair", "otpcsc", "otacsc", "cwpkcaid", "cwekey0", "cwekey1", "cwekey2", "cwekey3", "cwekey4", "cwekey5", "cwekey6", "cwekey7",
 #endif
 #if defined(READER_DRE) || defined(READER_DRECAS)
 		"exec_cmd_file",
