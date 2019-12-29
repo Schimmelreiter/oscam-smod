@@ -135,7 +135,6 @@ void findatr(struct s_reader *reader) {
 			rdr_log(reader, "no keys built in, use config values boxkey + deskey");
 		}
 		memcpy(reader->pincode, "0000", 4);
-		reader->saveemm = (0 | reader->saveemm);
 		reader->blockemm = (12 | reader->blockemm);
 #else
 		strcpy(current.info, " - but card system VIACCESS not built in!");
@@ -156,7 +155,6 @@ void findatr(struct s_reader *reader) {
 			rdr_log(reader, "no keys built in, use config values boxkey + deskey");
 		}
 		memcpy(reader->pincode, "0000", 4);
-		reader->saveemm = (0 | reader->saveemm);
 		reader->blockemm = (12 | reader->blockemm);
 #else
 		strcpy(current.info, " - but card system VIACCESS not built in!");
@@ -165,7 +163,6 @@ void findatr(struct s_reader *reader) {
 		/* more providers: FRANSAT (FR) V4 (0500:041900), SRF (CH) V4 (0500:040810) */
 		strcpy(current.providername, "SRG v4");
 #ifdef READER_VIACCESS
-		reader->saveemm = (0 | reader->saveemm);
 		reader->blockemm = (8 | reader->blockemm);
 #else
 		strcpy(current.info, " - but card system VIACCESS not built in!");
@@ -175,7 +172,6 @@ void findatr(struct s_reader *reader) {
 		strcpy(current.providername, "SRG v5");
 #ifdef READER_VIACCESS
 		reader->read_old_classes = 0;
-		reader->saveemm = (0 | reader->saveemm);
 		reader->blockemm = (8 | reader->blockemm);
 #else
 		strcpy(current.info, " - but card system VIACCESS not built in!");
@@ -197,8 +193,6 @@ void findatr(struct s_reader *reader) {
 			rdr_log(reader, "no keys built in, use config values boxkey + deskey");
 		}
 		memcpy(reader->pincode, "0000", 4);
-		reader->saveemm = (0 | reader->saveemm);
-		reader->blockemm = (0 | reader->blockemm);
 #else
 		strcpy(current.info, " - but card system VIACCESS not built in!");
 #endif
@@ -219,8 +213,6 @@ void findatr(struct s_reader *reader) {
 			rdr_log(reader, "no keys built in, use config values boxkey + deskey");
 		}
 		memcpy(reader->pincode, "0000", 4);
-		reader->saveemm = (0 | reader->saveemm);
-		reader->blockemm = (0 | reader->blockemm);
 #else
 		strcpy(current.info, " - but card system VIACCESS not built in!");
 #endif
@@ -240,19 +232,9 @@ void findatr(struct s_reader *reader) {
 		} else {
 			rdr_log(reader, "no keys built in, use config values boxkey + rsakey");
 		}
-		reader->saveemm = (0 | reader->saveemm);
 		reader->blockemm = (12 | reader->blockemm);
 #else
 		strcpy(current.info, " - but card system IRDETO not built in!");
-#endif
-	} else if (strncmp(current.atr, "3B 24 00 30 42 30 30", 20) == 0) {
-		/* more providers: ? */
-		strcpy(current.providername, "MTV Unlimited");
-#ifdef READER_CONAX
-		reader->saveemm = (0 | reader->saveemm);
-		reader->blockemm = (8 | reader->blockemm);
-#else
-		strcpy(current.info, " - but card system CONAX not built in!");
 #endif
 	} else if (strncmp(current.atr, "3B 78 12 00 00 54 C4 03 00 8F F1 90 00", 38) == 0) {
 		/* more providers: ? */
@@ -260,7 +242,6 @@ void findatr(struct s_reader *reader) {
 			strcpy(current.providername, "ICE CW-Mode");
 #ifdef READER_CRYPTOWORKS
 			reader->needsglobalfirst = 1;
-			reader->saveemm = (0 | reader->saveemm);
 			reader->blockemm = (12 | reader->blockemm);
 #else
 			strcpy(current.info, " - but card system CRYPTOWORKS not built in!");
@@ -280,7 +261,6 @@ void findatr(struct s_reader *reader) {
 			} else {
 				rdr_log(reader, "no keys built in, use config values boxkey + rsakey or disable force_irdeto");
 			}
-			reader->saveemm = (0 | reader->saveemm);
 			reader->blockemm = (12 | reader->blockemm);
 #else
 			strcpy(current.info, " - but card system IRDETO not built in!");
@@ -297,7 +277,6 @@ void findatr(struct s_reader *reader) {
 		} else {
 			rdr_log(reader, "no keys built in, use config value rsakey");
 		}
-		reader->saveemm = (0 | reader->saveemm);
 		reader->blockemm = (8 | reader->blockemm);
 #else
 		strcpy(current.info, " - but card system NAGRA not built in!");
@@ -317,7 +296,6 @@ void findatr(struct s_reader *reader) {
 		} else {
 			rdr_log(reader, "no keys built in, use config values boxkey + rsakey");
 		}
-		reader->saveemm = (0 | reader->saveemm);
 		reader->blockemm = (12 | reader->blockemm);
 #else
 		strcpy(current.info, " - but card system NAGRA not built in!");
@@ -334,7 +312,6 @@ void findatr(struct s_reader *reader) {
 		} else {
 			rdr_log(reader, "no keys built in, use config values boxkey + rsakey");
 		}
-		reader->saveemm = (0 | reader->saveemm);
 		reader->blockemm = (12 | reader->blockemm);
 #else
 		strcpy(current.info, " - but card system NAGRA not built in!");
@@ -357,7 +334,6 @@ void findatr(struct s_reader *reader) {
 			rdr_log(reader, "no keys built in, use config values boxkey + rsakey");
 		}
 		reader->cak7_mode = 0;
-		reader->saveemm = (0 | reader->saveemm);
 		reader->blockemm = (12 | reader->blockemm);
 #else
 		strcpy(current.info, " - but card system NAGRA not built in!");
@@ -403,7 +379,6 @@ void findatr(struct s_reader *reader) {
 		}
 		reader->cak7_mode = 1;
 		reader->forceemmg = 1;
-		reader->saveemm = (0 | reader->saveemm);
 		reader->blockemm = (8 | reader->blockemm);
 #else
 		strcpy(current.info, " - but card system NAGRA_MERLIN not built in!");
@@ -430,7 +405,6 @@ void findatr(struct s_reader *reader) {
 		} else {
 			rdr_log(reader, "no keys built in, use config values mod1 + mod2 + key3588 + data50 + mod50 + nuid + cwekey0");
 		}
-		reader->saveemm = (0 | reader->saveemm);
 		reader->blockemm = (8 | reader->blockemm);
 #else
 		strcpy(current.info, " - but card system NAGRA_MERLIN not built in!");
@@ -449,7 +423,6 @@ void findatr(struct s_reader *reader) {
 			if (strncmp(current.atr, buf, 65) == 0)	{
 				strcpy(current.providername, "Sky Deutschland V13");
 				reader->caid = 0x09C4;
-				reader->disablecrccws = 1;
 				if (strlen((char*)v13_k1_generic)) {
 					if (!reader->boxid || reader->boxid == 0x12345678) {
 						reader->boxid = v13_boxid;
@@ -469,8 +442,7 @@ void findatr(struct s_reader *reader) {
 				} else {
 					rdr_log(reader, "no keys built in, use config values boxid + ins7e + k1_generic + k1_unique");
 				}
-				reader->saveemm = (1 | reader->saveemm);
-				reader->blockemm = 15;
+				reader->blockemm = (10 | reader->blockemm);
 				current.found = 1;
 				break;
 			}
@@ -478,7 +450,6 @@ void findatr(struct s_reader *reader) {
 			if (strncmp(current.atr, buf, 62) == 0) {
 				strcpy(current.providername, "Sky Deutschland V14");
 				reader->caid = 0x098C;
-				reader->disablecrccws = 1;
 				if (strlen((char*)v14_k1_generic)) {
 					if (!reader->boxid || reader->boxid == 0x12345678) {
 						reader->boxid = v14_boxid;
@@ -498,8 +469,7 @@ void findatr(struct s_reader *reader) {
 				} else {
 					rdr_log(reader, "no keys built in, use config values boxid + ins7e + k1_generic + k1_unique");
 				}
-				reader->saveemm = (1 | reader->saveemm);
-				reader->blockemm = 15;
+				reader->blockemm = (10 | reader->blockemm);
 				current.found = 1;
 				break;
 			}
@@ -507,7 +477,6 @@ void findatr(struct s_reader *reader) {
 			if (strncmp(current.atr, buf, 62) == 0) {
 				strcpy(current.providername, "Sky Deutschland V15");
 				reader->caid = 0x098D;
-				reader->disablecrccws = 1;
 				if (strlen((char*)v15_k1_generic)) {
 					if (!reader->boxid || reader->boxid == 0x12345678) {
 						reader->boxid = v15_boxid;
@@ -527,8 +496,7 @@ void findatr(struct s_reader *reader) {
 				} else {
 					rdr_log(reader, "no keys built in, use config values boxid + ins7e + k1_generic + k1_unique");
 				}
-				reader->saveemm = (1 | reader->saveemm);
-				reader->blockemm = 15;
+				reader->blockemm = (10 | reader->blockemm);
 				current.found = 1;
 				break;
 			}
@@ -536,7 +504,6 @@ void findatr(struct s_reader *reader) {
 			if (strncmp(current.atr, buf, 65) == 0) {
 				strcpy(current.providername, "Sky/Unitymedia V23");
 				reader->boxid = 0x12345678;
-				reader->saveemm = (0 | reader->saveemm);
 				reader->blockemm = (12 | reader->blockemm);
 				current.found = 1;
 				break;
@@ -545,7 +512,6 @@ void findatr(struct s_reader *reader) {
 			if (strncmp(current.atr, buf, 62) == 0) {
 				strcpy(current.providername, "Vodafone G09");
 				reader->boxid = 0x12345678;
-				reader->saveemm = (0 | reader->saveemm);
 				reader->blockemm = (12 | reader->blockemm);
 				reader->deprecated = 1;
 				current.found = 1;
