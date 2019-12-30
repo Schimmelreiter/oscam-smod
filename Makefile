@@ -46,8 +46,8 @@ ifeq ($(uname_S),FreeBSD)
 endif
 
 override STD_LIBS := -lm $(LIB_PTHREAD) $(LIB_DL) $(LIB_RT)
-override STD_DEFS := -D'CS_SVN_VERSION="$(shell ./config.sh --oscam-revision | cut -d "+" -f4)'
-override STD_DEFS += -D'CS_SMOD_VERSION="$(shell ./config.sh --oscam-revision | cut -d "+" -f1-3)'
+override STD_DEFS := -D'CS_SVN_VERSION="$(shell ./config.sh --oscam-revision | cut -d "+" -f4 | sed -e "s/svn//")"'
+override STD_DEFS += -D'CS_SMOD_VERSION="$(shell ./config.sh --oscam-revision | cut -d "+" -f1-3)"'
 override STD_DEFS += -D'CS_SMOD_VERSION_HASH="$(shell ./config.sh --oscam-revision | cut -d "+" -f3)"'
 override STD_DEFS += -D'CS_CONFDIR="$(CONF_DIR)"'
 
