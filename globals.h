@@ -1525,13 +1525,11 @@ struct s_reader										// contains device info, reader info and card info
 	uint8_t			key3des[16];
 	uint8_t			klucz68[24];
 	uint8_t			pairtype;
-	uint8_t			pairbyte;
+	uint8_t			hasunique;
 	uint8_t			key3460[96];
 	uint8_t			key3460_length;
 	uint8_t			key3310[16];
 	uint8_t			key3310_length;
-	uint8_t			nuid[4];
-	uint8_t			nuid_length;
 	uint8_t			cwekey0[16];
 	uint8_t			cwekey0_length;
 	uint8_t			cwekey1[16];
@@ -1575,12 +1573,19 @@ struct s_reader										// contains device info, reader info and card info
 	uint8_t			stillencrypted[0x50];
 	uint8_t			resultrsa[0x50];
 	uint32_t		cak7_seq;
+	uint32_t		needrestart;
+	uint8_t			otpcsc[2];
+	uint8_t			otpcsc_length;
+	uint8_t			otacsc[2];
+	uint8_t			otacsc_length;
+	uint8_t			forcepair[1];
+	uint8_t			forcepair_length;
 	uint8_t			cak7_camstate;
 	uint8_t			cak7_aes_key[32];
 	uint8_t			cak7_aes_iv[16];
-	int8_t			forcecwswap;
-	int8_t			evensa;
-	int8_t			forceemmg;
+	uint8_t			forcecwswap;
+	uint8_t			evensa;
+	uint8_t			forceemmg;
 
 #endif
 #ifdef CS_CACHEEX
@@ -1606,11 +1611,12 @@ struct s_reader										// contains device info, reader info and card info
 	int32_t			l_port;
 	CAIDTAB			ctab;
 	uint32_t		boxid;
-	int8_t			cak7_mode;
+	uint8_t			cak7_mode;
 	uint8_t			cak7type;
-	uint32_t		cas_version;
 	uint8_t			cwpkcaid[2];
 	uint8_t			cwpkcaid_length;
+	uint8_t			nuid[4];
+	uint8_t			nuid_length;
 	int8_t			nagra_read;						// read nagra ncmed records: 0 Disabled (default), 1 read all records, 2 read valid records only
 	int8_t			detect_seca_nagra_tunneled_card;
 	int8_t			force_irdeto;
@@ -1675,6 +1681,7 @@ struct s_reader										// contains device info, reader info and card info
 	int8_t			ncd_proto;
 	int8_t			currenthops;					// number of hops (cccam & gbox)
 	int8_t			sh4_stb;						// to set sh4 type box used to identify sci type.
+	uint32_t		cas_version;
 #ifdef READER_TONGFANG
 	uint32_t		tongfang3_calibsn;
 	uint8_t			tongfang3_commkey[8];

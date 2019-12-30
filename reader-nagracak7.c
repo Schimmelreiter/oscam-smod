@@ -405,8 +405,7 @@ static int32_t ParseDataType(struct s_reader *reader, uint8_t dt, uint8_t *cta_r
 			{
 				rsa_decrypt(reader->edata, 0x70, reader->out, reader->mod2, reader->mod2_length);
 				memcpy(reader->tmprsa, reader->out, 0x70);
-				reader->pairbyte = 0x40;
-				rdr_log(reader, "OSCam will try UNIQUE mode");
+				reader->hasunique = 1;
 			}
 
 			return OK;
@@ -1136,20 +1135,32 @@ static int32_t CAK7_GetCamKey(struct s_reader *reader)
 
 	if(!reader->nuid_length)
 	{
-		uint8_t cmd021[] = {0x02,0x7B};
-		uint8_t cmd022[] = {0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC};
+		uint8_t cmd02[] = {0x02,0x7B};
 
-		memcpy(cmd0e + 7, cmd021, 2);
-		memcpy(cmd0e + 132, cmd022, 8);
+		memcpy(cmd0e + 7, cmd02, 2);
 
 		rdr_log(reader, "using CMD02");
 	}
 	else
 	{
 		memcpy(cmd0e + 132, reader->nuid, reader->nuid_length); // inject NUID
+		memcpy(cmd0e + 136, reader->otpcsc, reader->otpcsc_length);
+		memcpy(cmd0e + 138, reader->otacsc, reader->otacsc_length);
 	}
 
-	memcpy(cmd0e + 13, &reader->pairbyte, 1);
+	if(reader->forcepair_length)
+	{
+		rdr_log(reader, "Forcing Pairing Type");
+		memcpy(cmd0e + 13, reader->forcepair, 1);
+	}
+	else
+	{
+		if(reader->hasunique == 1)
+		{
+			cmd0e[13] = 0x40;
+		}
+	}
+
 	memcpy(cmd0e + 14, reader->idird, 4);
 	if(reader->cmd0eprov_length)
 	{
@@ -1159,6 +1170,7 @@ static int32_t CAK7_GetCamKey(struct s_reader *reader)
 	{
 		memcpy(cmd0e + 18, reader->prid[0] + 2, 2);
 	}
+
 	memcpy(cmd0e + 20, reader->key3588 + 24, 0x70);
 
 	if(reader->cak7_seq <= 15)
@@ -1183,6 +1195,20 @@ static int32_t CAK7_GetCamKey(struct s_reader *reader)
 	{
 		rdr_log(reader, "card is not responding to CMD02/E - check your data");
 		return ERROR;
+	}
+
+	reader->needrestart =  (cta_res[22] << 16);
+	reader->needrestart += (cta_res[23] <<  8);
+	reader->needrestart += (cta_res[24]      );
+	if(reader->cak7_seq <= 15)
+	{
+		rdr_log(reader, "Card needs restart after %d CMDs", reader->needrestart);
+		reader->needrestart--;
+	}
+	else
+	{
+		uint32_t cmdleft = reader->needrestart - reader->cak7_seq;
+		rdr_log(reader, "Card left %d CMDs before restart", cmdleft);
 	}
 
 	reader->dword_83DBC =  (cta_res[18] << 24);
@@ -1262,13 +1288,7 @@ static int32_t CAK7_GetCamKey(struct s_reader *reader)
 
 	reader->pairtype = cta_res[13];
 
-	if((reader->pairtype == 0x40 || reader->pairtype == 0x80) && reader->pairbyte == 0x40)
-	{
-		rdr_log(reader,"Despite DT05_20 card is starting in GLOBAL mode - check IRD & key3588");
-		if(!CAK7_cmd03_global(reader))
-		{return ERROR;}
-	}
-	else if((reader->pairtype == 0x40 || reader->pairtype == 0x80) && reader->pairbyte == 0x00)
+	if((reader->pairtype > 0x00) && (reader->pairtype < 0xC0))
 	{
 		rdr_log(reader,"Card is starting in GLOBAL mode");
 		if(!CAK7_cmd03_global(reader))
@@ -1282,7 +1302,7 @@ static int32_t CAK7_GetCamKey(struct s_reader *reader)
 	}
 	else
 	{
-		rdr_log(reader,"Unknown Pairing type. Card will not work.");
+		rdr_log(reader,"Unknown Pairing Type");
 		return ERROR;
 	}
 	return OK;
@@ -1294,7 +1314,7 @@ static int32_t nagra3_card_init(struct s_reader *reader, ATR *newatr)
 
 	memset(reader->hexserial, 0x00, 0x08);
 	reader->cak7_seq = 0;
-	reader->pairbyte = 0;
+	reader->hasunique = 0;
 	memset(reader->ecmheader,0x00,0x04);
 	cs_clear_entitlement(reader);
 
@@ -1410,7 +1430,7 @@ static int32_t nagra3_card_info(struct s_reader *reader)
 
 static void nagra3_post_process(struct s_reader *reader)
 {
-	if(reader->cak7_seq >= 0x008C9F)
+	if(reader->cak7_seq >= reader->needrestart)
 	{
 		rdr_log(reader, "Card needs reinit to prevent crash");
 		reader->card_status = CARD_NEED_INIT;
@@ -1431,6 +1451,23 @@ static void nagra3_post_process(struct s_reader *reader)
 static int32_t nagra3_do_ecm(struct s_reader *reader, const ECM_REQUEST *er, struct s_ecm_answer *ea)
 {
 	def_resp;
+
+	if(reader->cak7type == 3)
+	{
+		if(er->ecm[2] > 0x61 && er->ecm[7] == 0x5C && er->ecm[100] == 0x0B && er->ecm[101] == 0x04 && er->ecm[104] > reader->pairtype)
+		{
+			rdr_log(reader, "card won't decode this channel - reinit card in different Pairing Mode");
+			return ERROR;
+		}
+	}
+	else
+	{
+		if(er->ecm[2] > 0x86 && er->ecm[4] == 0x84 && er->ecm[137] == 0x0B && er->ecm[138] == 0x04 && er->ecm[141] > reader->pairtype)
+		{
+			rdr_log(reader, "card won't decode this channel - reinit card in different Pairing Mode");
+			return ERROR;
+		}
+	}
 
 	uint8_t ecmreq[0xC0];
 	memset(ecmreq,0xCC,0xC0);
@@ -1462,7 +1499,7 @@ static int32_t nagra3_do_ecm(struct s_reader *reader, const ECM_REQUEST *er, str
 		reader->card_status = CARD_NEED_INIT;
 		add_job(reader->client, ACTION_READER_RESTART, NULL, 0);
 	}
-	else if(cta_res[27] != 0x00)
+	else if(cta_res[27] != 0x00 && cta_res[27] != 0xCC)
 	{
 		memcpy(reader->ecmheader, cta_res + 9, 4);
 		reader->cak7_camstate = cta_res[4];
@@ -1503,122 +1540,126 @@ static int32_t nagra3_do_ecm(struct s_reader *reader, const ECM_REQUEST *er, str
 		memcpy(ea->cw + 8, _cwe1, 0x08);
 		return OK;
 	}
-	else
+	else if(cta_res[27] == 0x00)
 	{
 		memcpy(reader->ecmheader, cta_res + 9, 4);
 		reader->cak7_camstate = cta_res[4];
 
-		if((reader->pairtype == 0x40 || reader->pairtype == 0x80) && reader->pairbyte == 0x40)
+		if(reader->hasunique && reader->pairtype < 0xC0)
 		{
-			rdr_log(reader, "No CWs in card answer - reinit card in UNIQUE mode!");
+			rdr_log(reader, "reinit card in different Pairing Mode");
 		}
 		else
 		{
 			rdr_log(reader, "card has no right to decode this channel");
 		}
 	}
+	else
+	{
+		rdr_log(reader, "card got wrong ECM");
+	}
 	return ERROR;
 }
 
 static int32_t nagra3_do_emm(struct s_reader *reader, EMM_PACKET *ep)
 {
-def_resp;
+	def_resp;
 
-if(ep->emm[0] == 0x90)
-{
-	rdr_log(reader, "OSCam got your BoxEMM");
-	char tmp[128];
-	rdr_log(reader, "NUID: %s", cs_hexdump(1, ep->emm + 3, 4, tmp, sizeof(tmp)));
-	rdr_log(reader, "Index: %s", cs_hexdump(1, ep->emm + 10, 1, tmp, sizeof(tmp)));
-	rdr_log(reader, "eCWPK: %s", cs_hexdump(1, ep->emm + 11, 16, tmp, sizeof(tmp)));
-}
-else
-{
-	uint8_t emmreq[0xC0];
-	memset(emmreq, 0xCC, 0xC0);
-
-	emmreq[ 7] = 0x05;
-	emmreq[ 9] = 0x04;
-	emmreq[10] = reader->ecmheader[0];
-	emmreq[11] = reader->ecmheader[1];
-	emmreq[12] = reader->ecmheader[2];
-	emmreq[13] = reader->ecmheader[3];
-
-	if(reader->cak7type == 3)
+	if(ep->emm[0] == 0x90)
 	{
-		int32_t i;
-		uint8_t *prov_id_ptr;
-
-		switch(ep->type)
-		{
-			case SHARED:
-				emmreq[8] = ep->emm[9] + 6;
-				prov_id_ptr = ep->emm + 3;
-				memcpy(&emmreq[14], ep->emm + 9, ep->emm[9] + 1);
-				break;
-
-			case UNIQUE:
-				emmreq[8] = ep->emm[12] + 6;
-				prov_id_ptr = ep->emm + 9;
-				memcpy(&emmreq[14], ep->emm + 12, ep->emm[12] + 1);
-				break;
-
-			case GLOBAL:
-				emmreq[8] = ep->emm[6] + 6;
-				prov_id_ptr = ep->emm + 3;
-				memcpy(&emmreq[14], ep->emm + 6, ep->emm[6] + 1);
-				break;
-
-			default:
-				rdr_log(reader, "EMM: Congratulations, you have discovered a new EMM on Merlin.");
-				rdr_log(reader, "This has not been decoded yet.");
-				return ERROR;
-		}
-
-		i = get_prov_index(reader, prov_id_ptr);
-		if(i == -1)
-		{
-			rdr_log(reader, "EMM: skipped since provider id doesnt match");
-			return SKIPPED;
-		}
+		rdr_log(reader, "OSCam got your BoxEMM");
+		char tmp[128];
+		rdr_log(reader, "NUID: %s", cs_hexdump(1, ep->emm + 3, 4, tmp, sizeof(tmp)));
+		rdr_log(reader, "Index: %s", cs_hexdump(1, ep->emm + 10, 1, tmp, sizeof(tmp)));
+		rdr_log(reader, "eCWPK: %s", cs_hexdump(1, ep->emm + 11, 16, tmp, sizeof(tmp)));
 	}
 	else
 	{
-		emmreq[8] = ep->emm[9] + 6;
-		memcpy(&emmreq[14], ep->emm + 9, ep->emm[9] + 1);
-	}
+		uint8_t emmreq[0xC0];
+		memset(emmreq, 0xCC, 0xC0);
 
-	do_cak7_cmd(reader, cta_res, &cta_lr, emmreq, sizeof(emmreq), 0xB0);
+		emmreq[ 7] = 0x05;
+		emmreq[ 9] = 0x04;
+		emmreq[10] = reader->ecmheader[0];
+		emmreq[11] = reader->ecmheader[1];
+		emmreq[12] = reader->ecmheader[2];
+		emmreq[13] = reader->ecmheader[3];
 
-	if((cta_res[cta_lr-2] != 0x90 && cta_res[cta_lr-1] != 0x00) || cta_lr == 0)
-	{
-		rdr_log(reader, "(EMM) Reader will be restart now cause: %02X %02X card answer!!!", cta_res[cta_lr - 2], cta_res[cta_lr - 1]);
-		reader->card_status = CARD_NEED_INIT;
-		add_job(reader->client, ACTION_READER_RESTART, NULL, 0);
-	}
-	else
-	{
-		memcpy(reader->ecmheader, cta_res + 9, 4);
-
-		if(reader->cak7_seq >= 0x008C9F)
+		if(reader->cak7type == 3)
 		{
-			rdr_log(reader, "Card needs reinit to prevent crash");
+			int32_t i;
+			uint8_t *prov_id_ptr;
+
+			switch(ep->type)
+			{
+				case SHARED:
+					emmreq[8] = ep->emm[9] + 6;
+					prov_id_ptr = ep->emm + 3;
+					memcpy(&emmreq[14], ep->emm + 9, ep->emm[9] + 1);
+					break;
+
+				case UNIQUE:
+					emmreq[8] = ep->emm[12] + 6;
+					prov_id_ptr = ep->emm + 9;
+					memcpy(&emmreq[14], ep->emm + 12, ep->emm[12] + 1);
+					break;
+
+				case GLOBAL:
+					emmreq[8] = ep->emm[6] + 6;
+					prov_id_ptr = ep->emm + 3;
+					memcpy(&emmreq[14], ep->emm + 6, ep->emm[6] + 1);
+					break;
+
+				default:
+					rdr_log(reader, "EMM: Congratulations, you have discovered a new EMM on Merlin.");
+					rdr_log(reader, "This has not been decoded yet.");
+					return ERROR;
+			}
+
+			i = get_prov_index(reader, prov_id_ptr);
+			if(i == -1)
+			{
+				rdr_log(reader, "EMM: skipped since provider id doesnt match");
+				return SKIPPED;
+			}
+		}
+		else
+		{
+			emmreq[8] = ep->emm[9] + 6;
+			memcpy(&emmreq[14], ep->emm + 9, ep->emm[9] + 1);
+		}
+
+		do_cak7_cmd(reader, cta_res, &cta_lr, emmreq, sizeof(emmreq), 0xB0);
+
+		if((cta_res[cta_lr-2] != 0x90 && cta_res[cta_lr-1] != 0x00) || cta_lr == 0)
+		{
+			rdr_log(reader, "(EMM) Reader will be restart now cause: %02X %02X card answer!!!", cta_res[cta_lr - 2], cta_res[cta_lr - 1]);
 			reader->card_status = CARD_NEED_INIT;
 			add_job(reader->client, ACTION_READER_RESTART, NULL, 0);
 		}
-		else if((cta_res[4] & 64) == 64)
+		else
 		{
-			rdr_log(reader, "negotiating new Session Key");
-			if(!CAK7_GetCamKey(reader))
+			memcpy(reader->ecmheader, cta_res + 9, 4);
+
+			if(reader->cak7_seq >= reader->needrestart)
 			{
-				rdr_log(reader, "negotiations failed - need to restart reader");
+				rdr_log(reader, "Card needs reinit to prevent crash");
 				reader->card_status = CARD_NEED_INIT;
 				add_job(reader->client, ACTION_READER_RESTART, NULL, 0);
 			}
+			else if((cta_res[4] & 64) == 64)
+			{
+				rdr_log(reader, "negotiating new Session Key");
+				if(!CAK7_GetCamKey(reader))
+				{
+					rdr_log(reader, "negotiations failed - need to restart reader");
+					reader->card_status = CARD_NEED_INIT;
+					add_job(reader->client, ACTION_READER_RESTART, NULL, 0);
+				}
+			}
 		}
 	}
-}
-return OK;
+	return OK;
 }
 
 const struct s_cardsystem reader_nagracak7 =
