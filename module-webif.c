@@ -1360,7 +1360,7 @@ static char *send_oscam_config_cccam(struct templatevars *vars, struct uriparams
 	tpl_addVar(vars, TPLADD, "FORWARDORIGINCARD", (cfg.cc_forward_origin_card == 1) ? "checked" : "");
 
 	tpl_addVar(vars, TPLADD, "KEEPCONNECTED", (cfg.cc_keep_connected == 1) ? "checked" : "");
-	
+
 	tpl_addVar(vars, TPLADDONCE, "CONFIG_CONTROL", tpl_getTpl(vars, "CONFIGCCCAMCTRL"));
 
 	return tpl_getTpl(vars, "CONFIGCCCAM");
@@ -2542,6 +2542,30 @@ static char *send_oscam_reader_config(struct templatevars *vars, struct uriparam
 	{
 		for(i = 0; i < len ; i++)
 			{ tpl_printf(vars, TPLAPPEND, "NUID", "%02X", rdr->nuid[i]); }
+	}
+
+	// OTP CSC (CAK7)
+	len = rdr->otpcsc_length;
+	if(len > 0)
+	{
+		for(i = 0; i < len ; i++)
+			{ tpl_printf(vars, TPLAPPEND, "OTPCSC", "%02X", rdr->otpcsc[i]); }
+	}
+
+	// OTA CSC (CAK7)
+	len = rdr->otacsc_length;
+	if(len > 0)
+	{
+		for(i = 0; i < len ; i++)
+			{ tpl_printf(vars, TPLAPPEND, "OTACSC", "%02X", rdr->otacsc[i]); }
+	}
+
+	// Force Pairing Type (CAK7)
+	len = rdr->forcepair_length;
+	if(len > 0)
+	{
+		for(i = 0; i < len ; i++)
+			{ tpl_printf(vars, TPLAPPEND, "FORCEPAIR", "%02X", rdr->forcepair[i]); }
 	}
 
 	// cwekey0 (CAK7)
