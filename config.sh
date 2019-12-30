@@ -100,7 +100,6 @@ Usage: `basename $0` [parameters]
 
  -v, --oscam-version       Display OSCam version.
  -r, --oscam-revision      Display OSCam SVN revision.
- -i, --smod-revision       Display OSCam-Schimmelreiter revision.
 
  -O, --detect-osx-sdk-version  Find where OS X SDK is located
 
@@ -712,16 +711,16 @@ do
 		break
 	;;
 	'-r'|'--oscam-revision')
-		cat .trunk-svn
-		break
-	;;
-	'-i'|'--smod-revision')
-		revision=$(git rev-list --count HEAD 2>/dev/null; git rev-list --all --max-count=1 2>/dev/null | cut -c1-7)
+		revision=$(echo $(git rev-list --count HEAD 2>/dev/null; git rev-list --all --max-count=1 2>/dev/null | cut -c1-7) | sed -e "s| |+|g")
 		if [ -n "$revision" ]; then
-			revision="git $revision"
+			revision="git+$revision+svn$(cat .trunk-svn)+emu$(grep EMU_VERSION module-emulator-osemu.h | awk '{ print $3 }')"
 		else
 			revision=$(svn info 2>/dev/null | grep Revision | cut -d ' ' -f 2)
-			[ -n "$revision" ] && revision="svn $revision"
+			if [ -n "$revision" ]; then
+				revision="git+$revision+UNKNOWN+svn$(cat .trunk-svn)+emu$(grep EMU_VERSION module-emulator-osemu.h | awk '{ print $3 }')"
+			else
+				revision="git+UNKNOWN+UNKNOWN+svn$(cat .trunk-svn)+emu$(grep EMU_VERSION module-emulator-osemu.h | awk '{ print $3 }')"
+			fi
 		fi
 		echo $revision
 		break

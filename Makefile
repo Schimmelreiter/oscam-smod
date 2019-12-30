@@ -4,8 +4,8 @@ SHELL = /bin/sh
 .SUFFIXES: .o .c
 .PHONY: all tests help README.build README.config simple default debug config menuconfig allyesconfig allnoconfig defconfig clean distclean
 
-VER     := $(shell ./config.sh --oscam-version)
-SVN_REV := $(shell ./config.sh --oscam-revision)
+VER      := $(shell ./config.sh --oscam-version)
+SMOD_REV := $(shell ./config.sh --oscam-revision | cut -d "+" -f1-3)
 
 uname_S := $(shell sh -c 'uname -s 2>/dev/null || echo not')
 
@@ -46,11 +46,9 @@ ifeq ($(uname_S),FreeBSD)
 endif
 
 override STD_LIBS := -lm $(LIB_PTHREAD) $(LIB_DL) $(LIB_RT)
-override STD_DEFS := -D'CS_SVN_VERSION="$(SVN_REV)"'
-ifneq "$(shell ./config.sh --smod-revision)" ""
-override STD_DEFS += -D'CS_SMOD_VERSION="$(shell ./config.sh --smod-revision | cut -d " " -f1-3 | sed -e "s| |+|g")"'
-endif
-override STD_DEFS += -D'CS_SMOD_VERSION_HASH="$(shell ./config.sh --smod-revision | cut -d " " -f3)"'
+override STD_DEFS := -D'CS_SVN_VERSION="$(shell ./config.sh --oscam-revision | cut -d "+" -f4)'
+override STD_DEFS += -D'CS_SMOD_VERSION="$(shell ./config.sh --oscam-revision | cut -d "+" -f1-3)'
+override STD_DEFS += -D'CS_SMOD_VERSION_HASH="$(shell ./config.sh --oscam-revision | cut -d "+" -f3)"'
 override STD_DEFS += -D'CS_CONFDIR="$(CONF_DIR)"'
 
 # Compiler warnings
@@ -212,9 +210,9 @@ OBJDIR := $(BUILD_DIR)/$(TARGET)
 # These variables will be used to select only needed files for compilation
 -include $(OBJDIR)/config.mak
 
-OSCAM_BIN := $(BINDIR)/oscam-$(VER)$(SVN_REV)-$(subst cygwin,cygwin.exe,$(TARGET))
+OSCAM_BIN := $(BINDIR)/oscam-$(VER)+$(SMOD_REV)-$(subst cygwin,cygwin.exe,$(TARGET))
 TESTS_BIN := tests.bin
-LIST_SMARGO_BIN := $(BINDIR)/list_smargo-$(VER)$(SVN_REV)-$(subst cygwin,cygwin.exe,$(TARGET))
+LIST_SMARGO_BIN := $(BINDIR)/list_smargo-$(VER)+$(SMOD_REV)-$(subst cygwin,cygwin.exe,$(TARGET))
 
 # Build list_smargo-.... only when WITH_LIBUSB build is requested.
 ifndef USE_LIBUSB
@@ -410,7 +408,7 @@ all:
 	@-mkdir -p $(OBJDIR)/cscrypt $(OBJDIR)/csctapi $(OBJDIR)/minilzo $(OBJDIR)/ffdecsa $(OBJDIR)/webif
 	@-printf "\
 +-------------------------------------------------------------------------------\n\
-| OSCam ver: $(VER) rev: $(SVN_REV) target: $(TARGET)\n\
+| OSCam ver: $(VER) rev: $(SMOD_REV) target: $(TARGET)\n\
 | Tools:\n\
 |  CROSS    = $(CROSS_DIR)$(CROSS)\n\
 |  CC       = $(CC)\n\
@@ -715,8 +713,8 @@ OSCam build system documentation\n\
 \n\
    OSCAM_BIN=text  - This variable controls how the oscam binary will be named.\n\
                      Default OSCAM_BIN value is:\n\
-                      'BINDIR/oscam-VERSVN_REV-TARGET'\n\
-                     Once the variables (BINDIR, VER, SVN_REV and TARGET) are\n\
+                      'BINDIR/oscam-VER+SMOD_REV-TARGET'\n\
+                     Once the variables (BINDIR, VER, SMOD_REV and TARGET) are\n\
                      replaced, the resulting filename can look like this:\n\
                       'Distribution/oscam-1.20-unstable_svn7404-i486-slackware-linux-static'\n\
                      For example you can run: 'make OSCAM_BIN=my-oscam'\n\
