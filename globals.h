@@ -2233,9 +2233,9 @@ struct s_config
 	int8_t			cc_reshare_services;
 	int8_t			cc_forward_origin_card;
 	uint8_t			cc_fixed_nodeid[8];
-	char			*cc_cfgfile;					// CCcam.cfg file path
 	uint32_t		cc_recv_timeout;				// The poll() timeout parameter in ms. Default: DEFAULT_CC_RECV_TIMEOUT (2000 ms).
 #endif
+	char			*cc_cfgfile;					// CCcam.cfg file path
 #ifdef MODULE_GBOX
 	#define			GBOX_MY_VERS_DEF		0x2A
 	#define			GBOX_MY_CPU_API_DEF	0x40

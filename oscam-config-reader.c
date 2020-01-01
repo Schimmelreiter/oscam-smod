@@ -2051,7 +2051,7 @@ int32_t init_readerdb(void)
 
 	if(cfg.cc_cfgfile)
 		read_cccamcfg(CCCAMCFGREADER);
-	
+
 	struct s_reader *rdr;
 	if(!cs_malloc(&rdr, sizeof(struct s_reader)))
 	{
