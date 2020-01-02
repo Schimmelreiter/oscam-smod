@@ -50,9 +50,14 @@ int32_t nagra_get_emm_type(EMM_PACKET *ep, struct s_reader *rdr)
 
 			case 0x90:
 				ep->type = UNIQUE;
-				if(rdr->cwpkcaid_length)
+				if(rdr->cwpkcaid_length && rdr->nuid_length)
 				{
-					return (!memcmp(ep->emm + 3, rdr->nuid, 4));
+					memset(ep->hexserial, 0x00, 0x08);
+					ep->hexserial[0] = ep->emm[5];
+					ep->hexserial[1] = ep->emm[4];
+					ep->hexserial[2] = ep->emm[3];
+					ep->hexserial[3] = ep->emm[6];
+					return (!memcmp(rdr->nuid, ep->hexserial, 4));
 				}
 				return 0;
 
@@ -127,9 +132,14 @@ int32_t nagra_get_emm_type(EMM_PACKET *ep, struct s_reader *rdr)
 
 			case 0x90:
 				ep->type = UNIQUE;
-				if(rdr->cwpkcaid_length)
+				if(rdr->cwpkcaid_length && rdr->nuid_length)
 				{
-					return (!memcmp(ep->emm + 3, rdr->nuid, 4));
+					memset(ep->hexserial, 0x00, 0x08);
+					ep->hexserial[0] = ep->emm[5];
+					ep->hexserial[1] = ep->emm[4];
+					ep->hexserial[2] = ep->emm[3];
+					ep->hexserial[3] = ep->emm[6];
+					return (!memcmp(rdr->nuid, ep->hexserial, 4));
 				}
 				return 0;
 
@@ -300,14 +310,16 @@ int32_t nagra_get_emm_filter(struct s_reader *rdr, struct s_csystem_emm_filter *
 				idx++;
 			}
 
-			if(rdr->cwpkcaid_length)
+			if(rdr->cwpkcaid_length && rdr->nuid_length)
 			{
 				filters[idx].type = EMM_UNIQUE;
 				filters[idx].enabled = 1;
 				filters[idx].filter[0] = 0x90;
-				filters[idx].mask[0] = 0xFF;
-				memcpy(&filters[idx].filter[1], rdr->nuid, 4);
-				memset(&filters[idx].mask[1], 0xFF, 4);
+				filters[idx].filter[1] = rdr->nuid[2];
+				filters[idx].filter[2] = rdr->nuid[1];
+				filters[idx].filter[3] = rdr->nuid[0];
+				filters[idx].filter[4] = rdr->nuid[3];
+				memset(&filters[idx].mask[0], 0xFF, 5);
 				idx++;
 			}
 
@@ -377,14 +389,16 @@ int32_t nagra_get_emm_filter(struct s_reader *rdr, struct s_csystem_emm_filter *
 				idx++;
 			}
 
-			if(rdr->cwpkcaid_length)
+			if(rdr->cwpkcaid_length && rdr->nuid_length)
 			{
 				filters[idx].type = EMM_UNIQUE;
 				filters[idx].enabled = 1;
 				filters[idx].filter[0] = 0x90;
-				filters[idx].mask[0] = 0xFF;
-				memcpy(&filters[idx].filter[1], rdr->nuid, 4);
-				memset(&filters[idx].mask[1], 0xFF, 4);
+				filters[idx].filter[1] = rdr->nuid[2];
+				filters[idx].filter[2] = rdr->nuid[1];
+				filters[idx].filter[3] = rdr->nuid[0];
+				filters[idx].filter[4] = rdr->nuid[3];
+				memset(&filters[idx].mask[0], 0xFF, 5);
 				idx++;
 			}
 
