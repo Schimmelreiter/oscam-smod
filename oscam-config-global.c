@@ -830,7 +830,6 @@ static const struct config_list cccam_opts[] =
 };
 #else
 static const struct config_list cccam_opts[] = {
-	DEF_OPT_SAVE_FUNC(cccam_should_save_fn),
 	DEF_OPT_STR("cccfgfile"           , OFS(cc_cfgfile)            , NULL),
 	DEF_LAST_OPT
 };
