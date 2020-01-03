@@ -507,7 +507,7 @@ static int32_t CAK7GetDataType(struct s_reader *reader, uint8_t dt)
 		rdr_log_dump_dbg(reader, D_READER, cta_res, cta_lr, "Decrypted Answer:");
 		// hier eigentlich check auf 90 am ende usw... obs halt klarging ...
 
-		if(cta_res[cta_lr-2] == 0x6F && cta_res[cta_lr-1] == 0x01)
+		if((cta_res[cta_lr-2] == 0x6F && cta_res[cta_lr-1] == 0x01) || cta_lr == 0)
 		{
 			reader->card_status = CARD_NEED_INIT;
 			add_job(reader->client, ACTION_READER_RESTART, NULL, 0);
@@ -1200,15 +1200,16 @@ static int32_t CAK7_GetCamKey(struct s_reader *reader)
 	reader->needrestart =  (cta_res[22] << 16);
 	reader->needrestart += (cta_res[23] <<  8);
 	reader->needrestart += (cta_res[24]      );
+	reader->needrestart--;
+
 	if(reader->cak7_seq <= 15)
 	{
-		rdr_log(reader, "Card needs restart after %d CMDs", reader->needrestart);
-		reader->needrestart--;
+		rdr_log(reader, "card needs restart after %d CMDs", reader->needrestart);
 	}
 	else
 	{
 		uint32_t cmdleft = reader->needrestart - reader->cak7_seq;
-		rdr_log(reader, "Card left %d CMDs before restart", cmdleft);
+		rdr_log(reader, "%d CMDs left to restart", cmdleft);
 	}
 
 	reader->dword_83DBC =  (cta_res[18] << 24);
@@ -1432,7 +1433,7 @@ static void nagra3_post_process(struct s_reader *reader)
 {
 	if(reader->cak7_seq >= reader->needrestart)
 	{
-		rdr_log(reader, "Card needs reinit to prevent crash");
+		rdr_log(reader, "card needs restart to prevent crash");
 		reader->card_status = CARD_NEED_INIT;
 		add_job(reader->client, ACTION_READER_RESTART, NULL, 0);
 	}
@@ -1454,17 +1455,17 @@ static int32_t nagra3_do_ecm(struct s_reader *reader, const ECM_REQUEST *er, str
 
 	if(reader->cak7type == 3)
 	{
-		if(er->ecm[2] > 0x61 && er->ecm[7] == 0x5C && er->ecm[100] == 0x0B && er->ecm[101] == 0x04 && er->ecm[104] > reader->pairtype)
+		if(er->ecm[2] > 0x61 && er->ecm[7] == 0x5C && er->ecm[100] == 0x0B && (er->ecm[101] == 0x03 || er->ecm[101] == 0x04) && er->ecm[104] > reader->pairtype)
 		{
-			rdr_log(reader, "card won't decode this channel - reinit card in different Pairing Mode");
+			rdr_log(reader, "reinit card in different Pairing Mode");
 			return ERROR;
 		}
 	}
 	else
 	{
-		if(er->ecm[2] > 0x86 && er->ecm[4] == 0x84 && er->ecm[137] == 0x0B && er->ecm[138] == 0x04 && er->ecm[141] > reader->pairtype)
+		if(er->ecm[2] > 0x86 && er->ecm[4] == 0x84 && er->ecm[137] == 0x0B && (er->ecm[138] == 0x03 || er->ecm[138] == 0x04) && er->ecm[141] > reader->pairtype)
 		{
-			rdr_log(reader, "card won't decode this channel - reinit card in different Pairing Mode");
+			rdr_log(reader, "reinit card in different Pairing Mode");
 			return ERROR;
 		}
 	}
@@ -1540,7 +1541,7 @@ static int32_t nagra3_do_ecm(struct s_reader *reader, const ECM_REQUEST *er, str
 		memcpy(ea->cw + 8, _cwe1, 0x08);
 		return OK;
 	}
-	else if(cta_res[27] == 0x00)
+	else if(cta_res[23] == 0x00)
 	{
 		memcpy(reader->ecmheader, cta_res + 9, 4);
 		reader->cak7_camstate = cta_res[4];
@@ -1553,6 +1554,10 @@ static int32_t nagra3_do_ecm(struct s_reader *reader, const ECM_REQUEST *er, str
 		{
 			rdr_log(reader, "card has no right to decode this channel");
 		}
+	}
+	else if(cta_res[23] == 0x04)
+	{
+		rdr_log(reader, "reinit card with NUID");
 	}
 	else
 	{
@@ -1569,7 +1574,7 @@ static int32_t nagra3_do_emm(struct s_reader *reader, EMM_PACKET *ep)
 	{
 		rdr_log(reader, "OSCam got your BoxEMM");
 		char tmp[128];
-		rdr_log(reader, "NUID: %s", cs_hexdump(1, ep->emm + 3, 4, tmp, sizeof(tmp)));
+		rdr_log(reader, "NUID: %s", cs_hexdump(1, reader->nuid, 4, tmp, sizeof(tmp)));
 		rdr_log(reader, "Index: %s", cs_hexdump(1, ep->emm + 10, 1, tmp, sizeof(tmp)));
 		rdr_log(reader, "eCWPK: %s", cs_hexdump(1, ep->emm + 11, 16, tmp, sizeof(tmp)));
 	}
@@ -1643,7 +1648,7 @@ static int32_t nagra3_do_emm(struct s_reader *reader, EMM_PACKET *ep)
 
 			if(reader->cak7_seq >= reader->needrestart)
 			{
-				rdr_log(reader, "Card needs reinit to prevent crash");
+				rdr_log(reader, "card needs restart to prevent crash");
 				reader->card_status = CARD_NEED_INIT;
 				add_job(reader->client, ACTION_READER_RESTART, NULL, 0);
 			}
