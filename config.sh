@@ -711,13 +711,13 @@ do
 		break
 	;;
 	'-r'|'--oscam-revision')
-		revision=$(echo $(git rev-list --count HEAD 2>/dev/null; git rev-list --all --max-count=1 2>/dev/null | cut -c1-7) | sed -e "s| |+|g")
+		revision=$(svn info 2>/dev/null | grep Revision | cut -d ' ' -f 2)
 		if [ -n "$revision" ]; then
-			revision="git+$revision+svn$(cat .trunk-svn)+emu$(grep EMU_VERSION module-emulator-osemu.h | awk '{ print $3 }')"
+			revision="svn+$revision+UNKNOWN+svn$(cat .trunk-svn)+emu$(grep EMU_VERSION module-emulator-osemu.h | awk '{ print $3 }')"
 		else
-			revision=$(svn info 2>/dev/null | grep Revision | cut -d ' ' -f 2)
+			revision=$(echo $(git rev-list --count HEAD 2>/dev/null; git rev-list --all --max-count=1 2>/dev/null | cut -c1-7) | sed -e "s| |+|g")
 			if [ -n "$revision" ]; then
-				revision="git+$revision+UNKNOWN+svn$(cat .trunk-svn)+emu$(grep EMU_VERSION module-emulator-osemu.h | awk '{ print $3 }')"
+				revision="git+$revision+svn$(cat .trunk-svn)+emu$(grep EMU_VERSION module-emulator-osemu.h | awk '{ print $3 }')"
 			else
 				revision="git+UNKNOWN+UNKNOWN+svn$(cat .trunk-svn)+emu$(grep EMU_VERSION module-emulator-osemu.h | awk '{ print $3 }')"
 			fi
