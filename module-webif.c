@@ -2254,8 +2254,6 @@ static char *send_oscam_reader_config(struct templatevars *vars, struct uriparam
 	// Reset Cycle
 	tpl_printf(vars, TPLADD, "RESETCYCLE", "%d", rdr->resetcycle);
 
-	tpl_printf(vars, TPLADD, "WDELAY", "%d", rdr->wdelay);
-
 	// Disable Serverfilter
 	if(!apicall)
 	{
@@ -2643,6 +2641,10 @@ static char *send_oscam_reader_config(struct templatevars *vars, struct uriparam
 	// force_EMM_82
 	if(rdr->forceemmg)
 		{ tpl_addVar(vars, TPLADD, "FORCEEMMGCHECKED", "checked"); }
+
+        // OTA_CWPKs
+        if(rdr->cwpkota)
+                { tpl_addVar(vars, TPLADD, "CWPKOTACHECKED", "checked"); }
 #endif
 
 	// CWPK CaID (CAK7)

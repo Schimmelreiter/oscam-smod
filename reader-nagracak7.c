@@ -507,7 +507,11 @@ static int32_t CAK7GetDataType(struct s_reader *reader, uint8_t dt)
 		rdr_log_dump_dbg(reader, D_READER, cta_res, cta_lr, "Decrypted Answer:");
 		// hier eigentlich check auf 90 am ende usw... obs halt klarging ...
 
-		if((cta_res[cta_lr-2] == 0x6F && cta_res[cta_lr-1] == 0x01) || cta_lr == 0)
+		if(cta_lr == 0)
+		{
+			break;
+		}
+		if(cta_res[cta_lr-2] == 0x6F && cta_res[cta_lr-1] == 0x01)
 		{
 			reader->card_status = CARD_NEED_INIT;
 			add_job(reader->client, ACTION_READER_RESTART, NULL, 0);
@@ -1131,7 +1135,7 @@ static int32_t CAK7_GetCamKey(struct s_reader *reader)
 	0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,
 	0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,
 	0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,
-	0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0x00,0x00,0x00,0x00,0x00,0x08,0x00,0x00,0xCC,0xCC,0xCC,0xCC};
+	0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC,0xCC};
 
 	if(!reader->nuid_length)
 	{
@@ -1144,8 +1148,73 @@ static int32_t CAK7_GetCamKey(struct s_reader *reader)
 	else
 	{
 		memcpy(cmd0e + 132, reader->nuid, reader->nuid_length); // inject NUID
-		memcpy(cmd0e + 136, reader->otpcsc, reader->otpcsc_length);
-		memcpy(cmd0e + 138, reader->otacsc, reader->otacsc_length);
+
+                uint8_t cwekeycount = 0;
+
+                if(reader->cwekey0_length)
+                        { cwekeycount++; }
+                if(reader->cwekey1_length)
+                        { cwekeycount++; }
+                if(reader->cwekey2_length)
+                        { cwekeycount++; }
+                if(reader->cwekey3_length)
+                        { cwekeycount++; }
+                if(reader->cwekey4_length)
+                        { cwekeycount++; }
+                if(reader->cwekey5_length)
+                        { cwekeycount++; }
+                if(reader->cwekey6_length)
+                        { cwekeycount++; }
+                if(reader->cwekey7_length)
+                        { cwekeycount++; }
+
+                if(cwekeycount == 0)
+                {
+                        rdr_log(reader, "only NUID defined - enter at least CWPK0");
+                        return ERROR;
+                }
+		else
+		{
+			if(reader->otpcsc_length)
+			{
+				memcpy(cmd0e + 136, reader->otpcsc, reader->otpcsc_length);
+			}
+			else
+			{
+				if(!reader->cwpkota)
+				{
+					cmd0e[136] = 0x00;
+					cmd0e[137] = cwekeycount;
+				}
+				else
+				{
+					cmd0e[136] = 0x00;
+					cmd0e[137] = 0x00;
+				}
+			}
+
+			if(reader->otacsc_length)
+			{
+				memcpy(cmd0e + 138, reader->otacsc, reader->otacsc_length);
+			}
+			else
+			{
+				if(reader->cwpkota)
+				{
+					cmd0e[138] = 0x00;
+					cmd0e[139] = cwekeycount;
+				}
+				else
+				{
+					cmd0e[138] = 0x00;
+					cmd0e[139] = 0x00;
+				}
+			}
+		}
+
+		char tmp[16];
+		rdr_log(reader, "OTP CSC No. of keys: %s", cs_hexdump(1, cmd0e + 136, 2, tmp, sizeof(tmp)));
+		rdr_log(reader, "OTA CSC No. of keys: %s", cs_hexdump(1, cmd0e + 138, 2, tmp, sizeof(tmp)));
 	}
 
 	if(reader->forcepair_length)
@@ -1298,6 +1367,22 @@ static int32_t CAK7_GetCamKey(struct s_reader *reader)
 	else if(reader->pairtype == 0xC0)
 	{
 		rdr_log(reader,"Card is starting in UNIQUE mode");
+
+		if(!reader->mod2_length)
+        	{
+                	rdr_log(reader, "no mod2 defined");
+                	return ERROR;
+        	}
+                if(!reader->key3460_length)
+                {
+                        rdr_log(reader, "no key3460 defined");
+                        return ERROR;
+                }
+                if(!reader->key3310_length)
+                {
+                        rdr_log(reader, "no key3310 defined");
+                        return ERROR;
+                }
 		if(!CAK7_cmd03_unique(reader))
 		{return ERROR;}
 	}
@@ -1313,10 +1398,10 @@ static int32_t nagra3_card_init(struct s_reader *reader, ATR *newatr)
 {
 	get_atr;
 
-	memset(reader->hexserial, 0x00, 0x08);
+	memset(reader->hexserial, 0, 8);
 	reader->cak7_seq = 0;
 	reader->hasunique = 0;
-	memset(reader->ecmheader,0x00,0x04);
+	memset(reader->ecmheader, 0, 4);
 	cs_clear_entitlement(reader);
 
 	if(memcmp(atr + 8, "DNASP4", 6) == 0)
@@ -1347,6 +1432,32 @@ static int32_t nagra3_card_init(struct s_reader *reader, ATR *newatr)
 	reader->nemm83u = 0;
 	reader->nemm83s = 0;
 	reader->nemm87  = 0;*/
+
+	if(!reader->mod1_length)
+	{
+		rdr_log(reader, "no MOD1 defined");
+		return ERROR;
+	}
+	if(!reader->key3588_length)
+	{
+                rdr_log(reader, "no key3588 defined");
+                return ERROR;
+        }
+        if(!reader->data50_length)
+        {
+                rdr_log(reader, "no data50 defined");
+                return ERROR;
+        }
+        if(!reader->mod50_length)
+        {
+                rdr_log(reader, "no mod50 defined");
+                return ERROR;
+        }
+        if(!reader->idird_length)
+        {
+                rdr_log(reader, "no idird defined");
+                return ERROR;
+        }
 
 	CAK7GetDataType(reader, 0x02);
 	CAK7GetDataType(reader, 0x05);
@@ -1455,18 +1566,50 @@ static int32_t nagra3_do_ecm(struct s_reader *reader, const ECM_REQUEST *er, str
 
 	if(reader->cak7type == 3)
 	{
-		if(er->ecm[2] > 0x61 && er->ecm[7] == 0x5C && er->ecm[100] == 0x0B && (er->ecm[101] == 0x03 || er->ecm[101] == 0x04) && er->ecm[104] > reader->pairtype)
+		if(er->ecm[2] > 0x61 && er->ecm[7] == 0x5C && er->ecm[100] == 0x0B)
 		{
-			rdr_log(reader, "reinit card in different Pairing Mode");
-			return ERROR;
+			if(er->ecm[101] == 0x03 || er->ecm[101] == 0x04)
+			{
+				if(er->ecm[104] > reader->pairtype)
+				{
+					rdr_log(reader, "reinit card in Unique Pairing Mode");
+					return ERROR;
+				}
+				if(er->ecm[104] == 0x80 && reader->pairtype == 0x80)
+				{
+					rdr_log(reader, "reinit card in Unique Pairing Mode");
+					return ERROR;
+				}
+			}
+			if(er->ecm[101] == 0x04 && !reader->nuid_length)
+			{
+				rdr_log(reader, "reinit card with NUID");
+				return ERROR;
+			}
 		}
 	}
 	else
 	{
-		if(er->ecm[2] > 0x86 && er->ecm[4] == 0x84 && er->ecm[137] == 0x0B && (er->ecm[138] == 0x03 || er->ecm[138] == 0x04) && er->ecm[141] > reader->pairtype)
+		if(er->ecm[2] > 0x86 && er->ecm[4] == 0x84 && er->ecm[137] == 0x0B)
 		{
-			rdr_log(reader, "reinit card in different Pairing Mode");
-			return ERROR;
+			if(er->ecm[138] == 0x03 || er->ecm[138] == 0x04)
+			{
+				if(er->ecm[141] > reader->pairtype)
+				{
+					rdr_log(reader, "reinit card in Unique Pairing Mode");
+					return ERROR;
+				}
+				if(er->ecm[141] == 0x80 && reader->pairtype == 0x80)
+				{
+					rdr_log(reader, "reinit card in Unique Pairing Mode");
+					return ERROR;
+				}
+			}
+			if(er->ecm[138] == 0x04 && !reader->nuid_length)
+			{
+				rdr_log(reader, "reinit card with NUID");
+				return ERROR;
+			}
 		}
 	}
 
@@ -1548,7 +1691,7 @@ static int32_t nagra3_do_ecm(struct s_reader *reader, const ECM_REQUEST *er, str
 
 		if(reader->hasunique && reader->pairtype < 0xC0)
 		{
-			rdr_log(reader, "reinit card in different Pairing Mode");
+			rdr_log(reader, "reinit card in Unique Pairing Mode");
 		}
 		else
 		{
@@ -1557,7 +1700,14 @@ static int32_t nagra3_do_ecm(struct s_reader *reader, const ECM_REQUEST *er, str
 	}
 	else if(cta_res[23] == 0x04)
 	{
-		rdr_log(reader, "reinit card with NUID");
+		if(!reader->nuid_length)
+		{
+			rdr_log(reader, "reinit card with NUID");
+		}
+		else
+		{
+			rdr_log(reader, "wrong OTP/OTA CSC values");
+		}
 	}
 	else
 	{

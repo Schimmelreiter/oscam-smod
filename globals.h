@@ -1481,7 +1481,6 @@ struct s_reader										// contains device info, reader info and card info
 	uint8_t			keepalive;
 	uint8_t			changes_since_shareupdate;
 	int32_t			resetcycle;						// ECM until reset
-	int32_t			wdelay;						// ECM until reset
 	int32_t			resetcounter;					// actual count
 	uint32_t		auprovid;						// AU only for this provid
 	int8_t			audisabled;						// exclude reader from auto AU
@@ -1583,9 +1582,10 @@ struct s_reader										// contains device info, reader info and card info
 	uint8_t			cak7_camstate;
 	uint8_t			cak7_aes_key[32];
 	uint8_t			cak7_aes_iv[16];
-	uint8_t			forcecwswap;
-	uint8_t			evensa;
-	uint8_t			forceemmg;
+	int8_t			forcecwswap;
+	int8_t			evensa;
+	int8_t			forceemmg;
+	int8_t                  cwpkota;
 
 #endif
 #ifdef CS_CACHEEX
@@ -1611,7 +1611,7 @@ struct s_reader										// contains device info, reader info and card info
 	int32_t			l_port;
 	CAIDTAB			ctab;
 	uint32_t		boxid;
-	uint8_t			cak7_mode;
+	int8_t			cak7_mode;
 	uint8_t			cak7type;
 	uint8_t			cwpkcaid[2];
 	uint8_t			cwpkcaid_length;

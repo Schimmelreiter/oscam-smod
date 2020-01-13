@@ -1746,7 +1746,6 @@ static const struct config_list reader_opts[] =
 	DEF_OPT_INT32("reconnecttimeout"              , OFS(tcp_rto),                         DEFAULT_TCP_RECONNECT_TIMEOUT),
 	DEF_OPT_INT32("reconnectdelay"                , OFS(tcp_reconnect_delay),             60000),
 	DEF_OPT_INT32("resetcycle"                    , OFS(resetcycle),                      0),
-	DEF_OPT_INT32("wdelay"                        , OFS(wdelay),                          0),
 	DEF_OPT_INT8("disableserverfilter"            , OFS(ncd_disable_server_filt),         0),
 	DEF_OPT_INT8("connectoninit"                  , OFS(ncd_connect_on_init),             0),
 	DEF_OPT_UINT8("keepalive"                     , OFS(keepalive),                       0),
@@ -1807,6 +1806,7 @@ static const struct config_list reader_opts[] =
 	DEF_OPT_INT8("forcecwswap"                    , OFS(forcecwswap),                     0),
 	DEF_OPT_INT8("evensa"                         , OFS(evensa),                          0),
 	DEF_OPT_INT8("forceemmg"                      , OFS(forceemmg),                       0),
+	DEF_OPT_INT8("cwpkota"                        , OFS(cwpkota),                         0),
 #endif
 
 	DEF_OPT_INT8("cak7_mode"                      , OFS(cak7_mode),                       0),
@@ -1919,7 +1919,7 @@ static bool reader_check_setting(const struct config_list *UNUSED(clist), void *
 	// These are written only when the reader is physical reader
 	static const char *hw_only_settings[] =
 	{
-		"readnano", "resetcycle", "wdelay", "smargopatch", "autospeed", "sc8in1_dtrrts_patch", "boxid","fix07",
+		"readnano", "resetcycle", "smargopatch", "autospeed", "sc8in1_dtrrts_patch", "boxid","fix07",
 		"fix9993", "rsakey", "deskey", "ins7e", "ins7e11", "ins2e06", "k1_generic", "k1_unique", "force_irdeto", "needsemmfirst", "boxkey",
 		"atr", "detect", "nagra_read", "mhz", "cardmhz", "readtiers", "read_old_classes", "use_gpio", "needsglobalfirst",
 #ifdef READER_NAGRA_MERLIN
