@@ -55,6 +55,7 @@ static uint8_t key3588[136] = {0x0};
 static uint8_t data50[80] = {0x0};
 static uint8_t mod50[80] = {0x0};
 static uint8_t nuid[4] = {0x0};
+static uint8_t idird[4] = {0x0};
 static uint8_t cwpk[16] = {0x0};
 /* Max TV */
 static uint8_t maxtv_mod1[112] = {0x0};
@@ -63,6 +64,7 @@ static uint8_t maxtv_key3588[136] = {0x0};
 static uint8_t maxtv_data50[80] = {0x0};
 static uint8_t maxtv_mod50[80] = {0x0};
 static uint8_t maxtv_nuid[4] = {0x0};
+static uint8_t maxtv_idird[4] = {0x0};
 static uint8_t maxtv_cwpk[16] = {0x0};
 #endif
 
@@ -372,10 +374,12 @@ void findatr(struct s_reader *reader) {
 			reader->mod50_length = sizeof(mod50);
 			memcpy(reader->nuid, nuid, sizeof(nuid));
 			reader->nuid_length = sizeof(nuid);
+			memcpy(reader->idird, idird, sizeof(idird));
+			reader->idird_length = sizeof(idird);
 			memcpy(reader->cwekey0, cwpk, sizeof(cwpk));
 			reader->cwekey0_length = sizeof(cwpk);
 		} else {
-			rdr_log(reader, "no keys built in, use config values mod1 + mod2 + key3588 + data50 + mod50 + nuid + cwekey0");
+			rdr_log(reader, "no keys built in, use config values mod1 + mod2 + key3588 + data50 + mod50 + nuid + idird + cwekey0");
 		}
 		reader->cak7_mode = 1;
 		reader->forceemmg = 1;
@@ -400,10 +404,12 @@ void findatr(struct s_reader *reader) {
 			reader->mod50_length = sizeof(maxtv_mod50);
 			memcpy(reader->nuid, maxtv_nuid, sizeof(maxtv_nuid));
 			reader->nuid_length = sizeof(maxtv_nuid);
+			memcpy(reader->idird, maxtv_idird, sizeof(maxtv_idird));
+			reader->idird_length = sizeof(maxtv_idird);
 			memcpy(reader->cwekey0, maxtv_cwpk, sizeof(maxtv_cwpk));
 			reader->cwekey0_length = sizeof(maxtv_cwpk);
 		} else {
-			rdr_log(reader, "no keys built in, use config values mod1 + mod2 + key3588 + data50 + mod50 + nuid + cwekey0");
+			rdr_log(reader, "no keys built in, use config values mod1 + mod2 + key3588 + data50 + mod50 + nuid + idird + cwekey0");
 		}
 		reader->blockemm = (8 | reader->blockemm);
 #else
