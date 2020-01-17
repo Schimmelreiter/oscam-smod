@@ -490,10 +490,7 @@ bool IO_Serial_Write(struct s_reader *reader, uint32_t delay, uint32_t timeout, 
 {
 	const struct s_cardreader *crdr_ops = reader->crdr;
 	if (!crdr_ops) return ERROR;
-	if(reader->wdelay)
-	{
-		delay = reader->wdelay;
-	}
+
 	if(timeout == 0)   // General fix for readers not communicating timeout and delay
 	{
 		if(reader->char_delay != 0) { timeout = reader->char_delay; }
