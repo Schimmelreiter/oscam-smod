@@ -464,8 +464,6 @@ static void write_versionfile(bool use_stdout)
 		write_readerconf(READER_BULCRYPT, "Bulcrypt");
 		write_readerconf(READER_GRIFFIN, "Griffin");
 		write_readerconf(READER_DGCRYPT, "DGCrypt");
-		write_readerconf(READER_JET, "Jet");
-		write_readerconf(READER_STREAMGUARD, "StreamGuard");
 		fprintf(fp, "\n");
 		write_cardreaderconf(CARDREADER_PHOENIX, "phoenix");
 		write_cardreaderconf(CARDREADER_DRECAS, "drecas");
