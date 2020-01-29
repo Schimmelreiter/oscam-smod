@@ -143,9 +143,7 @@ void findatr(struct s_reader *reader) {
 #endif
 	} else if (
 			/* ? */
-			strncmp(current.atr, "3F 77 18 00 00 D3 8A 42 01 64 90 00", 35) == 0 ||
-			// TNTSAT V5
-			strncmp(current.atr, "3F 77 18 00 00 C2 EB 45 02 6C 90 00", 35) == 0) {
+			strncmp(current.atr, "3F 77 18 00 00 D3 8A 42 01 64 90 00", 35) == 0 {
 		strcpy(current.providername, "Redlight Mega Royale");
 #ifdef READER_VIACCESS
 		if (rlmr_boxkey[sizeof(rlmr_boxkey) - 1]) {
@@ -178,7 +176,8 @@ void findatr(struct s_reader *reader) {
 #else
 		strcpy(current.info, " - but card system VIACCESS not built in!");
 #endif
-	} else if (strncmp(current.atr, "3F 77 18 00 00 C2 EB 41 02 6C", 29) == 0) {
+	} else if (strncmp(current.atr, "3F 77 18 00 00 C2 EB 41 02 6C", 29) == 0) ||
+			strncmp(current.atr, "3F 77 18 00 00 C2 EB 45 02 6C 90 00", 35) == 0) {
 		/* more providers: TNTSAT V4/V5 (FR) (0500:030B00), NTV+ (RU) V6 (0500:050100), TVSAT AFRICA (INT) V5 (0500:042840) */
 		strcpy(current.providername, "TNT Viaccess v5");
 #ifdef READER_VIACCESS
