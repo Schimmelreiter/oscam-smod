@@ -366,6 +366,7 @@ static void *cw_process(void)
 			{ msec_wait = 3000; }
 
 		cleanupcwcycle();
+		cw_cache_cleanup(false);
 	}
 
 	return NULL;

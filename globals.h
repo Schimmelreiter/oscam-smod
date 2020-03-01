@@ -424,9 +424,10 @@
 #define D_CLIENTECM				0x0400	// Debug Client ECMs
 #define D_CSP					0x0800	// Debug CSP
 #define D_CWC					0x1000	// Debug CWC
+#define D_CW_CACHE				0x2000	// Debug CW Cache
 #define D_ALL_DUMP				0xFFFF	// dumps all
 
-#define MAX_DEBUG_LEVELS		13
+#define MAX_DEBUG_LEVELS		14
 
 /////// phoenix readers which need baudrate setting and timings need to be guarded by OSCam: BEFORE R_MOUSE
 #define R_DB2COM1				0x1		// Reader Dbox2 @ com1
@@ -2393,6 +2394,10 @@ struct s_config
 
 	int32_t			max_cache_time;					// seconds ecms are stored in ecmcwcache
 	int32_t			max_hitcache_time;				// seconds hits are stored in cspec_hitcache (to detect dyn wait_time)
+	
+	uint32_t		cw_cache_size;
+	uint32_t		cw_cache_memory;
+	CWCHECKTAB		cw_cache_settings;
 
 	int8_t			reload_useraccounts;
 	int8_t			reload_readers;

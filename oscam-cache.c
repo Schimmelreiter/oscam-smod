@@ -59,10 +59,43 @@ typedef struct cache_t
 	node                ll_node;             // node for linked list
 } ECMHASH;
 
+typedef struct cw_cache_t
+{
+	uint8_t             cw[16];
+	uint16_t            caid;
+	uint32_t            prid;
+	uint16_t            srvid;
+	struct timeb        first_recv_time;     // time of first cw received
+	struct timeb        upd_time;            // updated time. Update time at each cw got
+	node				ht_node;
+	node				ll_node;
+} CW_CACHE;
+
+typedef struct cw_cache_setting_t
+{
+	int8_t			mode;
+	uint16_t		timediff_old_cw;
+} CW_CACHE_SETTING;
+
 static pthread_rwlock_t cache_lock;
+static pthread_rwlock_t cw_cache_lock;
 static hash_table ht_cache;
+static hash_table ht_cw_cache;
 static list ll_cache;
+static list ll_cw_cache;
 static int8_t cache_init_done = 0;
+static int8_t cw_cache_init_done = 0;
+uint32_t cw_cache_remove_count = 0;
+
+void init_cw_cache(void){
+	if(cfg.cw_cache_size > 0 || cfg.cw_cache_memory > 0){
+		init_hash_table(&ht_cw_cache, &ll_cw_cache);
+		if (pthread_rwlock_init(&cw_cache_lock,NULL) != 0)
+			{ cs_log("Error creating lock cw_cache_lock!"); }
+		else
+			{ cw_cache_init_done = 1; }
+	}
+}
 
 void init_cache(void)
 {
@@ -76,9 +109,13 @@ void init_cache(void)
 void free_cache(void)
 {
 	cleanup_cache(true);
+	cw_cache_cleanup(true);
 	cache_init_done = 0;
+	cw_cache_init_done = 0;
 	deinitialize_hash_table(&ht_cache);
+	deinitialize_hash_table(&ht_cw_cache);
 	pthread_rwlock_destroy(&cache_lock);
+	pthread_rwlock_destroy(&cw_cache_lock);
 }
 
 uint32_t cache_size(void)
@@ -93,6 +130,17 @@ static uint8_t count_sort(CW *a, CW *b)
 {
 	if (a->count == b->count) return 0;
 	return (a->count > b->count) ? -1 : 1; // DESC order by count
+}
+
+static uint8_t time_sort(CW_CACHE *a, CW_CACHE *b)
+{
+	if(a->upd_time.millitm == b->upd_time.millitm){
+		return 0;
+	}
+	else
+	{
+		return (a->upd_time.millitm > b->upd_time.millitm) ? -1 : 1;
+	}
 }
 
 uint8_t check_is_pushed(void *cwp, struct s_client *cl)
@@ -172,6 +220,11 @@ static int compare_cw(const void *arg, const void *obj)
 	return memcmp(arg, ((const CW*)obj)->cw, 16);
 }
 
+static int compare_cw_cache(const void *arg, const void *obj)
+{
+	return memcmp(arg, ((const CW_CACHE*)obj)->cw, 16);
+}
+
 static bool cwcycle_check_cache(struct s_client *cl, ECM_REQUEST *er, CW *cw)
 {
 	(void)cl; (void)er; (void)cw;
@@ -237,7 +290,7 @@ struct ecm_request_t *check_cache(ECM_REQUEST *er, struct s_client *cl)
 		if((!cw->proxy && !cw->localcards) // cw received from ONLY cacheex/csp peers
 			&& check_cw.counter>1
 			&& cw->count < check_cw.counter
-			&& (check_cw.mode || !er->cacheex_wait_time_expired))
+			&& (check_cw.mode == 1 || !er->cacheex_wait_time_expired))
 		{
 			goto out_err;
 		}
@@ -317,9 +370,143 @@ static void cacheex_cache_add(ECM_REQUEST *er, ECMHASH *result, CW *cw, bool add
 #endif
 }
 
+CW_CACHE_SETTING get_cw_cache(ECM_REQUEST *er)
+{
+	int32_t i, timediff_old_cw = 0;
+	int8_t mode = 0;
+
+	for(i = 0; i < cfg.cw_cache_settings.cwchecknum; i++)
+	{
+		CWCHECKTAB_DATA *d = &cfg.cw_cache_settings.cwcheckdata[i];
+
+		if(i == 0 && d->caid <= 0)
+		{
+			mode = d->mode;
+			timediff_old_cw = d->counter;
+			continue; //check other, only valid for unset
+		}
+
+		if(d->caid == er->caid || d->caid == er->caid >> 8 || ((d->cmask >= 0 && (er->caid & d->cmask) == d->caid) || d->caid == -1))
+		{
+			if((d->prid >= 0 && d->prid == (int32_t)er->prid) || d->prid == -1)
+			{
+				if((d->srvid >= 0 && d->srvid == er->srvid) || d->srvid == -1)
+				{
+					mode = d->mode;
+					timediff_old_cw = d->counter;
+					break;
+				}
+			}
+		}
+	}
+
+	//check for correct values
+	if(mode>3 || mode<0) mode=0;
+	if(timediff_old_cw<1) timediff_old_cw=0;
+	
+	CW_CACHE_SETTING cw_cache_setting;
+	memset(&cw_cache_setting, 0, sizeof(CW_CACHE_SETTING));
+	cw_cache_setting.mode = mode;
+	cw_cache_setting.timediff_old_cw = timediff_old_cw;
+
+	return cw_cache_setting;
+}
+
+bool cw_cache_check(ECM_REQUEST *er){
+	if(cw_cache_init_done){
+		CW_CACHE_SETTING cw_cache_setting = get_cw_cache(er);
+		if(cw_cache_setting.mode > 0){
+			CW_CACHE *cw_cache = NULL;
+			SAFE_RWLOCK_WRLOCK(&cw_cache_lock);
+			cw_cache = find_hash_table(&ht_cw_cache, &er->cw, sizeof(er->cw), &compare_cw_cache);
+			// add cw to ht_cw_cache if < cw_cache_size
+			if(!cw_cache){
+				// cw_cache-size(count/memory) pre-check
+				if(
+					(cfg.cw_cache_size && (cfg.cw_cache_size > tommy_hashlin_count(&ht_cw_cache)))
+					|| 	(cfg.cw_cache_memory && (cfg.cw_cache_memory*1024*1024 > (2 * tommy_hashlin_memory_usage(&ht_cw_cache))))
+				){
+					if(cs_malloc(&cw_cache, sizeof(CW_CACHE))){
+						memcpy(cw_cache->cw, er->cw, sizeof(er->cw));
+						cw_cache->caid = er->caid;
+						cw_cache->prid = er->prid;
+						cw_cache->srvid = er->srvid;
+						cs_ftime(&cw_cache->first_recv_time);
+						cs_ftime(&cw_cache->upd_time);
+						
+						tommy_hashlin_insert(&ht_cw_cache, &cw_cache->ht_node, cw_cache, tommy_hash_u32(0, &er->cw, sizeof(er->cw)));
+						tommy_list_insert_tail(&ll_cw_cache, &cw_cache->ll_node, cw_cache);
+
+						SAFE_RWLOCK_UNLOCK(&cw_cache_lock);
+						return true;
+					}
+					else{
+						SAFE_RWLOCK_UNLOCK(&cw_cache_lock);
+						cs_log("[cw_cache] ERROR: NO added HASH to cw_cache!!");
+						return false;
+					}
+				}
+				else{
+					// clean cache call;
+					SAFE_RWLOCK_UNLOCK(&cw_cache_lock);
+					cw_cache_cleanup(true);
+					return false;
+				}
+			}
+			// cw found
+			else{
+				char cw1[16*3+2];
+				char cw2[16*3+2];
+				int8_t drop_cw = 0;
+				uint32_t gone_diff = 0;
+				gone_diff = comp_timeb(&er->tps, &cw_cache->first_recv_time);
+
+				if(D_CW_CACHE & cs_dblevel){
+					cs_hexdump(0, cw_cache->cw, 16, cw1, sizeof(cw1));
+					cs_hexdump(0, er->cw, 16, cw2, sizeof(cw2));
+				}
+
+				if(cw_cache->srvid == er->srvid && cw_cache->caid == er->caid){
+					cs_ftime(&cw_cache->upd_time);
+					// late (>cw_cache_setting.timediff_old_cw) cw incoming
+					if(cw_cache_setting.timediff_old_cw > 0 && gone_diff > cw_cache_setting.timediff_old_cw){
+						cs_log_dbg(D_CW_CACHE,"[cw_cache][late CW] cache: %04X:%06X:%04X:%s | in: %04X:%06X:%04X:%s | diff(now): %ums > %d", cw_cache->caid, cw_cache->prid, cw_cache->srvid, cw1, er->caid, er->prid, er->srvid, cw2, gone_diff, cw_cache_setting.timediff_old_cw);
+						drop_cw=1;
+					}
+				}
+				// same cw for different srvid incoming WTF? => drop
+				else if(cw_cache->srvid != er->srvid){
+					cs_ftime(&cw_cache->upd_time);
+					cs_log_dbg(D_CW_CACHE,"[cw_cache][dupe CW] cache: %04X:%06X:%04X:%s | in: %04X:%06X:%04X:%s | diff(now): %ums", cw_cache->caid, cw_cache->prid, cw_cache->srvid, cw1, er->caid, er->prid, er->srvid, cw2, gone_diff);
+					drop_cw = 1;
+				}
+
+				if(cw_cache_setting.mode > 1 && drop_cw){
+					// cw_cache->drop_count++;
+					cs_log_dbg(D_CW_CACHE,"[cw_cache] incoming CW dropped - current cw_cache_size: %i - cw_cache-mem-size: %iMiB", count_hash_table(&ht_cw_cache), 2*(int)tommy_hashlin_memory_usage(&ht_cw_cache)/1024/1024);
+					SAFE_RWLOCK_UNLOCK(&cw_cache_lock);
+					return false;
+				}
+			}
+			SAFE_RWLOCK_UNLOCK(&cw_cache_lock);
+			return true;
+		}
+	}
+	else{
+		cs_log_dbg(D_CW_CACHE,"[cw_cache] cw_cache_init_done %i cfg.cw_cache_size: %u cfg.cw_cache_memory %u", cw_cache_init_done, cfg.cw_cache_size, cfg.cw_cache_memory);
+		return true;
+	}
+	return true;
+}
+
 void add_cache(ECM_REQUEST *er)
 {
 	if(!cache_init_done || !er->csp_hash) return;
+	
+	// cw_cache_check
+	if(!cw_cache_check(er)){
+		return;
+	}
 
 	ECMHASH *result = NULL;
 	CW *cw = NULL;
@@ -334,10 +521,9 @@ void add_cache(ECM_REQUEST *er)
 			result->csp_hash = er->csp_hash;
 			init_hash_table(&result->ht_cw, &result->ll_cw);
 			cs_ftime(&result->first_recv_time);
-
 			add_hash_table(&ht_cache, &result->ht_node, &ll_cache, &result->ll_node, result, &result->csp_hash, sizeof(uint32_t));
-
-		}else{
+		}
+		else{
 			SAFE_RWLOCK_UNLOCK(&cache_lock);
 			cs_log("ERROR: NO added HASH to cache!!");
 			return;
@@ -415,8 +601,58 @@ void add_cache(ECM_REQUEST *er)
 		sort_list(&result->ll_cw, count_sort);
 
 	SAFE_RWLOCK_UNLOCK(&cache_lock);
-
+	
 	cacheex_cache_add(er, result, cw, add_new_cw);
+}
+
+void cw_cache_cleanup(bool force){
+	if(!cw_cache_init_done)
+		{ return; }
+
+	SAFE_RWLOCK_WRLOCK(&cw_cache_lock);
+	// check cfg-values to force cleanup
+	if(
+		(cfg.cw_cache_size && (cfg.cw_cache_size == tommy_hashlin_count(&ht_cw_cache)))
+		|| 	(cfg.cw_cache_memory && (cfg.cw_cache_memory*1024*1024 < (2 * tommy_hashlin_memory_usage(&ht_cw_cache))))
+	){
+		force=true;
+	}
+
+	if(!force){
+		SAFE_RWLOCK_UNLOCK(&cw_cache_lock);
+		return;
+	}
+
+	CW_CACHE *cw_cache;
+	node *i, *i_next;
+	uint32_t ll_c = 0;
+	uint32_t ll_ten_percent = (uint)tommy_list_count(&ll_cw_cache)*0.1; // 10 percent of cache
+	
+	sort_list(&ll_cw_cache, time_sort);
+
+	i = get_first_node_list(&ll_cw_cache);
+	while(i)
+	{
+		i_next = i->next;
+		
+		cw_cache = get_data_from_node(i);
+
+		if(!cw_cache)
+		{
+			i = i_next;
+			continue;
+		}
+		
+		++ll_c;
+		if(force && ll_c < ll_ten_percent){
+			remove_elem_list(&ll_cw_cache, &cw_cache->ll_node);
+			remove_elem_hash_table(&ht_cw_cache, &cw_cache->ht_node);
+			NULLFREE(cw_cache);
+		}
+		i = i_next;
+	}
+
+	SAFE_RWLOCK_UNLOCK(&cw_cache_lock);
 }
 
 void cleanup_cache(bool force)

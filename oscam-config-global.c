@@ -632,8 +632,9 @@ void cache_fixups_fn(void *UNUSED(var))
 static bool cache_should_save_fn(void *UNUSED(var))
 {
 	return cfg.delay > 0 || cfg.max_cache_time != 15
+			|| cfg.cw_cache_size > 0 || cfg.cw_cache_memory > 0 
 #ifdef CS_CACHEEX
-			|| cfg.cacheex_wait_timetab.cevnum || cfg.cacheex_enable_stats > 0 || cfg.csp_port || cfg.csp.filter_caidtab.cevnum || cfg.csp.allow_request == 0 || cfg.csp.allow_reforward > 0
+			|| cfg.cw_cache_settings.cwchecknum || cfg.cacheex_wait_timetab.cevnum || cfg.cacheex_enable_stats > 0 || cfg.csp_port || cfg.csp.filter_caidtab.cevnum || cfg.csp.allow_request == 0 || cfg.csp.allow_reforward > 0
 #endif
 #ifdef CW_CYCLE_CHECK
 			|| cfg.cwcycle_check_enable || cfg.cwcycle_check_caidtab.ctnum || cfg.maxcyclelist != 500 || cfg.keepcycletime || cfg.onbadcycle || cfg.cwcycle_dropold || cfg.cwcycle_sensitive || cfg.cwcycle_allowbadfromffb || cfg.cwcycle_usecwcfromce
@@ -648,6 +649,9 @@ static const struct config_list cache_opts[] =
 	DEF_OPT_UINT32("delay"                , OFS(delay)                  , CS_DELAY),
 	DEF_OPT_INT32("max_time"              , OFS(max_cache_time)         , DEFAULT_MAX_CACHE_TIME),
 #ifdef CS_CACHEEX
+	DEF_OPT_UINT32("cw_cache_size"        , OFS(cw_cache_size)          , 0),
+	DEF_OPT_UINT32("cw_cache_memory"      , OFS(cw_cache_memory)        , 0),
+	DEF_OPT_FUNC("cw_cache_settings"       , OFS(cw_cache_settings)    , cacheex_cwcheck_tab_fn),
 	DEF_OPT_INT32("max_hit_time"          , OFS(max_hitcache_time)      , DEFAULT_MAX_HITCACHE_TIME),
 	DEF_OPT_FUNC("wait_time"              , OFS(cacheex_wait_timetab)   , cacheex_valuetab_fn),
 	DEF_OPT_FUNC("cacheex_mode1_delay"    , OFS(cacheex_mode1_delay_tab), caidvaluetab_fn),

@@ -201,6 +201,7 @@ static void show_usage(void)
 	printf("                         .  1024 - Client ECM logging.\n");
 	printf("                         .  2048 - CSP logging.\n");
 	printf("                         .  4096 - CWC logging.\n");
+	printf("                         .  8192 - CW Cache logging.\n");
 	printf("                         . 65535 - Debug all.\n");
 	printf("\n Settings:\n");
 	printf(" -p, --pending-ecm <num> | Set the maximum number of pending ECM packets.\n");
@@ -1803,6 +1804,7 @@ int32_t main(int32_t argc, char *argv[])
 	init_cache();
 	cacheex_init_hitcache();
 	init_config();
+	init_cw_cache();
 	cs_init_log();
 	init_machine_info();
 	init_check();

@@ -932,6 +932,15 @@ static char *send_oscam_config_cache(struct templatevars *vars, struct uriparams
 
 #ifdef CS_CACHEEX
 	char *value = NULL;
+	
+	value = mk_t_cacheex_cwcheck_valuetab(&cfg.cw_cache_settings);
+	tpl_addVar(vars, TPLADD, "CWCACHESETTINGS", value);
+	free_mk_t(value);
+
+	tpl_printf(vars, TPLADD, "CWCACHESIZE", "%d", cfg.cw_cache_size);
+	
+	tpl_printf(vars, TPLADD, "CWCACHEMEMORY", "%d", cfg.cw_cache_memory);
+
 	value = mk_t_cacheex_valuetab(&cfg.cacheex_wait_timetab);
 	tpl_addVar(vars, TPLADD, "WAIT_TIME", value);
 	free_mk_t(value);
