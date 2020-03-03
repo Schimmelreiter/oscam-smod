@@ -1273,12 +1273,12 @@ static int32_t CAK7_GetCamKey(struct s_reader *reader)
 
 	if(reader->cak7_seq <= 15)
 	{
-		rdr_log(reader, "card needs restart after %d CMDs", reader->needrestart);
+		rdr_log(reader, "card needs FASTreinit after %d CMDs", reader->needrestart);
 	}
 	else
 	{
 		uint32_t cmdleft = reader->needrestart - reader->cak7_seq;
-		rdr_log(reader, "%d CMDs left to restart", cmdleft);
+		rdr_log(reader, "%d CMDs left to FASTreinit", cmdleft);
 	}
 
 	reader->dword_83DBC =  (cta_res[18] << 24);
@@ -1540,22 +1540,46 @@ static int32_t nagra3_card_info(struct s_reader *reader)
 	return OK;
 }
 
+static int32_t fastreinit(struct s_reader *reader)
+{
+	ATR newatr[ATR_MAX_SIZE];
+	memset(newatr, 0, 1);
+	if(ICC_Async_Activate(reader, newatr, 0))
+	{
+		return ERROR;
+	}
+	reader->cak7_seq = 0;
+	if(!CAK7_GetCamKey(reader))
+	{
+		return ERROR;
+	}
+	return OK;
+}
+
 static void nagra3_post_process(struct s_reader *reader)
 {
 	if(reader->cak7_seq >= reader->needrestart)
 	{
-		rdr_log(reader, "card needs restart to prevent crash");
-		reader->card_status = CARD_NEED_INIT;
-		add_job(reader->client, ACTION_READER_RESTART, NULL, 0);
+		rdr_log(reader, "card needs FASTreinit to prevent crash");
+		if(!fastreinit(reader))
+		{
+			rdr_log(reader, "FASTreinit failed - need to restart reader");
+			reader->card_status = CARD_NEED_INIT;
+			add_job(reader->client, ACTION_READER_RESTART, NULL, 0);
+		}
 	}
 	else if((reader->cak7_camstate & 64) == 64)
 	{
 		rdr_log(reader, "negotiating new Session Key");
 		if(!CAK7_GetCamKey(reader))
 		{
-			rdr_log(reader, "negotiations failed - need to restart reader");
-			reader->card_status = CARD_NEED_INIT;
-			add_job(reader->client, ACTION_READER_RESTART, NULL, 0);
+			rdr_log(reader, "negotiations failed - trying FASTreinit");
+			if(!fastreinit(reader))
+			{
+				rdr_log(reader, "FASTreinit failed - need to restart reader");
+                reader->card_status = CARD_NEED_INIT;
+                add_job(reader->client, ACTION_READER_RESTART, NULL, 0);
+			}
 		}
 	}
 }
@@ -1798,18 +1822,26 @@ static int32_t nagra3_do_emm(struct s_reader *reader, EMM_PACKET *ep)
 
 			if(reader->cak7_seq >= reader->needrestart)
 			{
-				rdr_log(reader, "card needs restart to prevent crash");
-				reader->card_status = CARD_NEED_INIT;
-				add_job(reader->client, ACTION_READER_RESTART, NULL, 0);
+				rdr_log(reader, "card needs FASTreinit to prevent crash");
+				if(!fastreinit(reader))
+				{
+					rdr_log(reader, "FASTreinit failed - need to restart reader");
+					reader->card_status = CARD_NEED_INIT;
+					add_job(reader->client, ACTION_READER_RESTART, NULL, 0);
+				}
 			}
 			else if((cta_res[4] & 64) == 64)
 			{
 				rdr_log(reader, "negotiating new Session Key");
 				if(!CAK7_GetCamKey(reader))
 				{
-					rdr_log(reader, "negotiations failed - need to restart reader");
-					reader->card_status = CARD_NEED_INIT;
-					add_job(reader->client, ACTION_READER_RESTART, NULL, 0);
+					rdr_log(reader, "negotiations failed - trying FASTreinit");
+					if(!fastreinit(reader))
+					{
+						rdr_log(reader, "FASTreinit failed - need to restart reader");
+						reader->card_status = CARD_NEED_INIT;
+						add_job(reader->client, ACTION_READER_RESTART, NULL, 0);
+					}
 				}
 			}
 		}
