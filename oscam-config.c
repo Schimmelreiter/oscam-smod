@@ -1518,10 +1518,12 @@ int32_t chk_cccam_cfg_F_more(char *line,struct s_auth * account)
 						account->ftab.filts[dno].nprids++;
 					}
 					if(dno==2){
+#ifdef MODULE_CCCSHARE
 						if(!cno && !(account->cccreshare)){
 							sscanf(p3,"%d",&reshare);
 							account->cccreshare=(int32_t)reshare;
 						}
+#endif
 						if(cno==1){
 							srvid=(uint16_t)a2i(p3,4);
 
