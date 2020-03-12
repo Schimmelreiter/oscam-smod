@@ -75,25 +75,20 @@
  }
  
  uint32_t cache_size(void)
-@@ -95,6 +132,17 @@
+@@ -95,6 +132,12 @@
  	return (a->count > b->count) ? -1 : 1; // DESC order by count
  }
  
 +static uint8_t time_sort(CW_CACHE *a, CW_CACHE *b)
 +{
-+	if(a->upd_time.millitm == b->upd_time.millitm){
-+		return 0;
-+	}
-+	else
-+	{
-+		return (a->upd_time.millitm > b->upd_time.millitm) ? -1 : 1;
-+	}
++	if (((int64_t)(a->upd_time.time) * 1000ull + (int64_t) a->upd_time.millitm) == ((int64_t)(b->upd_time.time) * 1000ull + (int64_t) b->upd_time.millitm)) return 0;
++	return (((int64_t)(a->upd_time.time) * 1000ull + (int64_t) a->upd_time.millitm) > ((int64_t)(b->upd_time.time) * 1000ull + (int64_t) b->upd_time.millitm)) ? -1 : 1;
 +}
 +
  uint8_t check_is_pushed(void *cwp, struct s_client *cl)
  {
  	struct s_pushclient *cl_tmp;
-@@ -172,6 +220,11 @@
+@@ -172,6 +215,11 @@
  	return memcmp(arg, ((const CW*)obj)->cw, 16);
  }
  
@@ -105,7 +100,7 @@
  static bool cwcycle_check_cache(struct s_client *cl, ECM_REQUEST *er, CW *cw)
  {
  	(void)cl; (void)er; (void)cw;
-@@ -237,7 +290,7 @@
+@@ -237,7 +285,7 @@
  		if((!cw->proxy && !cw->localcards) // cw received from ONLY cacheex/csp peers
  			&& check_cw.counter>1
  			&& cw->count < check_cw.counter
@@ -114,7 +109,7 @@
  		{
  			goto out_err;
  		}
-@@ -317,9 +370,143 @@
+@@ -317,9 +365,144 @@
  #endif
  }
  
@@ -218,14 +213,14 @@
 +					cs_ftime(&cw_cache->upd_time);
 +					// late (>cw_cache_setting.timediff_old_cw) cw incoming
 +					if(cw_cache_setting.timediff_old_cw > 0 && gone_diff > cw_cache_setting.timediff_old_cw){
-+						cs_log_dbg(D_CW_CACHE,"[cw_cache][late CW] cache: %04X:%06X:%04X:%s | in: %04X:%06X:%04X:%s | diff(now): %ums > %d", cw_cache->caid, cw_cache->prid, cw_cache->srvid, cw1, er->caid, er->prid, er->srvid, cw2, gone_diff, cw_cache_setting.timediff_old_cw);
++						cs_log_dbg(D_CW_CACHE,"[cw_cache][late CW] cache: %04X:%06X:%04X:%s | in: %04X:%06X:%04X:%s | diff(now): %ums > %d - %s", cw_cache->caid, cw_cache->prid, cw_cache->srvid, cw1, er->caid, er->prid, er->srvid, cw2, gone_diff, cw_cache_setting.timediff_old_cw, er->selected_reader->label);
 +						drop_cw=1;
 +					}
 +				}
 +				// same cw for different srvid incoming WTF? => drop
 +				else if(cw_cache->srvid != er->srvid){
 +					cs_ftime(&cw_cache->upd_time);
-+					cs_log_dbg(D_CW_CACHE,"[cw_cache][dupe CW] cache: %04X:%06X:%04X:%s | in: %04X:%06X:%04X:%s | diff(now): %ums", cw_cache->caid, cw_cache->prid, cw_cache->srvid, cw1, er->caid, er->prid, er->srvid, cw2, gone_diff);
++					cs_log_dbg(D_CW_CACHE,"[cw_cache][dupe CW] cache: %04X:%06X:%04X:%s | in: %04X:%06X:%04X:%s | diff(now): %ums - %s", cw_cache->caid, cw_cache->prid, cw_cache->srvid, cw1, er->caid, er->prid, er->srvid, cw2, gone_diff, er->selected_reader->label);
 +					drop_cw = 1;
 +				}
 +
@@ -236,6 +231,7 @@
 +					return false;
 +				}
 +			}
++			
 +			SAFE_RWLOCK_UNLOCK(&cw_cache_lock);
 +			return true;
 +		}
@@ -258,7 +254,7 @@
  
  	ECMHASH *result = NULL;
  	CW *cw = NULL;
-@@ -334,10 +521,9 @@
+@@ -334,10 +517,9 @@
  			result->csp_hash = er->csp_hash;
  			init_hash_table(&result->ht_cw, &result->ll_cw);
  			cs_ftime(&result->first_recv_time);
@@ -271,7 +267,7 @@
  			SAFE_RWLOCK_UNLOCK(&cache_lock);
  			cs_log("ERROR: NO added HASH to cache!!");
  			return;
-@@ -415,10 +601,60 @@
+@@ -415,10 +597,63 @@
  		sort_list(&result->ll_cw, count_sort);
  
  	SAFE_RWLOCK_UNLOCK(&cache_lock);
@@ -302,7 +298,7 @@
 +	node *i, *i_next;
 +	uint32_t ll_c = 0;
 +	uint32_t ll_ten_percent = (uint)tommy_list_count(&ll_cw_cache)*0.1; // 10 percent of cache
-+	
++
 +	sort_list(&ll_cw_cache, time_sort);
 +
 +	i = get_first_node_list(&ll_cw_cache);
@@ -317,12 +313,15 @@
 +			i = i_next;
 +			continue;
 +		}
-+		
 +		++ll_c;
-+		if(force && ll_c < ll_ten_percent){
++
++		if(ll_c < ll_ten_percent){
 +			remove_elem_list(&ll_cw_cache, &cw_cache->ll_node);
 +			remove_elem_hash_table(&ht_cw_cache, &cw_cache->ht_node);
 +			NULLFREE(cw_cache);
++		}
++		else{
++			break;
 +		}
 +		i = i_next;
 +	}
@@ -333,7 +332,7 @@
  void cleanup_cache(bool force)
  {
  	ECMHASH *ecmhash;
-@@ -488,4 +724,4 @@
+@@ -488,4 +723,4 @@
  		i = i_next;
  	}
  	SAFE_RWLOCK_UNLOCK(&cache_lock);
@@ -430,7 +429,7 @@
  
  /////// phoenix readers which need baudrate setting and timings need to be guarded by OSCam: BEFORE R_MOUSE
  #define R_DB2COM1				0x1		// Reader Dbox2 @ com1
-@@ -2305,6 +2306,10 @@
+@@ -2307,6 +2308,10 @@
  
  	int32_t			max_cache_time;					// seconds ecms are stored in ecmcwcache
  	int32_t			max_hitcache_time;				// seconds hits are stored in cspec_hitcache (to detect dyn wait_time)
@@ -464,14 +463,4 @@
  	DEF_OPT_INT32("max_hit_time"          , OFS(max_hitcache_time)      , DEFAULT_MAX_HITCACHE_TIME),
  	DEF_OPT_FUNC("wait_time"              , OFS(cacheex_wait_timetab)   , cacheex_valuetab_fn),
  	DEF_OPT_FUNC("cacheex_mode1_delay"    , OFS(cacheex_mode1_delay_tab), caidvaluetab_fn),
---- a/oscam-ecm.c
-+++ b/oscam-ecm.c
-@@ -357,6 +357,7 @@
- 			{ msec_wait = 3000; }
- 
- 		cleanupcwcycle();
-+		cw_cache_cleanup(false);
- 	}
- 
- 	return NULL;
 

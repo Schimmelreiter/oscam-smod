@@ -134,13 +134,8 @@ static uint8_t count_sort(CW *a, CW *b)
 
 static uint8_t time_sort(CW_CACHE *a, CW_CACHE *b)
 {
-	if(a->upd_time.millitm == b->upd_time.millitm){
-		return 0;
-	}
-	else
-	{
-		return (a->upd_time.millitm > b->upd_time.millitm) ? -1 : 1;
-	}
+	if (((int64_t)(a->upd_time.time) * 1000ull + (int64_t) a->upd_time.millitm) == ((int64_t)(b->upd_time.time) * 1000ull + (int64_t) b->upd_time.millitm)) return 0;
+	return (((int64_t)(a->upd_time.time) * 1000ull + (int64_t) a->upd_time.millitm) > ((int64_t)(b->upd_time.time) * 1000ull + (int64_t) b->upd_time.millitm)) ? -1 : 1;
 }
 
 uint8_t check_is_pushed(void *cwp, struct s_client *cl)
@@ -470,14 +465,14 @@ bool cw_cache_check(ECM_REQUEST *er){
 					cs_ftime(&cw_cache->upd_time);
 					// late (>cw_cache_setting.timediff_old_cw) cw incoming
 					if(cw_cache_setting.timediff_old_cw > 0 && gone_diff > cw_cache_setting.timediff_old_cw){
-						cs_log_dbg(D_CW_CACHE,"[cw_cache][late CW] cache: %04X:%06X:%04X:%s | in: %04X:%06X:%04X:%s | diff(now): %ums > %d", cw_cache->caid, cw_cache->prid, cw_cache->srvid, cw1, er->caid, er->prid, er->srvid, cw2, gone_diff, cw_cache_setting.timediff_old_cw);
+						cs_log_dbg(D_CW_CACHE,"[cw_cache][late CW] cache: %04X:%06X:%04X:%s | in: %04X:%06X:%04X:%s | diff(now): %ums > %d - %s", cw_cache->caid, cw_cache->prid, cw_cache->srvid, cw1, er->caid, er->prid, er->srvid, cw2, gone_diff, cw_cache_setting.timediff_old_cw, er->selected_reader->label);
 						drop_cw=1;
 					}
 				}
 				// same cw for different srvid incoming WTF? => drop
 				else if(cw_cache->srvid != er->srvid){
 					cs_ftime(&cw_cache->upd_time);
-					cs_log_dbg(D_CW_CACHE,"[cw_cache][dupe CW] cache: %04X:%06X:%04X:%s | in: %04X:%06X:%04X:%s | diff(now): %ums", cw_cache->caid, cw_cache->prid, cw_cache->srvid, cw1, er->caid, er->prid, er->srvid, cw2, gone_diff);
+					cs_log_dbg(D_CW_CACHE,"[cw_cache][dupe CW] cache: %04X:%06X:%04X:%s | in: %04X:%06X:%04X:%s | diff(now): %ums - %s", cw_cache->caid, cw_cache->prid, cw_cache->srvid, cw1, er->caid, er->prid, er->srvid, cw2, gone_diff, er->selected_reader->label);
 					drop_cw = 1;
 				}
 
@@ -488,6 +483,7 @@ bool cw_cache_check(ECM_REQUEST *er){
 					return false;
 				}
 			}
+			
 			SAFE_RWLOCK_UNLOCK(&cw_cache_lock);
 			return true;
 		}
@@ -627,7 +623,7 @@ void cw_cache_cleanup(bool force){
 	node *i, *i_next;
 	uint32_t ll_c = 0;
 	uint32_t ll_ten_percent = (uint)tommy_list_count(&ll_cw_cache)*0.1; // 10 percent of cache
-	
+
 	sort_list(&ll_cw_cache, time_sort);
 
 	i = get_first_node_list(&ll_cw_cache);
@@ -642,12 +638,15 @@ void cw_cache_cleanup(bool force){
 			i = i_next;
 			continue;
 		}
-		
 		++ll_c;
-		if(force && ll_c < ll_ten_percent){
+
+		if(ll_c < ll_ten_percent){
 			remove_elem_list(&ll_cw_cache, &cw_cache->ll_node);
 			remove_elem_hash_table(&ht_cw_cache, &cw_cache->ht_node);
 			NULLFREE(cw_cache);
+		}
+		else{
+			break;
 		}
 		i = i_next;
 	}
