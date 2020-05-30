@@ -424,6 +424,7 @@ void *work_thread(void *ptr)
 						{
 							int32_t hide_count;
 
+
 							int32_t cardsize;
 							int32_t ii, uu=0;
 							LLIST **sharelist = get_and_lock_sharelist();
