@@ -12,4 +12,5 @@ uint32_t cache_size(void);
 uint8_t get_odd_even(ECM_REQUEST *er);
 uint8_t check_is_pushed(void *cw, struct s_client *cl);
 void cw_cache_cleanup(bool force);
+int compare_csp_hash(const void *arg, const void *obj);
 #endif

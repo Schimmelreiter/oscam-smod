@@ -40,6 +40,7 @@ typedef struct cw_t
 	uint8_t             localcards;          // updated if answer from local cards (or proxy using localcards option)
 	uint8_t             proxy;               // updated if answer from local reader
 	uint32_t            count;               // count of same cws receved
+	uint8_t				localgenerated;      // flag for local generated CWs
 	// for push out
 	pthread_rwlock_t    pushout_client_lock;
 	struct s_pushclient *pushout_client;     // list of clients that pushing cw
@@ -85,10 +86,11 @@ static list ll_cache;
 static list ll_cw_cache;
 static int8_t cache_init_done = 0;
 static int8_t cw_cache_init_done = 0;
-uint32_t cw_cache_remove_count = 0;
 
-void init_cw_cache(void){
-	if(cfg.cw_cache_size > 0 || cfg.cw_cache_memory > 0){
+void init_cw_cache(void)
+{
+	if(cfg.cw_cache_size > 0 || cfg.cw_cache_memory > 0)
+	{
 		init_hash_table(&ht_cw_cache, &ll_cw_cache);
 		if (pthread_rwlock_init(&cw_cache_lock,NULL) != 0)
 			{ cs_log("Error creating lock cw_cache_lock!"); }
@@ -110,6 +112,7 @@ void free_cache(void)
 {
 	cleanup_cache(true);
 	cw_cache_cleanup(true);
+	ecm_cache_cleanup(true);
 	cache_init_done = 0;
 	cw_cache_init_done = 0;
 	deinitialize_hash_table(&ht_cache);
@@ -204,7 +207,7 @@ CW *get_first_cw(ECMHASH *ecmhash, ECM_REQUEST *er)
 	return NULL;
 }
 
-static int compare_csp_hash(const void *arg, const void *obj)
+int compare_csp_hash(const void *arg, const void *obj)
 {
 	uint32_t h = ((const ECMHASH*)obj)->csp_hash;
 	return memcmp(arg, &h, 4);
@@ -304,6 +307,7 @@ struct ecm_request_t *check_cache(ECM_REQUEST *er, struct s_client *cl)
 			ecm->cwc_cycletime = cw->cwc_cycletime;
 			ecm->cwc_next_cw_cycle = cw->cwc_next_cw_cycle;
 			ecm->cacheex_src = cw->cacheex_src;
+			ecm->localgenerated = (cw->localgenerated) ? 1:0;
 			ecm->cw_count = cw->count;
 		}
 	}
@@ -311,6 +315,11 @@ struct ecm_request_t *check_cache(ECM_REQUEST *er, struct s_client *cl)
 out_err:
 	SAFE_RWLOCK_UNLOCK(&cache_lock);
 	return ecm;
+}
+
+uint16_t get_cacheex_nopushafter(ECM_REQUEST *er)
+{
+	return caidvaluetab_get_value(&cfg.cacheex_nopushafter_tab, er->caid, 0);
 }
 
 static void cacheex_cache_add(ECM_REQUEST *er, ECMHASH *result, CW *cw, bool add_new_cw)
@@ -330,7 +339,7 @@ static void cacheex_cache_add(ECM_REQUEST *er, ECMHASH *result, CW *cw, bool add
 		return;
 	}
 
-	debug_ecm(D_CACHEEX|D_CSP, "got pushed ECM %s from %s", buf, er->from_csp ? "csp" : username(er->cacheex_src));
+	debug_ecm(D_CACHEEX|D_CSP, "got pushed ECM %s from %s - hop %i", buf, er->from_csp ? "csp" : username(er->cacheex_src), ll_count(er->csp_lastnodes));
 	CW *cw_first = get_first_cw(result, er);
 	if(!cw_first)
 		return;
@@ -407,21 +416,27 @@ CW_CACHE_SETTING get_cw_cache(ECM_REQUEST *er)
 	return cw_cache_setting;
 }
 
-bool cw_cache_check(ECM_REQUEST *er){
-	if(cw_cache_init_done){
+static bool cw_cache_check(ECM_REQUEST *er)
+{
+	if(cw_cache_init_done)
+	{
 		CW_CACHE_SETTING cw_cache_setting = get_cw_cache(er);
-		if(cw_cache_setting.mode > 0){
+		if(cw_cache_setting.mode > 0)
+		{
 			CW_CACHE *cw_cache = NULL;
 			SAFE_RWLOCK_WRLOCK(&cw_cache_lock);
 			cw_cache = find_hash_table(&ht_cw_cache, &er->cw, sizeof(er->cw), &compare_cw_cache);
 			// add cw to ht_cw_cache if < cw_cache_size
-			if(!cw_cache){
+			if(!cw_cache)
+			{
 				// cw_cache-size(count/memory) pre-check
 				if(
 					(cfg.cw_cache_size && (cfg.cw_cache_size > tommy_hashlin_count(&ht_cw_cache)))
 					|| 	(cfg.cw_cache_memory && (cfg.cw_cache_memory*1024*1024 > (2 * tommy_hashlin_memory_usage(&ht_cw_cache))))
-				){
-					if(cs_malloc(&cw_cache, sizeof(CW_CACHE))){
+				)
+				{
+					if(cs_malloc(&cw_cache, sizeof(CW_CACHE)))
+					{
 						memcpy(cw_cache->cw, er->cw, sizeof(er->cw));
 						cw_cache->caid = er->caid;
 						cw_cache->prid = er->prid;
@@ -431,56 +446,64 @@ bool cw_cache_check(ECM_REQUEST *er){
 						
 						tommy_hashlin_insert(&ht_cw_cache, &cw_cache->ht_node, cw_cache, tommy_hash_u32(0, &er->cw, sizeof(er->cw)));
 						tommy_list_insert_tail(&ll_cw_cache, &cw_cache->ll_node, cw_cache);
-
+						
 						SAFE_RWLOCK_UNLOCK(&cw_cache_lock);
 						return true;
 					}
-					else{
+					else
+					{
 						SAFE_RWLOCK_UNLOCK(&cw_cache_lock);
 						cs_log("[cw_cache] ERROR: NO added HASH to cw_cache!!");
 						return false;
 					}
 				}
-				else{
+				else
+				{
 					// clean cache call;
 					SAFE_RWLOCK_UNLOCK(&cw_cache_lock);
-					cw_cache_cleanup(true);
+					cw_cache_cleanup(false);
 					return false;
 				}
 			}
 			// cw found
-			else{
+			else
+			{
 				char cw1[16*3+2];
 				char cw2[16*3+2];
 				int8_t drop_cw = 0;
-				uint32_t gone_diff = 0;
+				int64_t gone_diff = 0;
+
 				gone_diff = comp_timeb(&er->tps, &cw_cache->first_recv_time);
 
-				if(D_CW_CACHE & cs_dblevel){
+				if(D_CW_CACHE & cs_dblevel)
+				{
 					cs_hexdump(0, cw_cache->cw, 16, cw1, sizeof(cw1));
 					cs_hexdump(0, er->cw, 16, cw2, sizeof(cw2));
 				}
 
-				if(cw_cache->srvid == er->srvid && cw_cache->caid == er->caid){
-					cs_ftime(&cw_cache->upd_time);
-					// late (>cw_cache_setting.timediff_old_cw) cw incoming
-					if(cw_cache_setting.timediff_old_cw > 0 && gone_diff > cw_cache_setting.timediff_old_cw){
-						cs_log_dbg(D_CW_CACHE,"[cw_cache][late CW] cache: %04X:%06X:%04X:%s | in: %04X:%06X:%04X:%s | diff(now): %ums > %d - %s", cw_cache->caid, cw_cache->prid, cw_cache->srvid, cw1, er->caid, er->prid, er->srvid, cw2, gone_diff, cw_cache_setting.timediff_old_cw, er->selected_reader->label);
+				if(cw_cache_setting.timediff_old_cw > 0 && gone_diff > cw_cache_setting.timediff_old_cw) // late (>cw_cache_setting.timediff_old_cw) cw incoming
+				{
+					if(cw_cache->srvid == er->srvid && cw_cache->caid == er->caid) // & same cw for same caid&srvid
+					{
+						cs_ftime(&cw_cache->upd_time);
+						cs_log_dbg(D_CW_CACHE,"[cw_cache][late CW] cache: %04X:%06X:%04X:%s | in: %04X:%06X:%04X:%s | diff(now): %"PRIi64"ms > %"PRIu16" - %s", cw_cache->caid, cw_cache->prid, cw_cache->srvid, cw1, er->caid, er->prid, er->srvid, cw2, gone_diff, cw_cache_setting.timediff_old_cw, (er->selected_reader && strlen(er->selected_reader->label)) ? er->selected_reader->label : username(er->cacheex_src));
 						drop_cw=1;
-					}
-				}
-				// same cw for different srvid incoming WTF? => drop
-				else if(cw_cache->srvid != er->srvid){
-					cs_ftime(&cw_cache->upd_time);
-					cs_log_dbg(D_CW_CACHE,"[cw_cache][dupe CW] cache: %04X:%06X:%04X:%s | in: %04X:%06X:%04X:%s | diff(now): %ums - %s", cw_cache->caid, cw_cache->prid, cw_cache->srvid, cw1, er->caid, er->prid, er->srvid, cw2, gone_diff, er->selected_reader->label);
-					drop_cw = 1;
-				}
 
-				if(cw_cache_setting.mode > 1 && drop_cw){
-					// cw_cache->drop_count++;
-					cs_log_dbg(D_CW_CACHE,"[cw_cache] incoming CW dropped - current cw_cache_size: %i - cw_cache-mem-size: %iMiB", count_hash_table(&ht_cw_cache), 2*(int)tommy_hashlin_memory_usage(&ht_cw_cache)/1024/1024);
-					SAFE_RWLOCK_UNLOCK(&cw_cache_lock);
-					return false;
+					}
+					else if(cw_cache->srvid != er->srvid) // same cw for different srvid & late
+					{
+						cs_ftime(&cw_cache->upd_time);
+						cs_log_dbg(D_CW_CACHE,"[cw_cache][dupe&late CW] cache: %04X:%06X:%04X:%s | in: %04X:%06X:%04X:%s | diff(now): %"PRIi64"ms - %s", cw_cache->caid, cw_cache->prid, cw_cache->srvid, cw1, er->caid, er->prid, er->srvid, cw2, gone_diff, (er->selected_reader && strlen(er->selected_reader->label)) ? er->selected_reader->label : username(er->cacheex_src));
+						drop_cw = 1;
+					}
+
+					if(cw_cache_setting.mode > 1 && drop_cw)
+					{
+						// cw_cache->drop_count++;
+						cs_log_dbg(D_CW_CACHE,"[cw_cache] incoming CW dropped - current cw_cache_size: %i - cw_cache-mem-size: %iMiB", count_hash_table(&ht_cw_cache), 2*(int)tommy_hashlin_memory_usage(&ht_cw_cache)/1024/1024);
+						SAFE_RWLOCK_UNLOCK(&cw_cache_lock);
+						return false;
+					}
 				}
 			}
 			
@@ -488,7 +511,8 @@ bool cw_cache_check(ECM_REQUEST *er){
 			return true;
 		}
 	}
-	else{
+	else
+	{
 		cs_log_dbg(D_CW_CACHE,"[cw_cache] cw_cache_init_done %i cfg.cw_cache_size: %u cfg.cw_cache_memory %u", cw_cache_init_done, cfg.cw_cache_size, cfg.cw_cache_memory);
 		return true;
 	}
@@ -500,7 +524,8 @@ void add_cache(ECM_REQUEST *er)
 	if(!cache_init_done || !er->csp_hash) return;
 	
 	// cw_cache_check
-	if(!cw_cache_check(er)){
+	if(!cw_cache_check(er))
+	{
 		return;
 	}
 
@@ -512,14 +537,17 @@ void add_cache(ECM_REQUEST *er)
 
 	// add csp_hash to cache
 	result = find_hash_table(&ht_cache, &er->csp_hash, sizeof(uint32_t), &compare_csp_hash);
-	if(!result){
-		if(cs_malloc(&result, sizeof(ECMHASH))){
+	if(!result)
+	{
+		if(cs_malloc(&result, sizeof(ECMHASH)))
+		{
 			result->csp_hash = er->csp_hash;
 			init_hash_table(&result->ht_cw, &result->ll_cw);
 			cs_ftime(&result->first_recv_time);
 			add_hash_table(&ht_cache, &result->ht_node, &ll_cache, &result->ll_node, result, &result->csp_hash, sizeof(uint32_t));
 		}
-		else{
+		else
+		{
 			SAFE_RWLOCK_UNLOCK(&cache_lock);
 			cs_log("ERROR: NO added HASH to cache!!");
 			return;
@@ -588,43 +616,78 @@ void add_cache(ECM_REQUEST *er)
 		else cw->proxy = 1;
 	}
 
+#ifdef CS_CACHEEX
+	// copy flag for local generated CW
+	if(er->localgenerated || (er->selected_reader && !is_network_reader(er->selected_reader)))
+	{
+		cw->localgenerated = 1;
+		er->localgenerated = 1;
+		// to favorite CWs with this flag while sorting
+		if(cw->count < 0x0F000000)
+			cw->count |= 0x0F000000;
+	}
+	else
+	{
+		cw->localgenerated = 0;
+	}
+#endif
+
 	// always update group and counter
 	cw->grp |= er->grp;
 	cw->count++;
 
+	// add count to er for checking @ cacheex_push
+	er->cw_count += cw->count;
 	// sort cw_list by counter (DESC order)
 	if(cw->count>1)
 		sort_list(&result->ll_cw, count_sort);
 
+#ifdef CS_CACHEEX
+	// dont push not flagged CWs - global
+	if(!er->localgenerated && (cfg.cacheex_localgenerated_only || chk_ctab_ex(er->caid, &cfg.cacheex_localgenerated_only_caidtab)))
+	{
+		cs_log_dbg(D_CACHEEX, "cacheex: push denied, cacheex_localgenerated_only->global");
+		SAFE_RWLOCK_UNLOCK(&cache_lock);
+		return;
+	}
+
+	// dont push CW if time for caid > x  && from local reader | proxy
+	if(er->rc < 3 && er->ecm_time && get_cacheex_nopushafter(er) != 0 &&(get_cacheex_nopushafter(er) < er->ecm_time ))
+	{
+		cs_log_dbg(D_CACHEEX, "cacheex: push denied, cacheex_nopushafter %04X:%u < %i, reader: %s", er->caid, get_cacheex_nopushafter(er), er->ecm_time, er->selected_reader->label);
+		SAFE_RWLOCK_UNLOCK(&cache_lock);
+		return;
+	}
+
+	// no cacheex-push on diff-cw's if no localgenerated flag exist
+	if(cfg.cacheex_dropdiffs && (count_hash_table(&result->ht_cw) > 1) && !er->localgenerated)
+	{
+		cs_log_dbg(D_CACHEEX,"cacheex: diff CW - cacheex push denied src: %s", er->selected_reader->label);
+		SAFE_RWLOCK_UNLOCK(&cache_lock);
+		return;
+	}
+#endif
+
 	SAFE_RWLOCK_UNLOCK(&cache_lock);
-	
+
 	cacheex_cache_add(er, result, cw, add_new_cw);
 }
 
-void cw_cache_cleanup(bool force){
+void cw_cache_cleanup(bool force)
+{
 	if(!cw_cache_init_done)
 		{ return; }
 
 	SAFE_RWLOCK_WRLOCK(&cw_cache_lock);
-	// check cfg-values to force cleanup
-	if(
-		(cfg.cw_cache_size && (cfg.cw_cache_size == tommy_hashlin_count(&ht_cw_cache)))
-		|| 	(cfg.cw_cache_memory && (cfg.cw_cache_memory*1024*1024 < (2 * tommy_hashlin_memory_usage(&ht_cw_cache))))
-	){
-		force=true;
-	}
-
-	if(!force){
-		SAFE_RWLOCK_UNLOCK(&cw_cache_lock);
-		return;
-	}
 
 	CW_CACHE *cw_cache;
 	node *i, *i_next;
+		
 	uint32_t ll_c = 0;
 	uint32_t ll_ten_percent = (uint)tommy_list_count(&ll_cw_cache)*0.1; // 10 percent of cache
 
-	sort_list(&ll_cw_cache, time_sort);
+	if(!force)
+		sort_list(&ll_cw_cache, time_sort);
 
 	i = get_first_node_list(&ll_cw_cache);
 	while(i)
@@ -638,19 +701,30 @@ void cw_cache_cleanup(bool force){
 			i = i_next;
 			continue;
 		}
-		++ll_c;
+		if(!force)
+		{
+			++ll_c;
 
-		if(ll_c < ll_ten_percent){
+			if(ll_c < ll_ten_percent)
+			{
+				remove_elem_list(&ll_cw_cache, &cw_cache->ll_node);
+				remove_elem_hash_table(&ht_cw_cache, &cw_cache->ht_node);
+				NULLFREE(cw_cache);
+			}
+			else{
+				break;
+			}
+		}
+		else
+		{
 			remove_elem_list(&ll_cw_cache, &cw_cache->ll_node);
 			remove_elem_hash_table(&ht_cw_cache, &cw_cache->ht_node);
 			NULLFREE(cw_cache);
 		}
-		else{
-			break;
-		}
+
 		i = i_next;
 	}
-
+	
 	SAFE_RWLOCK_UNLOCK(&cw_cache_lock);
 }
 

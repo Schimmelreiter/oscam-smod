@@ -2372,6 +2372,13 @@ void cc_idle(void)
 
 	if(rdr->cc_keepalive)
 	{
+#ifdef CS_CACHEEX
+			if(!cl->cacheex_aio_checked && ((cl->account && cl->account->cacheex.mode > 1) || (cl->reader && cl->reader->cacheex.mode > 1)))
+			{
+				cc_cacheex_feature_request(cl);
+				cl->cacheex_aio_checked = 1;
+			}
+#endif
 		if(cc_cmd_send(cl, NULL, 0, MSG_KEEPALIVE) > 0)
 		{
 			cs_log_dbg(D_READER, "cccam: keepalive");
@@ -2704,6 +2711,13 @@ static void cc_s_idle(struct s_client *cl)
 	cs_log_dbg(D_TRACE, "ccc idle %s", username(cl));
 	if(cfg.cc_keep_connected)
 	{
+#ifdef CS_CACHEEX
+			if(!cl->cacheex_aio_checked && ((cl->account && cl->account->cacheex.mode > 1) || (cl->reader && cl->reader->cacheex.mode > 1)))
+			{
+				cc_cacheex_feature_request(cl);
+				cl->cacheex_aio_checked = 1;
+			}
+#endif
 		cc_cmd_send(cl, NULL, 0, MSG_KEEPALIVE);
 		cl->last = time(NULL);
 	}
@@ -3319,6 +3333,33 @@ int32_t cc_parse_msg(struct s_client *cl, uint8_t *buf, int32_t l)
 			break;
 		}
 
+		case MSG_CACHE_FEATURE_EXCHANGE:
+		{
+			if((l - 4) >= 2)
+			{
+				cc_cacheex_feature_request_reply(cl);
+			}
+			break;
+		}
+
+		case MSG_CACHE_FEATURE_EXCHANGE_REPLY:
+		{
+			if((l - 4) >= 2)
+			{
+				cc_cacheex_feature_request_save(cl, data);
+			}
+			break;
+		}
+
+		case MSG_CACHE_FEATURE_TRIGGER:
+		{
+			if((l - 4) >= 2)
+			{
+				cc_cacheex_feature_trigger_in(cl, data);
+			}
+			break;
+		}
+
 		case MSG_CW_ECM:
 		{
 			cc->just_logged_in = 0;
@@ -3581,6 +3622,13 @@ int32_t cc_parse_msg(struct s_client *cl, uint8_t *buf, int32_t l)
 
 		case MSG_KEEPALIVE:
 		{
+#ifdef CS_CACHEEX
+			if(!cl->cacheex_aio_checked && ((cl->account && cl->account->cacheex.mode > 1) || (cl->reader && cl->reader->cacheex.mode > 1)))
+			{
+				cc_cacheex_feature_request(cl);
+				cl->cacheex_aio_checked = 1;
+			}
+#endif
 			if(cl)
 			{
 				cl->last = time(NULL);
@@ -4478,6 +4526,8 @@ void cc_srv_init2(struct s_client *cl)
 		{
 			cl->init_done = 1;
 			cc_cacheex_filter_out(cl);
+			if((cl->account && cl->account->cacheex.mode > 1) ||(cl->reader && cl->reader->cacheex.mode > 1))
+				cc_cacheex_feature_request(cl);
 		}
 	}
 	return;
@@ -4712,7 +4762,11 @@ int32_t cc_cli_connect(struct s_client *cl)
 	cl->crypted = 1;
 	cc->ecm_busy = 0;
 
-	cc_cacheex_filter_out(cl);
+	if(cacheex_get_rdr_mode(rdr) > 1)
+	{
+		cc_cacheex_filter_out(cl);
+		cc_cacheex_feature_request(cl);
+	}
 
 	return 0;
 }

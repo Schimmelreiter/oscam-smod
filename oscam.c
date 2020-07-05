@@ -1805,6 +1805,7 @@ int32_t main(int32_t argc, char *argv[])
 	cacheex_init_hitcache();
 	init_config();
 	init_cw_cache();
+	init_ecm_cache();
 	cs_init_log();
 	init_machine_info();
 	init_check();
@@ -1971,6 +1972,7 @@ if(!cfg.gsms_dis)
 	cs_sleepms(200);
 
 	free_cache();
+	free_ecm_cache();
 	cacheex_free_hitcache();
 	webif_tpls_free();
 	init_free_userdb(cfg.account);

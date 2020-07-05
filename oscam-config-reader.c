@@ -1763,7 +1763,14 @@ static const struct config_list reader_opts[] =
 	DEF_OPT_UINT8("cacheex_allow_request"         , OFS(cacheex.allow_request),           0),
 	DEF_OPT_UINT8("cacheex_drop_csp"              , OFS(cacheex.drop_csp),                0),
 	DEF_OPT_UINT8("cacheex_allow_filter"          , OFS(cacheex.allow_filter),            1),
+	DEF_OPT_UINT8("cacheex_allow_maxhop"          , OFS(cacheex.allow_maxhop),            0),
 	DEF_OPT_UINT8("cacheex_block_fakecws"         , OFS(cacheex.block_fakecws),           0),
+	DEF_OPT_UINT8("cacheex_cw_check_for_push"     , OFS(cacheex.cw_check_for_push),       0),
+	DEF_OPT_UINT8("cacheex_localgenerated_only"   , OFS(cacheex.localgenerated_only),     0),
+	DEF_OPT_FUNC("cacheex_localgenerated_only_caid", OFS(cacheex.localgenerated_only_caidtab), check_caidtab_fn),
+	DEF_OPT_UINT8("cacheex_localgenerated_only_in", OFS(cacheex.localgenerated_only_in),  0),
+	DEF_OPT_FUNC("cacheex_localgenerated_only_in_caid", OFS(cacheex.localgenerated_only_in_caidtab), check_caidtab_fn),
+	DEF_OPT_FUNC("cacheex_nopushafter"            , OFS(cacheex.cacheex_nopushafter_tab), caidvaluetab_fn),
 #endif
 	DEF_OPT_FUNC("caid"                           , OFS(ctab),                            reader_caid_fn),
 	DEF_OPT_FUNC("atr"                            , 0,                                    atr_fn),
@@ -2127,6 +2134,7 @@ void free_reader(struct s_reader *rdr)
 	ftab_clear(&rdr->localcards);
 	ftab_clear(&rdr->fchid);
 	ftab_clear(&rdr->ftab);
+	ftab_clear(&rdr->disablecrccws_only_for);
 
     NULLFREE(rdr->cltab.aclass);
  	NULLFREE(rdr->cltab.bclass);
@@ -2134,6 +2142,9 @@ void free_reader(struct s_reader *rdr)
 	caidtab_clear(&rdr->ctab);
 #ifdef CS_CACHEEX
 	cecspvaluetab_clear(&rdr->cacheex.filter_caidtab);
+	caidtab_clear(&rdr->cacheex.localgenerated_only_caidtab);
+	caidtab_clear(&rdr->cacheex.localgenerated_only_in_caidtab);
+	caidvaluetab_clear(&rdr->cacheex.cacheex_nopushafter_tab);
 #endif
 	lb_destroy_stats(rdr);
 

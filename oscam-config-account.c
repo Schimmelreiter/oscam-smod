@@ -470,9 +470,16 @@ static const struct config_list account_opts[] =
 	DEF_OPT_UINT8("cacheex_allow_request"      , OFS(cacheex.allow_request),   0),
 	DEF_OPT_UINT8("no_wait_time"               , OFS(no_wait_time),            0),
 	DEF_OPT_UINT8("cacheex_allow_filter"       , OFS(cacheex.allow_filter),    1),
+	DEF_OPT_UINT8("cacheex_allow_maxhop"       , OFS(cacheex.allow_maxhop),    0),
 	DEF_OPT_UINT8("cacheex_block_fakecws"      , OFS(cacheex.block_fakecws),   0),
 	DEF_OPT_UINT8("disablecrccacheex"          , OFS(disablecrccacheex),       0),
 	DEF_OPT_FUNC_X("disablecrccacheex_only_for", OFS(disablecrccacheex_only_for), ftab_fn, FTAB_ACCOUNT | FTAB_IGNCRCCEX4USERONLYFOR),
+	DEF_OPT_UINT8("cacheex_cw_check_for_push"  , OFS(cacheex.cw_check_for_push), 0),
+	DEF_OPT_UINT8("cacheex_localgenerated_only", OFS(cacheex.localgenerated_only), 0),
+	DEF_OPT_FUNC("cacheex_localgenerated_only_caid", OFS(cacheex.localgenerated_only_caidtab), check_caidtab_fn),
+	DEF_OPT_UINT8("cacheex_localgenerated_only_in", OFS(cacheex.localgenerated_only_in), 0),
+	DEF_OPT_FUNC("cacheex_localgenerated_only_in_caid", OFS(cacheex.localgenerated_only_in_caidtab), check_caidtab_fn),
+	DEF_OPT_FUNC("cacheex_nopushafter"         , OFS(cacheex.cacheex_nopushafter_tab), caidvaluetab_fn),
 #endif
 #ifdef MODULE_CCCAM
 	DEF_OPT_INT32("cccmaxhops"                 , OFS(cccmaxhops),              DEFAULT_CC_MAXHOPS),
@@ -609,12 +616,16 @@ int32_t init_free_userdb(struct s_auth *ptr)
 		config_list_gc_values(account_opts, ptr);
 		ftab_clear(&ptr->ftab);
 		ftab_clear(&ptr->fchid);
+		ftab_clear(&ptr->disablecrccacheex_only_for);
 		tuntab_clear(&ptr->ttab);
 		caidtab_clear(&ptr->ctab);
 		NULLFREE(ptr->cltab.aclass);
 		NULLFREE(ptr->cltab.bclass);
 #ifdef CS_CACHEEX
 		cecspvaluetab_clear(&ptr->cacheex.filter_caidtab);
+		caidtab_clear(&ptr->cacheex.localgenerated_only_caidtab);
+		caidtab_clear(&ptr->cacheex.localgenerated_only_in_caidtab);
+		caidvaluetab_clear(&ptr->cacheex.cacheex_nopushafter_tab);
 #endif
 #ifdef WITH_LB
 		caidvaluetab_clear(&ptr->lb_nbest_readers_tab);
