@@ -712,27 +712,6 @@ uint8_t check_nds_cwex(ECM_REQUEST *er)
 	return 0;
 }
 
-// check if sky_ger 64 bit CW has valid checksum bytes and therefore is probably invalid
-uint8_t check_nds_cwex(ECM_REQUEST *er)
-{
-	uint8_t k, csum;
-	uint8_t hit = 0;
-	uint8_t oe = checkCWpart(er->cw, 0) ? 0 : 8;
-	for(k = 0; k < 8; k += 4)
-	{
-		csum = ((er->cw[k + oe] + er->cw[k + oe + 1] + er->cw[k + oe + 2]) & 0xff);
-		if(er->cw[k + oe + 3] == csum)
-		{
-			hit++;
-		}
-	}
-	if(hit > 1)
-	{
-		return 1;
-	}
-	return 0;
-}
-
 static int32_t cacheex_add_to_cache_int(struct s_client *cl, ECM_REQUEST *er, int8_t csp)
 {
 	if(er->rc >= E_NOTFOUND) { return 0; }
