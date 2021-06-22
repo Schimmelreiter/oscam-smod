@@ -5,6 +5,9 @@
 #include <unistd.h>
 #include "oscam-config-null.h"
 
+int tmp_conf;
+int res;
+
 /* maybe use it later
 #if !defined(cs_conf)
 
