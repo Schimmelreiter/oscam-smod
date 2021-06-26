@@ -20,6 +20,10 @@ jobs:
           sudo apt-get -q update
           sudo apt-get install g++-${{ matrix.gcc }}
 
+      - uses: actions/checkout@v2
+        with:
+          ref: 'master'
+          
       - name: Build oscam
         env:
           CC: "gcc-${{ matrix.gcc }}"
