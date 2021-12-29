@@ -41,11 +41,6 @@
 #include "reader-common.h"
 #include "module-gbox.h"
 
-#ifdef WITH_EMU
-	void add_emu_reader(void);
-	void stop_stream_server(void);
-#endif
-
 #ifdef WITH_SSL
 #include <openssl/crypto.h>
 #include <openssl/ssl.h>
@@ -435,8 +430,6 @@ static void write_versionfile(bool use_stdout)
 	write_conf(LCDSUPPORT, "LCD support");
 	write_conf(LEDSUPPORT, "LED support");
 	write_conf(IPV6SUPPORT, "IPv6 support");
-	write_conf(WITH_EMU, "Emulator support");
-	write_conf(WITH_SOFTCAM, "Built-in SoftCam.Key");
 	write_conf(WITH_CARDLIST, "Cardlist support");
 
 	fprintf(fp, "\n");
@@ -1845,9 +1838,6 @@ int32_t main(int32_t argc, char *argv[])
 
 	init_sidtab();
 	init_readerdb();
-#ifdef WITH_EMU
-	add_emu_reader();
-#endif
 	cfg.account = init_userdb();
 	init_signal();
 	init_provid();
@@ -1935,9 +1925,6 @@ int32_t main(int32_t argc, char *argv[])
 	// Cleanup
 #ifdef MODULE_GBOX
 	stop_gbx_ticker();
-#endif
-#ifdef WITH_EMU
-	stop_stream_server();
 #endif
 	webif_close();
 	azbox_close();

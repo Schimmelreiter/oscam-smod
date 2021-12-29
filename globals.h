@@ -399,7 +399,7 @@
 #define CS_ECM_RINGBUFFER_MAX	0x10	// max size for ECM last responsetimes ringbuffer. Keep this set to power of 2 values!
 
 // Support for multiple CWs per channel and other encryption algos
-#define WITH_EXTENDED_CW		1
+//#define WITH_EXTENDED_CW		1
 
 #if defined(READER_DRE) || defined(READER_DRECAS) || defined(READER_VIACCESS) || defined(WITH_EMU)
 #define MAX_ECM_SIZE			1024
@@ -1946,7 +1946,6 @@ struct s_reader										// contains device info, reader info and card info
 #ifdef WITH_EMU
 	FTAB			emu_auproviders;				// AU providers for Emu reader
 	int8_t			emu_datecodedenabled;			// date-coded keys for BISS
-	LLIST			*ll_biss2_rsa_keys;				// BISS2 RSA keys - Read from external PEM files
 #endif
 	uint8_t			cnxlastecm;						// == 0 - last ecm has not been paired ecm, > 0 last ecm has been paired ecm
 	LLIST			*emmstat;						// emm stats

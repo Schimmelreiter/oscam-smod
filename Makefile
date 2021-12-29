@@ -69,6 +69,13 @@ else
 override CFLAGS += -fexpensive-optimizations
 endif
 
+TARGETHELP := $(shell $(CC) --target-help 2>&1)
+ifneq (,$(findstring sse2,$(TARGETHELP)))
+override CFLAGS += -fexpensive-optimizations -mmmx -msse -msse2 -msse3
+else
+override CFLAGS += -fexpensive-optimizations
+endif
+
 # The linker for powerpc have bug that prevents --gc-sections from working
 # Check for the linker version and if it matches disable --gc-sections
 # For more information about the bug see:
@@ -278,30 +285,6 @@ SRC-$(CONFIG_CS_CACHEEX) += module-cccam-cacheex.c
 SRC-$(CONFIG_MODULE_CCCAM) += module-cccam.c
 SRC-$(CONFIG_MODULE_CCCSHARE) += module-cccshare.c
 SRC-$(CONFIG_MODULE_CONSTCW) += module-constcw.c
-SRC-$(CONFIG_WITH_EMU) += module-emulator.c
-SRC-$(CONFIG_WITH_EMU) += module-emulator-osemu.c
-SRC-$(CONFIG_WITH_EMU) += module-emulator-streamserver.c
-SRC-$(CONFIG_WITH_EMU) += module-emulator-biss.c
-SRC-$(CONFIG_WITH_EMU) += module-emulator-cryptoworks.c
-SRC-$(CONFIG_WITH_EMU) += module-emulator-director.c
-SRC-$(CONFIG_WITH_EMU) += module-emulator-irdeto.c
-SRC-$(CONFIG_WITH_EMU) += module-emulator-nagravision.c
-SRC-$(CONFIG_WITH_EMU) += module-emulator-powervu.c
-SRC-$(CONFIG_WITH_EMU) += module-emulator-viaccess.c
-SRC-$(CONFIG_WITH_EMU) += ffdecsa/ffdecsa.c
-ifeq "$(CONFIG_WITH_EMU)" "y"
-ifeq "$(CONFIG_WITH_SOFTCAM)" "y"
-UNAME := $(shell uname -s)
-ifneq ($(UNAME),Darwin)
-ifndef ANDROID_NDK
-ifndef ANDROID_STANDALONE_TOOLCHAIN
-TOUCH_SK := $(shell touch SoftCam.Key)
-override LDFLAGS += -Wl,--format=binary -Wl,SoftCam.Key -Wl,--format=default
-endif
-endif
-endif
-endif
-endif
 SRC-$(CONFIG_CS_CACHEEX) += module-csp.c
 SRC-$(CONFIG_CW_CYCLE_CHECK) += module-cw-cycle-check.c
 SRC-$(CONFIG_WITH_AZBOX) += module-dvbapi-azbox.c
@@ -405,7 +388,7 @@ SRC := $(subst config.c,$(OBJDIR)/config.c,$(SRC))
 # starts the compilation.
 all:
 	@./config.sh --use-flags "$(USE_FLAGS)" --objdir "$(OBJDIR)" --make-config.mak
-	@-mkdir -p $(OBJDIR)/cscrypt $(OBJDIR)/csctapi $(OBJDIR)/minilzo $(OBJDIR)/ffdecsa $(OBJDIR)/webif
+	@-mkdir -p $(OBJDIR)/cscrypt $(OBJDIR)/csctapi $(OBJDIR)/minilzo $(OBJDIR)/webif
 	@-printf "\
 +-------------------------------------------------------------------------------\n\
 | OSCam ver: $(VER) rev: $(SMOD_REV) target: $(TARGET)\n\
