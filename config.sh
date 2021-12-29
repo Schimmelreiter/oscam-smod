@@ -299,6 +299,7 @@ update_deps() {
 	# Calculate dependencies
 	enabled_any $(get_opts readers) $(get_opts card_readers) WITH_EMU && enable_opt WITH_CARDREADER >/dev/null
 	disabled_all $(get_opts readers) $(get_opts card_readers) WITH_EMU && disable_opt WITH_CARDREADER >/dev/null
+	enabled CS_CACHEEX_AIO && enable_opt CS_CACHEEX >/dev/null
 	disabled WEBIF && disable_opt WEBIF_LIVELOG >/dev/null
 	disabled WEBIF && disable_opt WEBIF_JQUERY >/dev/null
 	enabled MODULE_CCCSHARE && enable_opt MODULE_CCCAM >/dev/null
@@ -470,7 +471,7 @@ menu_addons() {
 		MODULE_MONITOR		"Monitor"								$(check_test "MODULE_MONITOR") \
 		WITH_LB				"Loadbalancing"							$(check_test "WITH_LB") \
 		CS_CACHEEX			"Cache exchange"						$(check_test "CS_CACHEEX") \
-		CS_CACHEEX_AIO			"Cache exchange aio"						$(check_test "CS_CACHEEX_AIO") \
+		CS_CACHEEX_AIO			"Cache exchange aio (depend on Cache exchange)"			$(check_test "CS_CACHEEX_AIO") \
 		CW_CYCLE_CHECK		"CW Cycle Check"						$(check_test "CW_CYCLE_CHECK") \
 		LCDSUPPORT			"LCD support"							$(check_test "LCDSUPPORT") \
 		LEDSUPPORT			"LED support"							$(check_test "LEDSUPPORT") \

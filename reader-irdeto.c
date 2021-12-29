@@ -322,7 +322,7 @@ static int32_t irdeto_card_init_provider(struct s_reader *reader)
 				reader->prid[i][3] = 0xFF;
 			}
 
-			snprintf((char *) buf + strlen((char *)buf), sizeof(buf) - strlen((char *)buf), ",%06x", b2i(3, &reader->prid[i][1]));
+			snprintf((char *) buf + cs_strlen((char *)buf), sizeof(buf) - cs_strlen((char *)buf), ",%06x", b2i(3, &reader->prid[i][1]));
 		}
 		else
 		{
@@ -856,8 +856,13 @@ static int32_t irdeto_get_emm_type(EMM_PACKET *ep, struct s_reader *rdr)
 			ep->type = SHARED;
 			memset(ep->hexserial, 0, 8);
 			memcpy(ep->hexserial, ep->emm + 4, l);
-			cs_hexdump(1, rdr->hexserial, l, dumprdrserial, sizeof(dumprdrserial));
-			cs_hexdump(1, ep->hexserial, l, dumpemmserial, sizeof(dumpemmserial));
+#ifdef WITH_DEBUG
+			if(cs_dblevel & D_EMM)
+			{
+				cs_hexdump(1, rdr->hexserial, l, dumprdrserial, sizeof(dumprdrserial));
+				cs_hexdump(1, ep->hexserial, l, dumpemmserial, sizeof(dumpemmserial));
+			}
+#endif
 			rdr_log_dbg_sensitive(rdr, D_EMM, "SHARED l = %d ep = {%s} rdr = {%s} base = %02x",
 					l, dumpemmserial, dumprdrserial, base);
 
@@ -890,11 +895,16 @@ static int32_t irdeto_get_emm_type(EMM_PACKET *ep, struct s_reader *rdr)
 			ep->type = UNIQUE;
 			memset(ep->hexserial, 0, 8);
 			memcpy(ep->hexserial, ep->emm + 4, l);
-			cs_hexdump(1, rdr->hexserial, l, dumprdrserial, sizeof(dumprdrserial));
-			cs_hexdump(1, ep->hexserial, l, dumpemmserial, sizeof(dumpemmserial));
-			rdr_log_dbg_sensitive(rdr, D_EMM, "UNIQUE l = %d ep = {%s} rdr = {%s} base = %02x",
-					l, dumpemmserial, dumprdrserial, base);
 
+#ifdef WITH_DEBUG
+			if(cs_dblevel & D_EMM)
+			{			
+				cs_hexdump(1, rdr->hexserial, l, dumprdrserial, sizeof(dumprdrserial));
+				cs_hexdump(1, ep->hexserial, l, dumpemmserial, sizeof(dumpemmserial));
+				rdr_log_dbg_sensitive(rdr, D_EMM, "UNIQUE l = %d ep = {%s} rdr = {%s} base = %02x",
+					l, dumpemmserial, dumprdrserial, base);
+			}
+#endif
 			if(base & 0x10) // unique hex addressed
 			{
 				return ((base == rdr->hexserial[3]) && (!memcmp(ep->emm + 4, rdr->hexserial, l)));

@@ -76,7 +76,7 @@ static void account_allowedprotocols_fn(const char *token, char *value, void *se
 	if(value)
 	{
 		account->allowedprotocols = 0;
-		if(strlen(value) > 3)
+		if(cs_strlen(value) > 3)
 		{
 			int i;
 			char *ptr, *saveptr1 = NULL;
@@ -143,7 +143,7 @@ static void account_au_fn(const char *token, char *value, void *setting, FILE *f
 	else if(account->aureader_list)
 	{
 		value = mk_t_aureader(account);
-		if(strlen(value) > 0)
+		if(cs_strlen(value) > 0)
 			{ fprintf_conf(f, token, "%s\n", value); }
 		free_mk_t(value);
 	}
@@ -325,7 +325,7 @@ static void account_tuntab_fn(const char *token, char *value, void *setting, FIL
 	TUNTAB *ttab = setting;
 	if(value)
 	{
-		if(strlen(value) == 0)
+		if(cs_strlen(value) == 0)
 		{
 			tuntab_clear(ttab);
 		}
@@ -377,7 +377,7 @@ void services_fn(const char *token, char *value, void *setting, FILE *f)
 		return;
 	}
 	value = mk_t_service(sidtabs);
-	if(strlen(value) > 0 || cfg.http_full_cfg)
+	if(cs_strlen(value) > 0 || cfg.http_full_cfg)
 		{ fprintf_conf(f, token, "%s\n", value); }
 	free_mk_t(value);
 }
@@ -392,7 +392,7 @@ void class_fn(const char *token, char *value, void *setting, FILE *f)
 		return;
 	}
 	value = mk_t_cltab(cltab);
-	if(strlen(value) > 0 || cfg.http_full_cfg)
+	if(cs_strlen(value) > 0 || cfg.http_full_cfg)
 	{
 		fprintf_conf(f, token, "%s\n", value);
 		free_mk_t(value);
@@ -572,7 +572,7 @@ struct s_auth *init_userdb(void)
 		int32_t l;
 		void *ptr;
 
-		if((l = strlen(trim(token))) < 3)
+		if((l = cs_strlen(trim(token))) < 3)
 			{ continue; }
 		if(token[0] == '[' && token[l - 1] == ']')
 		{
@@ -642,15 +642,13 @@ int32_t init_free_userdb(struct s_auth *ptr)
 		config_list_gc_values(account_opts, ptr);
 		ftab_clear(&ptr->ftab);
 		ftab_clear(&ptr->fchid);
-#ifdef CS_CACHEEX_AIO		
-		ftab_clear(&ptr->disablecrccacheex_only_for);
-#endif
 		tuntab_clear(&ptr->ttab);
 		caidtab_clear(&ptr->ctab);
 		NULLFREE(ptr->cltab.aclass);
 		NULLFREE(ptr->cltab.bclass);
 #ifdef CS_CACHEEX
 		cecspvaluetab_clear(&ptr->cacheex.filter_caidtab);
+		ftab_clear(&ptr->disablecrccacheex_only_for);
 #ifdef CS_CACHEEX_AIO
 		caidtab_clear(&ptr->cacheex.localgenerated_only_caidtab);
 		caidtab_clear(&ptr->cacheex.localgenerated_only_in_caidtab);

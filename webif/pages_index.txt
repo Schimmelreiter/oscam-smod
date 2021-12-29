@@ -46,11 +46,12 @@ CACHEEXPAGE                   cacheex/cacheex.html                              
 CACHEEXTABLEROW               cacheex/cacheex_tablerow.html                               CS_CACHEEX
 
 CACHEEXAIOPAGE                cacheexaio/cacheex.html                                     CS_CACHEEX_AIO
+CACHEEXAIOTABLEROW            cacheexaio/cacheex_tablerow.html                            CS_CACHEEX_AIO
 CACHEEXAIOTABLEROWSTATS       cacheexaio/cacheex_tablerow_stats.html                      CS_CACHEEX_AIO
 
 CONFIGANTICASC                config/anticasc.html                                        CS_ANTICASC
 CONFIGCACHE                   config/cache.html
-CONFIGCACHEAIO                config/cacheaio.html                                        CS_CACHE_AIO
+CONFIGCACHEAIO                config/cacheaio.html                                        CS_CACHEEX_AIO
 CONFIGCACHEEXCSP              config/cache_cacheexcsp.html                                CS_CACHEEX
 CONFIGCACHEEXAIOCSP           config/cache_cacheexaiocsp.html                             CS_CACHEEX_AIO
 CONFIGCWCYCLE                 config/cache_cwcycle.html                                   CW_CYCLE_CHECK
@@ -274,6 +275,7 @@ SHUTDOWN                      shutdown/shutdown.html
 
 STATUS                        status/status.html
 CACHEEXINFOBIT                status/status_cacheexinfo.html                              CS_CACHEEX
+CACHEEXAIOINFOBIT             status/status_cacheexaioinfo.html                           CS_CACHEEX_AIO
 CLIENTHEADLINE                status/status_cheadline.html
 CLIENTHEADLINEADD             status/status_cheadlineadd.html
 CLIENTHEADLINEBIT             status/status_clientheadlinebit.html
