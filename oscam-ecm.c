@@ -1229,6 +1229,7 @@ void request_cw_from_readers(ECM_REQUEST *er, uint8_t stop_stage)
 			default:
 			{
 				// only fallbacks
+				if (ea->reader->typ == R_GBOX) break;
 				if((ea->status & REQUEST_SENT) ||
 						(ea->status & (READER_ACTIVE | READER_FALLBACK)) != (READER_ACTIVE | READER_FALLBACK))
 					{ continue; }
@@ -1565,7 +1566,7 @@ static void logCWtoFile(ECM_REQUEST *er, uint8_t *cw)
 	if(writeheader)
 	{
 		/* no global macro for cardserver name :( */
-		fprintf(pfCWL, "# OSCam cardserver v%s - http://www.streamboard.tv/oscam/\n", CS_VERSION);
+		fprintf(pfCWL, "# OSCam cardserver v%s - https://trac.streamboard.tv/oscam/\n", CS_VERSION);
 		fprintf(pfCWL, "# control word log file for use with tsdec offline decrypter\n");
 		strftime(buf, sizeof(buf), "DATE %Y-%m-%d, TIME %H:%M:%S, TZ %Z\n", &timeinfo);
 		fprintf(pfCWL, "# %s", buf);
