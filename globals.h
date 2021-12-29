@@ -1681,8 +1681,6 @@ struct s_reader										// contains device info, reader info and card info
 	uint8_t			cak7type;
 	uint8_t			cwpkcaid[2];
 	uint8_t			cwpkcaid_length;
-	uint8_t			nuid[4];
-	uint8_t			nuid_length;
 	int8_t			nagra_read;						// read nagra ncmed records: 0 Disabled (default), 1 read all records, 2 read valid records only
 	int8_t			detect_seca_nagra_tunneled_card;
 	int8_t			force_irdeto;
