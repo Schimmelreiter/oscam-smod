@@ -43,7 +43,6 @@ APIUSEREDIT                   api.xml/useredit.xml
 
 CACHEEXPAGE                   cacheex/cacheex.html                                        CS_CACHEEX
 CACHEEXTABLEROW               cacheex/cacheex_tablerow.html                               CS_CACHEEX
-CACHEEXTABLEROWSTATS          cacheex/cacheex_tablerow_stats.html                         CS_CACHEEX
 
 CONFIGANTICASC                config/anticasc.html                                        CS_ANTICASC
 CONFIGCACHE                   config/cache.html

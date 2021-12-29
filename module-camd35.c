@@ -316,7 +316,7 @@ static int32_t camd35_recv(struct s_client *client, uint8_t *buf, int32_t l)
 				{
 					buflen = (((buf[21] & 0x0F) << 8) | buf[22]) + 3;
 				}
-				else if(buf[0] == 0x40 || buf[0] == 0x41 || buf[0] == 0x42 || buf[0] == 0x3D || buf[0] == 0x3E || buf[0] == 0x3F) // cacheex-push
+				else if(buf[0] == 0x3D || buf[0] == 0x3E || buf[0] == 0x3F) // cacheex-push
 				{
 					buflen = buf[1] | (buf[2] << 8);
 				}
@@ -864,7 +864,6 @@ static int32_t camd35_client_init(struct s_client *cl)
 	if(cacheex_get_rdr_mode(cl->reader) == 2)
 	{
 		camd35_cacheex_send_push_filter(cl, 2);
-		camd35_cacheex_feature_request(cl);
 	}
 
 	return 0;

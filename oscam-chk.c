@@ -154,36 +154,6 @@ int32_t chk_srvid_match(ECM_REQUEST *er, SIDTAB *sidtab)
 	return (rc == 7);
 }
 
-int32_t chk_srvid_disablecrccws_only_for_exception(ECM_REQUEST *er)
-{
-	int32_t nr;
-	SIDTAB *sidtab;
-
-	for(nr = 0, sidtab = cfg.sidtab; sidtab; sidtab = sidtab->next, nr++)
-	{
-		if(sidtab->disablecrccws_only_for_exception && (sidtab->num_caid | sidtab->num_provid | sidtab->num_srvid) && chk_srvid_match(er, sidtab))
-		{
-			return(1);
-		}
-	}
-	return(0);
-}
-
-int32_t chk_srvid_no_wait_time(ECM_REQUEST *er)
-{
-	int32_t nr;
-	SIDTAB *sidtab;
-
-	for(nr = 0, sidtab = cfg.sidtab; sidtab; sidtab = sidtab->next, nr++)
-	{
-		if(sidtab->no_wait_time && (sidtab->num_caid | sidtab->num_provid | sidtab->num_srvid) && chk_srvid_match(er, sidtab))
-		{
-			return(1);
-		}
-	}
-	return(0);
-}
-
 int32_t chk_srvid(struct s_client *cl, ECM_REQUEST *er)
 {
 	int32_t nr, rc = 0;
@@ -1242,16 +1212,4 @@ int32_t chk_is_fakecw(uint8_t *cw)
 	cs_readunlock(__func__, &config_lock);
 
 	return is_fakecw;
-}
-
-bool chk_nopushafter(uint16_t caid, CAIDVALUETAB *cv, int32_t ecm_time)
-{
-	uint16_t npa_time = caidvaluetab_get_value(cv, caid, 0);
-	if(npa_time && (ecm_time > npa_time))
-	{
-		cs_log_dbg(D_CACHEEX, "REJECTED push: nopushafter %u < ecm_time %i", npa_time, ecm_time);
-		return 0;
-	}
-	else
-		return 1;
 }

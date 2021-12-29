@@ -601,9 +601,6 @@ void cs_reinit_clients(struct s_auth *new_accounts)
 			if(account && !account->disabled && cl->pcrc == crc32(0L, MD5((uint8_t *)ESTR(account->pwd), strlen(ESTR(account->pwd)), md5tmp), MD5_DIGEST_LENGTH))
 			{
 				cl->account = account;
-#ifdef CS_CACHEEX
-				cl->cacheex_aio_checked = 0;
-#endif
 				if(cl->typ == 'c')
 				{
 					cl->grp = account->grp;

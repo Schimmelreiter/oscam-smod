@@ -301,8 +301,6 @@ static void set_ecm_info(struct templatevars * vars)
 	  || first_client->cwcacheexgot<0
 	  || first_client->cwcacheexpush<0
 	  || first_client->cwcacheexhit<0
-	  || first_client->cwcacheexgotlg<0
-	  || first_client->cwcacheexpushlg<0
 #endif
 	){
 		clear_info_clients_stats();
@@ -934,35 +932,12 @@ static char *send_oscam_config_cache(struct templatevars *vars, struct uriparams
 
 #ifdef CS_CACHEEX
 	char *value = NULL;
-	
-	value = mk_t_cacheex_cwcheck_valuetab(&cfg.cw_cache_settings);
-	tpl_addVar(vars, TPLADD, "CWCACHESETTINGS", value);
-	free_mk_t(value);
-
-	tpl_printf(vars, TPLADD, "CWCACHESIZE", "%d", cfg.cw_cache_size);
-	
-	tpl_printf(vars, TPLADD, "CWCACHEMEMORY", "%d", cfg.cw_cache_memory);
-
-	tpl_printf(vars, TPLADD, "ECMCACHESIZE", "%d", cfg.ecm_cache_size);
-	
-	tpl_printf(vars, TPLADD, "ECMCACHEMEMORY", "%d", cfg.ecm_cache_memory);
-
-	tpl_printf(vars, TPLADD, "ECMDROPTIME", "%d", cfg.ecm_cache_droptime);
-
 	value = mk_t_cacheex_valuetab(&cfg.cacheex_wait_timetab);
 	tpl_addVar(vars, TPLADD, "WAIT_TIME", value);
 	free_mk_t(value);
 
-	tpl_printf(vars, TPLADD, "WAITTIME_BLOCK_START", "%d", cfg.waittime_block_start);
-
-	tpl_printf(vars, TPLADD, "WAITTIME_BLOCK_TIME", "%d", cfg.waittime_block_time);
-
 	value = mk_t_caidvaluetab(&cfg.cacheex_mode1_delay_tab);
 	tpl_addVar(vars, TPLADD, "CACHEEXMODE1DELAY", value);
-	free_mk_t(value);
-
-	value = mk_t_caidvaluetab(&cfg.cacheex_nopushafter_tab);
-	tpl_addVar(vars, TPLADD, "CACHEEXNOPUSHAFTER", value);
 	free_mk_t(value);
 
 	tpl_printf(vars, TPLADD, "MAX_HIT_TIME", "%d", cfg.max_hitcache_time);
@@ -970,28 +945,6 @@ static char *send_oscam_config_cache(struct templatevars *vars, struct uriparams
 	tpl_addVar(vars, TPLADD, "CACHEEXSTATSSELECTED", (cfg.cacheex_enable_stats == 1) ? "checked" : "");
 
 	tpl_addVar(vars, TPLADD, "WTTCHECKED", (cfg.wait_until_ctimeout == 1) ? "checked" : "");
-
-	tpl_addVar(vars, TPLADD, "CACHEEXDROPDIFFS", (cfg.cacheex_dropdiffs == 1) ? "checked" : "");
-
-	tpl_addVar(vars, TPLADD, "LOCALGENERATEDONLYCHECKED", (cfg.cacheex_localgenerated_only == 1) ? "checked" : "");
-
-	value = mk_t_caidtab(&cfg.cacheex_localgenerated_only_caidtab);
-	tpl_addVar(vars, TPLADD, "LOCALGENERATEDONLYCAID", value);
-	free_mk_t(value);
-
-	tpl_addVar(vars, TPLADD, "LOCALGENERATEDONLYINCHECKED", (cfg.cacheex_localgenerated_only_in == 1) ? "checked" : "");
-	
-	value = mk_t_caidtab(&cfg.cacheex_localgenerated_only_in_caidtab);
-	tpl_addVar(vars, TPLADD, "LOCALGENERATEDONLYINCAID", value);
-	free_mk_t(value);
-
-	value = mk_t_cacheex_hitvaluetab(&cfg.cacheex_filter_caidtab);
-	tpl_addVar(vars, TPLADD, "CACHEEXECMFILTER", value);
-	free_mk_t(value);
-
-	value = mk_t_cacheex_hitvaluetab(&cfg.cacheex_filter_caidtab_aio);
-	tpl_addVar(vars, TPLADD, "CACHEEXECMFILTERAIO", value);
-	free_mk_t(value);
 
 	if(cfg.csp_port)
 		{ tpl_printf(vars, TPLADD, "PORT", "%d", cfg.csp_port); }
@@ -1954,7 +1907,6 @@ static char *send_oscam_reader(struct templatevars *vars, struct uriparams *para
 	ll_iter_reset(&itr); //going to iterate all configured readers
 	while((rdr = ll_iter_next(&itr)))
 	{
-		const char *proto = reader_get_type_desc(rdr, 0);
 		struct s_client *cl = rdr->client;
 		if(rdr->label[0] && rdr->typ)
 		{
@@ -1986,27 +1938,7 @@ static char *send_oscam_reader(struct templatevars *vars, struct uriparams *para
 			{
 				tpl_printf(vars, TPLAPPEND, "EXISTING_INS", ",'%s'", urlencode(vars, rdr->label));
 			}
-#ifdef CS_CACHEEX
-		if(rdr->cacheex.feature_bitfield)
-		{
-			const char *aio_suffix = " (cx-aio)";
-			char *new_proto;
-			if(cs_malloc(&new_proto, strlen(proto)+strlen(aio_suffix)+1))
-			{
-				new_proto[0] = '\0';
-				strcat(new_proto,proto);
-				strcat(new_proto,aio_suffix);
-				tpl_addVar(vars, TPLADD, "CTYP", (const char*)new_proto);
-				free(new_proto);
-			}
-		}
-		else
-		{
-#endif
-			tpl_addVar(vars, TPLADD, "CTYP", proto);
-#ifdef CS_CACHEEX
-		}
-#endif
+			tpl_addVar(vars, TPLADD, "CTYP", reader_get_type_desc(rdr, 0));
 			tpl_addVar(vars, TPLADD, "CTYPSORT", reader_get_type_desc(rdr, 0));
 
 			tpl_addVar(vars, TPLADD, "READERCLASS", rdr->enable ? "enabledreader" : "disabledreader");
@@ -2391,24 +2323,7 @@ static char *send_oscam_reader_config(struct templatevars *vars, struct uriparam
 	tpl_addVar(vars, TPLADD, "DCCHECKED", (rdr->cacheex.drop_csp == 1) ? "checked" : "");
 	tpl_addVar(vars, TPLADD, "ARCHECKED", (rdr->cacheex.allow_request == 1) ? "checked" : "");
 	tpl_addVar(vars, TPLADD, "AFCHECKED", (rdr->cacheex.allow_filter == 1) ? "checked" : "");
-	tpl_addVar(vars, TPLADD, "AMCHECKED", (rdr->cacheex.allow_maxhop == 1) ? "checked" : "");
 	tpl_addVar(vars, TPLADD, "BLOCKFAKECWSCHECKED", (rdr->cacheex.block_fakecws == 1) ? "checked" : "");
-	tpl_addVar(vars, TPLADD, "USECWCHECKFORPUSHCHECKED", (rdr->cacheex.cw_check_for_push == 1) ? "checked" : "");
-	tpl_addVar(vars, TPLADD, "LOCALGENERATEDONLYCHECKED", (rdr->cacheex.localgenerated_only == 1) ? "checked" : "");
-
-	value = mk_t_caidtab(&rdr->cacheex.localgenerated_only_caidtab);
-	tpl_addVar(vars, TPLADD, "LOCALGENERATEDONLYCAID", value);
-	free_mk_t(value);
-
-	tpl_addVar(vars, TPLADD, "LOCALGENERATEDONLYINCHECKED", (rdr->cacheex.localgenerated_only_in == 1) ? "checked" : "");
-	
-	value = mk_t_caidtab(&rdr->cacheex.localgenerated_only_in_caidtab);
-	tpl_addVar(vars, TPLADD, "LOCALGENERATEDONLYINCAID", value);
-	free_mk_t(value);
-
-	value = mk_t_caidvaluetab(&rdr->cacheex.cacheex_nopushafter_tab);
-	tpl_addVar(vars, TPLADD, "CACHEEXNOPUSHAFTER", value);
-	free_mk_t(value);
 #endif
 
 	// BoxID
@@ -3843,25 +3758,7 @@ static char *send_oscam_user_config_edit(struct templatevars *vars, struct uripa
 	tpl_addVar(vars, TPLADD, "DCCHECKED", (account->cacheex.drop_csp == 1) ? "checked" : "");
 	tpl_addVar(vars, TPLADD, "ARCHECKED", (account->cacheex.allow_request == 1) ? "checked" : "");
 	tpl_addVar(vars, TPLADD, "AFCHECKED", (account->cacheex.allow_filter == 1) ? "checked" : "");
-	tpl_addVar(vars, TPLADD, "AMCHECKED", (account->cacheex.allow_maxhop == 1) ? "checked" : "");
 	tpl_addVar(vars, TPLADD, "BLOCKFAKECWSCHECKED", (account->cacheex.block_fakecws == 1) ? "checked" : "");
-	tpl_addVar(vars, TPLADD, "USECWCHECKFORPUSHCHECKED", (account->cacheex.cw_check_for_push == 1) ? "checked" : "");
-	tpl_addVar(vars, TPLADD, "LOCALGENERATEDONLYCHECKED", (account->cacheex.localgenerated_only == 1) ? "checked" : "");
-
-	value = mk_t_caidtab(&account->cacheex.localgenerated_only_caidtab);
-	tpl_addVar(vars, TPLADD, "LOCALGENERATEDONLYCAID", value);
-	free_mk_t(value);
-
-	tpl_addVar(vars, TPLADD, "LOCALGENERATEDONLYINCHECKED", (account->cacheex.localgenerated_only_in == 1) ? "checked" : "");
-	
-	value = mk_t_caidtab(&account->cacheex.localgenerated_only_in_caidtab);
-	tpl_addVar(vars, TPLADD, "LOCALGENERATEDONLYINCAID", value);
-	free_mk_t(value);
-
-	value = mk_t_caidvaluetab(&account->cacheex.cacheex_nopushafter_tab);
-	tpl_addVar(vars, TPLADD, "CACHEEXNOPUSHAFTER", value);
-	free_mk_t(value);
-
 	tpl_addVar(vars, TPLADD, "NWTCHECKED", (account->no_wait_time == 1) ? "checked" : "");
 	tpl_addVar(vars, TPLADD, "DISABLECRCCEX4USER", (account->disablecrccacheex == 1) ? "checked" : "");
 	value = mk_t_ftab(&account->disablecrccacheex_only_for);
@@ -4024,27 +3921,6 @@ static void webif_add_client_proto(struct templatevars *vars, struct s_client *c
 		return;
 	}
 #endif
-#if defined(MODULE_CAMD35) || defined(MODULE_CAMD35_TCP) && defined(CS_CACHEEX)
-	if(cl->account && cl->cacheex_aio_checked)
-	{
-		if(cl->account->cacheex.feature_bitfield & 32)
-			tpl_addVar(vars, TPLADD, "CLIENTPROTOTITLE", cl->account->cacheex.aio_version);
-		else if(cl->account->cacheex.feature_bitfield)
-			tpl_addVar(vars, TPLADD, "CLIENTPROTOTITLE", "[cx-aio: < 9.2.3]");
-		else
-			tpl_addVar(vars, TPLADD, "CLIENTPROTOTITLE", "");
-	}
-	
-	if(cl->reader && cl->cacheex_aio_checked)
-	{
-		if(cl->reader->cacheex.feature_bitfield & 32)
-			tpl_addVar(vars, TPLADD, "CLIENTPROTOTITLE", cl->reader->cacheex.aio_version);
-		else if(cl->reader->cacheex.feature_bitfield)
-			tpl_addVar(vars, TPLADD, "CLIENTPROTOTITLE", "[cx-aio < 9.2.3]");
-		else
-			tpl_addVar(vars, TPLADD, "CLIENTPROTOTITLE", "");
-	}
-#endif
 #ifdef MODULE_CCCAM
 	if(strncmp(proto, "cccam", 5) == 0)
 	{
@@ -4065,40 +3941,7 @@ static void webif_add_client_proto(struct templatevars *vars, struct s_client *c
 			}
 			else
 			{
-#endif
-#if defined(MODULE_CCCAM) && defined(CS_CACHEEX)
-				if(cl->reader && cl->reader->cacheex.feature_bitfield)
-				{
-					if(cl->reader->cacheex.feature_bitfield & 32)
-					{
-						tpl_printf(vars, TPLADD, "CLIENTPROTOTITLE", "%s [cx-aio %s]", (cc->extended_mode ? cc->remote_oscam : ""), cl->reader->cacheex.aio_version);
-					}
-					else if(cl->reader->cacheex.feature_bitfield)
-					{
-						tpl_printf(vars, TPLADD, "CLIENTPROTOTITLE", "%s [cx-aio < 9.2.3]", (cc->extended_mode ? cc->remote_oscam : ""));
-					}
-				}
-				else if(cl->account && cl->account->cacheex.feature_bitfield)
-				{
-					if(cl->account->cacheex.feature_bitfield & 32)
-					{
-						tpl_printf(vars, TPLADD, "CLIENTPROTOTITLE", "%s [cx-aio %s]", (cc->extended_mode ? cc->remote_oscam : ""), cl->account->cacheex.aio_version);
-					}
-					else if(cl->account->cacheex.feature_bitfield)
-					{
-						tpl_printf(vars, TPLADD, "CLIENTPROTOTITLE", "%s [cx-aio < 9.2.3]", (cc->extended_mode ? cc->remote_oscam : ""));
-					}
-				}
-				else
-				{
-#endif
-#ifdef MODULE_CCCAM
-					tpl_addVar(vars, TPLADD, "CLIENTPROTOTITLE", cc->extended_mode ? cc->remote_oscam : "");
-#endif			
-#if defined(MODULE_CCCAM) && defined(CS_CACHEEX)
-				}
-#endif
-#ifdef MODULE_CCCAM
+				tpl_addVar(vars, TPLADD, "CLIENTPROTOTITLE", cc->extended_mode ? cc->remote_oscam : "");
 			}
 
 			if(cfg.http_showpicons)
@@ -4616,27 +4459,8 @@ static char *send_oscam_user_config(struct templatevars *vars, struct uriparams 
 				tpl_addVar(vars, TPLADD, "CLIENTTIMETOSLEEPAPI", "undefined");
 			}
 		}
-#ifdef CS_CACHEEX
-		if(latestclient != NULL &&  latestclient->account->cacheex.feature_bitfield)
-		{
-			const char *aio_suffix = " (cx-aio)";
-			char *new_proto;
-			if(cs_malloc(&new_proto, strlen(proto)+strlen(aio_suffix)+1))
-			{
-				new_proto[0] = '\0';
-				strcat(new_proto,proto);
-				strcat(new_proto,aio_suffix);
-				webif_add_client_proto(vars, latestclient, (const char*)new_proto, apicall);
-				free(new_proto);
-			}
-		}
-		else
-		{
-#endif
+
 		webif_add_client_proto(vars, latestclient, proto, apicall);
-#ifdef CS_CACHEEX
-		}
-#endif
 
 		tpl_addVar(vars, TPLADD, "CLASSNAME", classname);
 		MD5((uint8_t *)account->usr, strlen(account->usr), md5tmp);
@@ -5751,30 +5575,8 @@ static char *send_oscam_status(struct templatevars * vars, struct uriparams * pa
 					tpl_addVar(vars, TPLADD, "CLIENTIP", cs_inet_ntoa(cl->ip));
 					tpl_printf(vars, TPLADD, "CLIENTPORT", "%d", cl->port);
 					const char *proto = client_get_proto(cl);
-#ifdef CS_CACHEEX
-					if(cl && 
-						(  (cl->typ == 'c' && cl->account && cl->account->cacheex.feature_bitfield)
-					 	|| (cl->typ == 'p' && cl->reader && cl->reader->cacheex.feature_bitfield))
-					 )
-					{
-						const char *aio_suffix = " (cx-aio)";
-						char *new_proto;
-						if(cs_malloc(&new_proto, strlen(proto)+strlen(aio_suffix)+1))
-						{
-							new_proto[0] = '\0';
-							strcat(new_proto,proto);
-							strcat(new_proto,aio_suffix);
-							webif_add_client_proto(vars, cl, (const char*)new_proto, apicall);
-							free(new_proto);
-						}
-					}
-					else
-					{
-#endif
 					webif_add_client_proto(vars, cl, proto, apicall);
-#ifdef CS_CACHEEX
-					}
-#endif
+
 					if(!apicall)
 					{
 						if((cl->typ != 'p' && cl->typ != 'r') || cl->reader->card_status == CARD_INSERTED)
@@ -6574,12 +6376,9 @@ static char *send_oscam_services_edit(struct templatevars * vars, struct uripara
 
 	tpl_addVar(vars, TPLADD, "LABEL", xml_encode(vars, sidtab->label));
 	tpl_addVar(vars, TPLADD, "LABELENC", urlencode(vars, sidtab->label));
-	tpl_addVar(vars, TPLADD, "DCRCCHECKED", (sidtab->disablecrccws_only_for_exception == 1) ? "checked" : "" );
-	tpl_addVar(vars, TPLADD, "NWCHECKED", (sidtab->no_wait_time == 1) ? "checked" : "" );
 
 	if(sidtab)
 	{
-		
 		for(i = 0; i < sidtab->num_caid; i++)
 		{
 			if(i == 0) { tpl_printf(vars, TPLADD, "CAIDS", "%04X", sidtab->caid[i]); }
@@ -7784,11 +7583,6 @@ static char *send_oscam_cacheex(struct templatevars * vars, struct uriparams * p
 
 	for(i = 0, cl = first_client; cl ; cl = cl->next, i++)
 	{
-		char classname[9];
-		snprintf(classname, 8, "class%02d", i) < 0 ? abort() : (void)0;
-		classname[8] = '\0';
-		tpl_addVar(vars, TPLADD, "CLASSNAME", classname);
-
 		if(cl->typ == 'c' && cl->account && cl->account->cacheex.mode)
 		{
 			cacheex_name_link_tpl = "SUSER";
@@ -7822,9 +7616,6 @@ static char *send_oscam_cacheex(struct templatevars * vars, struct uriparams * p
 			tpl_printf(vars, TPLADD, "HIT", "%d", cl->account->cwcacheexhit);
 			tpl_printf(vars, TPLADD, "ERR", "%d", cl->account->cwcacheexerr);
 			tpl_printf(vars, TPLADD, "ERRCW", "%d", cl->account->cwcacheexerrcw);
-			tpl_printf(vars, TPLADD, "GOTLG", "%d", cl->account->cwcacheexgotlg);
-			tpl_printf(vars, TPLADD, "PUSHLG", "%d", cl->account->cwcacheexpushlg);
-			tpl_printf(vars, TPLADD, "REL_CACHEXHITGOT", "%.2f", (double)(cl->account->cwcacheexhit ? (double)cl->account->cwcacheexhit : 0) * 100 / (double)(cl->account->cwcacheexgot ? cl->account->cwcacheexgot : 1));
 			tpl_addVar(vars, TPLADD, "DIRECTIONIMG", (cl->account->cacheex.mode == 3) ? getting : pushing);
 			rowvariable = "TABLECLIENTROWS";
 			written = 1;
@@ -7864,9 +7655,6 @@ static char *send_oscam_cacheex(struct templatevars * vars, struct uriparams * p
 			tpl_printf(vars, TPLADD, "HIT", "%d", cl->cwcacheexhit);
 			tpl_printf(vars, TPLADD, "ERR", "%d", cl->cwcacheexerr);
 			tpl_printf(vars, TPLADD, "ERRCW", "%d", cl->cwcacheexerrcw);
-			tpl_printf(vars, TPLADD, "GOTLG", "%d", cl->cwcacheexgotlg);
-			tpl_printf(vars, TPLADD, "PUSHLG", "%d", cl->cwcacheexpushlg);
-			tpl_printf(vars, TPLADD, "REL_CACHEXHITGOT", "%.2f", (double)(cl->cwcacheexhit ? (double)cl->cwcacheexhit : 0) * 100 / (double)(cl->cwcacheexgot ? cl->cwcacheexgot : 1));
 			tpl_addVar(vars, TPLADD, "DIRECTIONIMG", (cl->reader->cacheex.mode == 3) ? pushing : getting);
 
 			rowvariable = "TABLEREADERROWS";
@@ -7904,9 +7692,6 @@ static char *send_oscam_cacheex(struct templatevars * vars, struct uriparams * p
 			tpl_printf(vars, TPLADD, "HIT", "%d", cl->cwcacheexhit);
 			tpl_printf(vars, TPLADD, "ERR", "%d", cl->cwcacheexerr);
 			tpl_printf(vars, TPLADD, "ERRCW", "%d", cl->cwcacheexerrcw);
-			tpl_printf(vars, TPLADD, "GOTLG", "%d", cl->cwcacheexgotlg);
-			tpl_printf(vars, TPLADD, "PUSHLG", "%d", cl->cwcacheexpushlg);
-			tpl_printf(vars, TPLADD, "REL_CACHEXHITGOT", "%.2f", (double)(cl->cwcacheexhit ? (double)cl->cwcacheexhit : 0) * 100 / (double)(cl->cwcacheexgot ? cl->cwcacheexgot : 1));
 			tpl_addVar(vars, TPLADD, "DIRECTIONIMG", getting);
 			rowvariable = "TABLECLIENTROWS";
 			written = 1;
@@ -7938,13 +7723,11 @@ static char *send_oscam_cacheex(struct templatevars * vars, struct uriparams * p
 					if(cacheex_stats_entry->cache_direction == 0)
 					{
 						tpl_printf(vars, TPLADD, "PUSH", "%d", cacheex_stats_entry->cache_count);
-						tpl_printf(vars, TPLADD, "PUSHLG", "%d", cacheex_stats_entry->cache_count_lg);
 						tpl_addVar(vars, TPLADD, "GOT", "");
 					}
 					else
 					{
 						tpl_printf(vars, TPLADD, "GOT", "%d", cacheex_stats_entry->cache_count);
-						tpl_printf(vars, TPLADD, "GOTLG", "%d", cacheex_stats_entry->cache_count_lg);
 						tpl_addVar(vars, TPLADD, "PUSH", "");
 					}
 					tpl_addVar(vars, TPLADD, "HIT", "");
@@ -7959,7 +7742,7 @@ static char *send_oscam_cacheex(struct templatevars * vars, struct uriparams * p
 					}
 					else
 					{
-						tpl_addVar(vars, TPLAPPEND, rowvariable, tpl_getTpl(vars, "CACHEEXTABLEROWSTATS"));
+						tpl_addVar(vars, TPLAPPEND, rowvariable, tpl_getTpl(vars, "CACHEEXTABLEROW"));
 					}
 				}
 			}
