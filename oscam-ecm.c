@@ -1997,6 +1997,8 @@ int32_t write_ecm_answer(struct s_reader *reader, ECM_REQUEST *er, int8_t rc, ui
 				{ logCWtoFile(er, ea->cw); } // CWL logging only if cwlogdir is set in config
 
 			reader->ecmsok++;
+			if(er->localgenerated)
+				reader->ecmsoklg++;
 			reader->webif_ecmsok++;
 #ifdef CS_CACHEEX
 			struct s_client *eacl = reader->client;
@@ -2051,6 +2053,7 @@ int32_t write_ecm_answer(struct s_reader *reader, ECM_REQUEST *er, int8_t rc, ui
 		if(reader->ecmsok != 0 || reader->ecmsnok != 0 || reader->ecmstout != 0)
 		{
 			reader->ecmshealthok = ((double) reader->ecmsok / (reader->ecmsok + reader->ecmsnok + reader->ecmstout)) * 100;
+			reader->ecmshealthoklg = ((double) reader->ecmsoklg / (reader->ecmsok + reader->ecmsnok + reader->ecmstout)) * 100;
 			reader->ecmshealthnok = ((double) reader->ecmsnok / (reader->ecmsok + reader->ecmsnok + reader->ecmstout)) * 100;
 			reader->ecmshealthtout = ((double) reader->ecmstout / (reader->ecmsok + reader->ecmsnok + reader->ecmstout)) * 100;
 		}
@@ -2176,7 +2179,7 @@ void write_ecm_answer_fromcache(struct s_write_from_cache *wfc)
 	er = wfc->er_new;
 	ecm = wfc->er_cache;
 
-	if(ecm->localgenerated)
+	if(ecm->localgenerated || (ecm->cw_count > 0x0F000000))
 		er->localgenerated = 1;
 
 	int8_t rc_orig = er->rc;
