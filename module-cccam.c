@@ -835,7 +835,7 @@ int32_t cc_msg_recv(struct s_client *cl, uint8_t *buf, int32_t maxlen)
 
 		len = cs_recv(handle, buf + 4, size, MSG_WAITALL);
 
-		if(rdr && (buf[1] == MSG_CW_ECM || buf[1] == MSG_CW_ECM_LGF))
+		if(rdr && buf[1] == MSG_CW_ECM)
 		{
 			rdr->last_g = time(NULL);
 		}
@@ -2343,12 +2343,6 @@ int32_t check_extended_mode(struct s_client *cl, char *msg)
 			cs_log_dbg(D_CLIENT, "%s sleepsend", getprefix());
 			has_param = 1;
 		}
-		else if(p && strncmp(p, "LGF", 3) == 0)
-		{
-			cc->extended_lg_flagged_cws = 1;
-			cs_log_dbg(D_CLIENT, "%s lg-flagged CWs", getprefix());
-			has_param = 1;
-		}
 	}
 	return has_param;
 }
@@ -2378,13 +2372,6 @@ void cc_idle(void)
 
 	if(rdr->cc_keepalive)
 	{
-#ifdef CS_CACHEEX
-			if(!cl->cacheex_aio_checked && ((cl->account && cl->account->cacheex.mode > 0) || (cl->reader && cl->reader->cacheex.mode > 0)))
-			{
-				cc_cacheex_feature_request(cl);
-				cl->cacheex_aio_checked = 1;
-			}
-#endif
 		if(cc_cmd_send(cl, NULL, 0, MSG_KEEPALIVE) > 0)
 		{
 			cs_log_dbg(D_READER, "cccam: keepalive");
@@ -2717,13 +2704,6 @@ static void cc_s_idle(struct s_client *cl)
 	cs_log_dbg(D_TRACE, "ccc idle %s", username(cl));
 	if(cfg.cc_keep_connected)
 	{
-#ifdef CS_CACHEEX
-			if(!cl->cacheex_aio_checked && ((cl->account && cl->account->cacheex.mode > 0) || (cl->reader && cl->reader->cacheex.mode > 0)))
-			{
-				cc_cacheex_feature_request(cl);
-				cl->cacheex_aio_checked = 1;
-			}
-#endif
 		cc_cmd_send(cl, NULL, 0, MSG_KEEPALIVE);
 		cl->last = time(NULL);
 	}
@@ -2815,7 +2795,7 @@ int32_t cc_parse_msg(struct s_client *cl, uint8_t *buf, int32_t l)
 				if(cc->is_oscam_cccam)
 				{
 					uint8_t token[256];
-					snprintf((char *)token, sizeof(token), "PARTNER: OSCam v%s, build r%s (%s) [EXT,SID,SLP,LGF]",
+					snprintf((char *)token, sizeof(token), "PARTNER: OSCam v%s, build r%s (%s) [EXT,SID,SLP]",
 								CS_VERSION, CS_SVN_VERSION, CS_TARGET);
 
 					cc_cmd_send(cl, token, strlen((char *)token) + 1, MSG_CW_NOK1);
@@ -3127,11 +3107,6 @@ int32_t cc_parse_msg(struct s_client *cl, uint8_t *buf, int32_t l)
 								addParam(param, "SLP");
 							}
 
-							if(cc->extended_lg_flagged_cws)
-							{
-								addParam(param, "LGF");
-							}
-
 							strcat(param, "]");
 						}
 
@@ -3344,33 +3319,6 @@ int32_t cc_parse_msg(struct s_client *cl, uint8_t *buf, int32_t l)
 			break;
 		}
 
-		case MSG_CACHE_FEATURE_EXCHANGE:
-		{
-			if((l - 4) >= 2)
-			{
-				cc_cacheex_feature_request_reply(cl);
-			}
-			break;
-		}
-
-		case MSG_CACHE_FEATURE_EXCHANGE_REPLY:
-		{
-			if((l - 4) >= 2)
-			{
-				cc_cacheex_feature_request_save(cl, data);
-			}
-			break;
-		}
-
-		case MSG_CACHE_FEATURE_TRIGGER:
-		{
-			if((l - 4) >= 2)
-			{
-				cc_cacheex_feature_trigger_in(cl, data);
-			}
-			break;
-		}
-		case MSG_CW_ECM_LGF:
 		case MSG_CW_ECM:
 		{
 			cc->just_logged_in = 0;
@@ -3620,6 +3568,7 @@ int32_t cc_parse_msg(struct s_client *cl, uint8_t *buf, int32_t l)
 				}
 
 				//cc_abort_user_ecms();
+
 				cc_send_ecm(cl, NULL);
 
 				if(cc->max_ecms)
@@ -3632,13 +3581,6 @@ int32_t cc_parse_msg(struct s_client *cl, uint8_t *buf, int32_t l)
 
 		case MSG_KEEPALIVE:
 		{
-#ifdef CS_CACHEEX
-			if(!cl->cacheex_aio_checked && ((cl->account && cl->account->cacheex.mode > 0) || (cl->reader && cl->reader->cacheex.mode > 0)))
-			{
-				cc_cacheex_feature_request(cl);
-				cl->cacheex_aio_checked = 1;
-			}
-#endif
 			if(cl)
 			{
 				cl->last = time(NULL);
@@ -3939,14 +3881,12 @@ int32_t cc_recv_chk(struct s_client *cl, uint8_t *dcw, int32_t *rc, uint8_t *buf
 {
 	struct cc_data *cc = cl->cc;
 
-	if(buf[1] == MSG_CW_ECM || buf[1] == MSG_CW_ECM_LGF)
+	if(buf[1] == MSG_CW_ECM)
 	{
 		memcpy(dcw, cc->dcw, 16);
 		//cs_log_dbg(D_CLIENT, "cccam: recv chk - MSG_CW %d - %s", cc->recv_ecmtask,
 		//			cs_hexdump(0, dcw, 16, tmp_dbg, sizeof(tmp_dbg)));
 		*rc = 1;
-		if(buf[1] == MSG_CW_ECM_LGF)
-			*rc = 0x86;
 		return (cc->recv_ecmtask);
 	}
 	else if((buf[1] == (MSG_CW_NOK1)) || (buf[1] == (MSG_CW_NOK2)))
@@ -4011,16 +3951,7 @@ void cc_send_dcw(struct s_client *cl, ECM_REQUEST *er)
 		{
 			cc->g_flag = eei->send_idx;
 		}
-
-		// lg-flag
-		if(cc->extended_lg_flagged_cws && (er->localgenerated || (er->selected_reader && !is_network_reader(er->selected_reader))))
-		{
-			cc_cmd_send(cl, buf, 16, MSG_CW_ECM_LGF);
-		}
-		else
-		{
-			cc_cmd_send(cl, buf, 16, MSG_CW_ECM);
-		}		
+		cc_cmd_send(cl, buf, 16, MSG_CW_ECM);
 
 		if(!cc->extended_mode)
 		{
@@ -4125,7 +4056,7 @@ int32_t cc_recv(struct s_client *cl, uint8_t *buf, int32_t l)
 	{
 		// parse it and write it back, if we have received something of value
 		n = cc_parse_msg(cl, buf, n);
-		if(n == MSG_CW_ECM || n == MSG_EMM_ACK || n == MSG_CW_ECM_LGF)
+		if(n == MSG_CW_ECM || n == MSG_EMM_ACK)
 		{
 			cl->last = time(NULL); // last client action is now
 			if(rdr)
@@ -4547,8 +4478,6 @@ void cc_srv_init2(struct s_client *cl)
 		{
 			cl->init_done = 1;
 			cc_cacheex_filter_out(cl);
-			if((cl->account && cl->account->cacheex.mode > 0) || (cl->reader && cl->reader->cacheex.mode > 0))
-				cc_cacheex_feature_request(cl);
 		}
 	}
 	return;
@@ -4783,11 +4712,7 @@ int32_t cc_cli_connect(struct s_client *cl)
 	cl->crypted = 1;
 	cc->ecm_busy = 0;
 
-	if(cacheex_get_rdr_mode(rdr) > 0)
-	{
-		cc_cacheex_filter_out(cl);
-		cc_cacheex_feature_request(cl);
-	}
+	cc_cacheex_filter_out(cl);
 
 	return 0;
 }
