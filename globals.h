@@ -1598,7 +1598,6 @@ struct s_reader										// contains device info, reader info and card info
 	uint8_t			cwekey3_length;
 	uint8_t			cwekey4[16];
 	uint8_t			cwekey4_length;
-	struct timeb	last_refresh;
 	uint8_t			cwekey5[16];
 	uint8_t			cwekey5_length;
 	uint8_t			cwekey6[16];
