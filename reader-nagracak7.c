@@ -454,6 +454,10 @@ static int32_t ParseDataType(struct s_reader *reader, uint8_t dt, uint8_t *cta_r
 						start_date = 1;
 						expire_date = 0xA69EFB7F;
 				}
+ 
+	struct timeb now;
+	cs_ftime(&now);
+	reader->last_refresh=now;
 
 				cs_add_entitlement(reader,
 					reader->caid,
@@ -467,6 +471,16 @@ static int32_t ParseDataType(struct s_reader *reader, uint8_t dt, uint8_t *cta_r
 				rdr_log(reader, "|%04X|%04X    |%s  |%s  |", id, chid, ds, de);
 				addProvider(reader, cta_res + 19);
 			}
+
+	struct timeb now;
+	cs_ftime(&now);
+	int64_t gone_now = comp_timeb(&now, &reader->emm_last);
+	int64_t gone_refresh = comp_timeb(&reader->emm_last, &reader->last_refresh);
+	if((gone_now > 3600*1000) || (gone_refresh > 12*3600*1000))
+	{
+		add_job(reader->client, ACTION_READER_CARDINFO, NULL, 0); // refresh entitlement since it might have been changed!
+	}
+
 			return OK;
 		}
 
