@@ -1567,7 +1567,6 @@ struct s_reader										// contains device info, reader info and card info
 	uint8_t			mod1_length;
 	uint8_t			cmd0eprov[2];
 	uint8_t			cmd0eprov_length;
-	struct timeb	last_refresh;
 	uint8_t			mod2[112];
 	uint8_t			mod2_length;
 	uint8_t			tmprsa[112];
