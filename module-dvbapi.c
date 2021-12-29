@@ -2696,6 +2696,8 @@ int32_t dvbapi_start_descrambling(int32_t demux_id, int32_t pid, int8_t checked,
 	er->vpid   = demux[demux_id].ECMpids[pid].VPID;
 	er->pmtpid = demux[demux_id].pmtpid;
 	er->onid   = demux[demux_id].onid;
+	er->tsid   = demux[demux_id].tsid;
+	er->ens    = demux[demux_id].ens;
 	er->msgid  = msgid;
 
 #ifdef WITH_STAPI5
@@ -2743,18 +2745,29 @@ int32_t dvbapi_start_descrambling(int32_t demux_id, int32_t pid, int8_t checked,
 		if(caid_is_fake(demux[demux_id].ECMpids[pid].CAID) || caid_is_biss_fixed(demux[demux_id].ECMpids[pid].CAID))
 		{
 			int32_t j, n;
-			er->ecmlen = 5;
+			er->ecmlen = 7;
 			er->ecm[0] = 0x80; // to pass the cache check it must be 0x80 or 0x81
 			er->ecm[1] = 0x00;
-			er->ecm[2] = 0x02;
+			er->ecm[2] = 0x04;
 			i2b_buf(2, er->srvid, er->ecm + 3);
+			i2b_buf(2, er->pmtpid, er->ecm + 5);
 
-			for(j = 0, n = 5; j < demux[demux_id].STREAMpidcount; j++, n += 2)
+			for(j = 0, n = 7; j < demux[demux_id].STREAMpidcount; j++, n += 2)
 			{
 				i2b_buf(2, demux[demux_id].STREAMpids[j], er->ecm + n);
 				er->ecm[2] += 2;
 				er->ecmlen += 2;
 			}
+
+			er->ens &= 0x0FFFFFFF; // clear top 4 bits (in case of DVB-T/C or garbage), prepare for flagging
+			er->ens |= 0xA0000000; // flag to emu: this is the namespace, not a pid
+
+			i2b_buf(2, er->tsid, er->ecm + er->ecmlen);     // place tsid after the last stream pid
+			i2b_buf(2, er->onid, er->ecm + er->ecmlen + 2); // place onid right after tsid
+			i2b_buf(4, er->ens, er->ecm + er->ecmlen + 4);  // place namespace at the end of the ecm
+
+			er->ecm[2] += 8;
+			er->ecmlen += 8;
 
 			cs_log("Demuxer %d trying to descramble PID %d CAID %04X PROVID %06X ECMPID %04X ANY CHID PMTPID %04X VPID %04X",
 				demux_id,
