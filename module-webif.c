@@ -7770,8 +7770,13 @@ static bool process_emm_file(struct templatevars * vars, struct s_reader * rdr, 
 					if(send_EMM(rdr, caid, csystem, emmhex, len))
 					{
 						++wemms;
-						/* Give time to process EMM, otherwise, too many jobs can be added*/
-						cs_sleepms(1000); //TODO: use oscam signal to catch reader answer
+						int32_t jcount = ll_count(rdr->client->joblist);
+						if (jcount > 200)
+						{
+							/* Give more time to process EMMs */
+							cs_sleepms(1000);
+						}
+						rdr_log_dbg(rdr, D_READER, "pending emm jobs: %i, processed emms: %i", jcount, wemms);
 					}
 				}
 				fsize = ftell(fp);
@@ -8099,6 +8104,10 @@ static char *send_oscam_cacheex(struct templatevars * vars, struct uriparams * p
 				{
 					tpl_printf(vars, TPLADD, "CLIENTDESCRIPTION","%s(%s)",!apicall?"&#13;":"",xml_encode(vars, cl->account->description));
 				}
+				else
+				{
+					tpl_addVar(vars, TPLADD, "CLIENTDESCRIPTION", "");
+				}
 			}
 			else
 			{
@@ -8107,6 +8116,10 @@ static char *send_oscam_cacheex(struct templatevars * vars, struct uriparams * p
 				if(cl->account->description)
 				{
 					tpl_addVar(vars, TPLADD, "CLIENTDESCRIPTION", cl->account->description);
+				}
+				else
+				{
+					tpl_addVar(vars, TPLADD, "CLIENTDESCRIPTION", "");
 				}
 			}
 
@@ -8142,6 +8155,10 @@ static char *send_oscam_cacheex(struct templatevars * vars, struct uriparams * p
 				{
 					tpl_printf(vars, TPLADD, "CLIENTDESCRIPTION","%s(%s)",!apicall?"&#13;":"",xml_encode(vars, cl->reader->description));
 				}
+				else
+				{
+					tpl_addVar(vars, TPLADD, "CLIENTDESCRIPTION", "");
+				}
 			}
 			else
 			{
@@ -8150,6 +8167,10 @@ static char *send_oscam_cacheex(struct templatevars * vars, struct uriparams * p
 				if(cl->reader->description)
 				{
 					tpl_addVar(vars, TPLADD, "CLIENTDESCRIPTION", cl->reader->description);
+				}
+				else
+				{
+					tpl_addVar(vars, TPLADD, "CLIENTDESCRIPTION", "");
 				}
 			}
 

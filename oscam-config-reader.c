@@ -750,7 +750,9 @@ static void key3310_fn(const char *token, char *value, void *setting, FILE *f)
 	else if(cfg.http_full_cfg)
 		{ fprintf_conf(f, "key3310", "\n"); }
 }
+#endif
 
+#if defined(READER_NAGRA_MERLIN) || defined(READER_NAGRA)		
 static void nuid_fn(const char *token, char *value, void *setting, FILE *f)
 {
 	struct s_reader *rdr = setting;
@@ -1409,6 +1411,8 @@ static void emmcache_fn(const char *token, char *value, void *setting, FILE *f)
 				case 0:
 					rdr->cachemm = atoi(ptr);
 					break;
+#endif
+#if defined(READER_NAGRA_MERLIN) || defined(READER_NAGRA)
 				case 1:
 					rdr->rewritemm = atoi(ptr);
 					break;
