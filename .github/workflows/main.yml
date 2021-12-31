@@ -1,0 +1,35 @@
+name: oscam smod
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    name: Build oscam
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        gcc: [8, 9, 10, 11]
+    steps:
+      - name: Install prerequisites
+        run: |
+          sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+          sudo apt-get -q update
+          sudo apt-get install g++-${{ matrix.gcc }}
+
+      - uses: actions/checkout@v2
+        with:
+          ref: 'master'
+          
+      - name: Build oscam
+        env:
+          CC: "gcc-${{ matrix.gcc }}"
+          CXX: "g++-${{ matrix.gcc }}"
+        run: |
+          echo "compiling oscam"
+          ./config.sh -E all
+          make
+          echo done!
