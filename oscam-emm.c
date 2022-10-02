@@ -285,7 +285,7 @@ static char *get_emmlog_filename(char *dest, size_t destlen, const char *basefil
 	else
 	{
 		const char *slash = "/";
-		if(cfg.emmlogdir[strlen(cfg.emmlogdir) - 1] == '/') { slash = ""; }
+		if(cfg.emmlogdir[cs_strlen(cfg.emmlogdir) - 1] == '/') { slash = ""; }
 		snprintf(dest, destlen, "%s%s%s", cfg.emmlogdir, slash, filename);
 	}
 	return dest;
@@ -352,6 +352,7 @@ static void saveemm(struct s_reader *aureader, EMM_PACKET *ep, const char *proce
 
 void do_emm(struct s_client *client, EMM_PACKET *ep)
 {
+	int32_t writeemm = 1; // 0= dont write emm, 1=write emm, default = write
 	char *typtext[] = {"unknown", "unique", "shared", "global"};
 	char tmp[17];
 	int32_t emmnok = 0;
@@ -603,7 +604,6 @@ void do_emm(struct s_client *client, EMM_PACKET *ep)
 
 		ep->client = client;
 
-		int32_t writeemm = 1; // 0= dont write emm, 1=write emm, default = write
 
 		if(aureader->cachemm && !(caid_is_irdeto(caid) || caid_is_videoguard(caid))) // Check emmcache early:
 		{

@@ -316,12 +316,22 @@ static void ParseDescriptors(uint8_t *buffer, uint16_t info_length, uint8_t *typ
 					case 0x0E: // DTS-HD descriptor (DVB)
 					case 0x0F: // DTS Neural descriptor (DVB)
 					case 0x15: // AC-4 descriptor (DVB)
-					case 0x21: // DTS-UHD descriptor (DVB)
 						*type = STREAM_AUDIO;
+						break;
+
+					case 0x20: // TTML subtitling descriptor (DVB)
+						*type = STREAM_SUBTITLE;
+						break;
+
+					default:
+						*type = STREAM_UNDEFINED;
 						break;
 				}
 				break;
 			}
+
+			default:
+				break;
 		}
 	}
 }
@@ -1269,7 +1279,7 @@ static int32_t connect_to_stream(char *http_buf, int32_t http_buf_len, char *str
 				"Connection: keep-alive\n\n", stream_path, emu_stream_source_host, emu_stream_source_port);
 	}
 
-	if (send(streamfd, http_buf, strlen(http_buf), 0) == -1)
+	if (send(streamfd, http_buf, cs_strlen(http_buf), 0) == -1)
 	{
 		return -1;
 	}
@@ -1410,7 +1420,7 @@ static void *stream_client_handler(void *arg)
 				conndata->connid, data->srvid, data->tsid, data->onid, data->ens);
 
 	snprintf(http_buf, 1024, "HTTP/1.0 200 OK\nConnection: Close\nContent-Type: video/mpeg\nServer: stream_enigma2\n\n");
-	clientStatus = send(conndata->connfd, http_buf, strlen(http_buf), 0);
+	clientStatus = send(conndata->connfd, http_buf, cs_strlen(http_buf), 0);
 
 	data->connid = conndata->connid;
 	data->caid = NO_CAID_VALUE;

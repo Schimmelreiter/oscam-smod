@@ -53,7 +53,7 @@ static int32_t chk_class(ECM_REQUEST *er, CLASSTAB *clstab, const char *type, co
 	if(er->caid != 0x0500 && er->caid != 0x4AE1) { return 1; }
 	if(!clstab->bn && !clstab->an) { return 1; }
 
-	j = an = cl_n = l = 0;
+	j = an = cl_n = 0;
 
 	if(er->caid == 0x0500)
 	{
@@ -154,6 +154,7 @@ int32_t chk_srvid_match(ECM_REQUEST *er, SIDTAB *sidtab)
 	return (rc == 7);
 }
 
+#ifdef CS_CACHEEX_AIO
 int32_t chk_srvid_disablecrccws_only_for_exception(ECM_REQUEST *er)
 {
 	int32_t nr;
@@ -183,6 +184,22 @@ int32_t chk_srvid_no_wait_time(ECM_REQUEST *er)
 	}
 	return(0);
 }
+
+int32_t chk_srvid_localgenerated_only_exception(ECM_REQUEST *er)
+{
+	int32_t nr;
+	SIDTAB *sidtab;
+
+	for(nr = 0, sidtab = cfg.sidtab; sidtab; sidtab = sidtab->next, nr++)
+	{
+		if(sidtab->lg_only_exception && (sidtab->num_caid | sidtab->num_provid | sidtab->num_srvid) && chk_srvid_match(er, sidtab))
+		{
+			return(1);
+		}
+	}
+	return(0);
+}
+#endif
 
 int32_t chk_srvid(struct s_client *cl, ECM_REQUEST *er)
 {
@@ -481,12 +498,11 @@ int32_t chk_ident_filter(uint16_t rcaid, uint32_t rprid, FTAB *ftab)
 
 int32_t chk_ufilters(ECM_REQUEST *er)
 {
-	int32_t i, j, rc;
+	int32_t i, j, rc = 1;
 	uint16_t ucaid;
 	uint32_t uprid;
 	struct s_client *cur_cl = cur_client();
 
-	rc = 1;
 	if(cur_cl->ftab.nfilts)
 	{
 		FTAB *f = &cur_cl->ftab;
@@ -556,7 +572,7 @@ int32_t chk_rsfilter(struct s_reader *reader, ECM_REQUEST *er)
 		return 1;
 	}
 
-	rc = prid = 0;
+	rc = 0;
 	caid = reader->caid;
 	if(caid == er->caid)
 	{
@@ -739,6 +755,68 @@ uint8_t chk_is_fixed_fallback(struct s_reader *rdr, ECM_REQUEST *er)
 
 	return 0;
 }
+
+#ifdef CS_CACHEEX_AIO
+uint8_t chk_lg_only(ECM_REQUEST *er, FTAB *lg_only_ftab)
+{
+	int32_t i, k;
+
+	if(!lg_only_ftab->nfilts)
+		return 0;
+
+	for(i = 0; i < lg_only_ftab->nfilts; i++)
+	{
+		uint16_t tcaid = lg_only_ftab->filts[i].caid;
+		if(tcaid && (tcaid == er->caid || (tcaid < 0x0100 && (er->caid >> 8) == tcaid))) // caid match
+		{
+			int32_t nprids = lg_only_ftab->filts[i].nprids;
+			if(!nprids) // No Provider ->Ok
+				{ return 1; }
+
+			for(k = 0; k < nprids; k++)
+			{
+				uint32_t prid = lg_only_ftab->filts[i].prids[k];
+				if(prid == NO_PROVID_VALUE || prid == er->prid) // Provider matches
+				{
+					return 1;
+				}
+			}
+		}
+	}
+
+	return 0;
+}
+
+uint8_t chk_lg_only_cp(uint16_t caid, uint32_t prid, FTAB *lg_only_ftab)
+{
+	int32_t i, k;
+
+	if(!lg_only_ftab->nfilts)
+		return 0;
+
+	for(i = 0; i < lg_only_ftab->nfilts; i++)
+	{
+		uint16_t tcaid = lg_only_ftab->filts[i].caid;
+		if(tcaid && (tcaid == caid || (tcaid < 0x0100 && (caid >> 8) == tcaid))) // caid match
+		{
+			int32_t nprids = lg_only_ftab->filts[i].nprids;
+			if(!nprids) // No Provider ->Ok
+				{ return 1; }
+
+			for(k = 0; k < nprids; k++)
+			{
+				uint32_t fprid = lg_only_ftab->filts[i].prids[k];
+				if(fprid == NO_PROVID_VALUE || fprid == prid) // Provider matches
+				{
+					return 1;
+				}
+			}
+		}
+	}
+
+	return 0;
+}
+#endif
 
 uint8_t chk_has_fixed_fallback(ECM_REQUEST *er)
 {
@@ -1007,7 +1085,6 @@ int32_t matching_reader(ECM_REQUEST *er, struct s_reader *rdr)
 			skip = 0;
 			byteok = 0;
 			entryok = 0;
-			len = 0;
 
 			if(tmp->caid == 0 || tmp->caid == er->caid)
 			{
@@ -1244,6 +1321,7 @@ int32_t chk_is_fakecw(uint8_t *cw)
 	return is_fakecw;
 }
 
+#ifdef CS_CACHEEX_AIO
 bool chk_nopushafter(uint16_t caid, CAIDVALUETAB *cv, int32_t ecm_time)
 {
 	uint16_t npa_time = caidvaluetab_get_value(cv, caid, 0);
@@ -1255,3 +1333,4 @@ bool chk_nopushafter(uint16_t caid, CAIDVALUETAB *cv, int32_t ecm_time)
 	else
 		return 1;
 }
+#endif

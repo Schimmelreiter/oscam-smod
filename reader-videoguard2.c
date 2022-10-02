@@ -305,7 +305,6 @@ static void vg2_read_tiers(struct s_reader *reader)
 						{
 							if((cta_res[word + 2] >> bitnum) & 1)
 							{
-								tier_id = 0;
 								tier_id = ((TierClass << 8) + (word << 3) + bitnum);
 								cs_add_entitlement(reader, reader->caid, b2ll(4, reader->prid[0]), tier_id, TierClass, start_t, end_t, 4, 1);
 								rdr_log(reader, "|-- %02x ---|-- %04x --| %04d/%02d/%02d-%02d:%02d:%02d | %s",
@@ -322,7 +321,6 @@ static void vg2_read_tiers(struct s_reader *reader)
 
 							if((cta_res[word + 1 + 2] >> bitnum) & 1)
 							{
-								tier_id = 0;
 								tier_id = ((TierClass << 8) + (word << 3) + bitnum + 8);
 								cs_add_entitlement(reader, reader->caid, b2ll(4, reader->prid[0]), tier_id, TierClass, start_t, end_t, 4, 1);
 								rdr_log(reader, "|-- %02x ---|-- %04x --| %04d/%02d/%02d-%02d:%02d:%02d | %s",
@@ -1189,8 +1187,7 @@ static int32_t videoguard2_card_init(struct s_reader *reader, ATR *newatr)
 static int32_t videoguard2_do_ecm(struct s_reader *reader, const ECM_REQUEST *er, struct s_ecm_answer *ea)
 {
 	uint8_t cta_res[CTA_RES_LEN];
-	static const char valid_ecm[] = { 0x00, 0x00, 0x01 };
-	uint8_t ins40[5] = { 0xD1, 0x40, 0x00, 0x80, 0xFF };
+	uint8_t ins40[5] = { 0xD1, 0x40, 0x60, 0x80, 0xFF };
 	static const uint8_t ins54[5] = { 0xD3, 0x54, 0x00, 0x00, 0x00};
 	int32_t posECMpart2 = er->ecm[6] + 7;
 	int32_t lenECMpart2 = er->ecm[posECMpart2] + 1;
@@ -1202,7 +1199,7 @@ static int32_t videoguard2_do_ecm(struct s_reader *reader, const ECM_REQUEST *er
 	int32_t chk;
 	chk = checksum_ok(EcmIrdHeader);
 
-	if((memcmp(&(er->ecm[3]), valid_ecm, sizeof(valid_ecm)) != 0) || (chk == 0))
+	if((er->ecm[3] != 0) || chk == 0 || (er->ecm[4] != 0 && 4 != er->ecm[2]- er->ecm[4]))
 	{
 		rdr_log(reader, "Not a valid ecm");
 		return E_CORRUPT;
@@ -1298,7 +1295,7 @@ static int32_t videoguard2_do_ecm(struct s_reader *reader, const ECM_REQUEST *er
 				if(buff_0F[0] & 1) // case 0f_0x 01 xx xx xx xx xx
 				{
 					rdr_log(reader, "classD3 ins54: no cw --> Bad/wrong ECM");
-					test_0F = 0;
+					return E_CORRUPT;
 				}
 
 				if(buff_0F[1] & 1) // case 0f_0x xx 01 xx xx xx xx
