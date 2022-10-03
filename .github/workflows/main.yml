@@ -30,6 +30,7 @@ jobs:
           CXX: "g++-${{ matrix.gcc }}"
         run: |
           echo "compiling oscam"
+          sed -i 's/#if defined(WITH_SOFTCAM) && !defined(__APPLE__) && !defined(__ANDROID__)/#if defined(WITH_SOFTCAM_PATCH)/g' module-emulator-osemu.c
           ./config.sh -E all
           make
           echo done!
