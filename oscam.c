@@ -384,7 +384,7 @@ static void write_versionfile(bool use_stdout)
 				st.tm_hour, st.tm_min, st.tm_sec);
 	}
 
-	fprintf(fp, "Version:        oscam-%s-r%s%s\n", CS_VERSION, CS_SVN_VERSION, "-ICAM");
+	fprintf(fp, "Version:        oscam-%s-r%s%s\n", CS_VERSION, CS_SVN_VERSION, "-ICAM-v9");
 	fprintf(fp, "Compiler:       %s\n", CS_TARGET);
 	fprintf(fp, "Box type:       %s (%s)\n", boxtype_get(), boxname_get());
 	fprintf(fp, "PID:            %d\n", getppid());

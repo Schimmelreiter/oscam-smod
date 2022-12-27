@@ -19,8 +19,6 @@ static uint8_t gLast_ecm_paket[EMU_STREAM_SERVER_MAX_CONNECTIONS][8];
 
 bool caid_is_icam(uint16_t caid)
 {
-	if (!chk_ctab_ex(caid, &cfg.emu_stream_relay_ctab))
-		return false;
 	if (caid == 0x098C || caid == 0x098D || caid == 0x09C4)
 		return true;
 	return false;

@@ -24,6 +24,7 @@
 #include <stdlib.h>
 
 #include "ffdecsa.h"
+#include "../config.h"
 
 #ifndef NULL
 #define NULL 0
@@ -53,6 +54,7 @@
 #define PARALLEL_128_2MMX    1284
 #define PARALLEL_128_SSE     1285
 #define PARALLEL_128_SSE2    1286
+#define PARALLEL_128_NEON    1287
 
 //////// our choice //////////////// our choice //////////////// our choice //////////////// our choice ////////
 #ifndef PARALLEL_MODE
@@ -68,6 +70,13 @@
 #define PARALLEL_MODE PARALLEL_32_INT
 #define COPY_UNALIGNED_PKT
 #define MEMALIGN_VAL 4
+
+#elif defined(__arm__)
+#ifdef WITH_ARM_NEON
+#define PARALLEL_MODE PARALLEL_128_NEON
+#else
+#define PARALLEL_MODE PARALLEL_32_INT
+#endif
 
 #else
 #define PARALLEL_MODE PARALLEL_32_INT
@@ -108,6 +117,8 @@
 #include "parallel_128_sse.h"
 #elif PARALLEL_MODE==PARALLEL_128_SSE2
 #include "parallel_128_sse2.h"
+#elif PARALLEL_MODE==PARALLEL_128_NEON
+#include "parallel_128_neon.h"
 #else
 #error "unknown/undefined parallel mode"
 #endif
@@ -486,7 +497,7 @@ static void block_decypher_group(
 
   roff=GROUP_PARALLELISM*56;
 
-#define FASTTRASP1
+//#define FASTTRASP1
 #ifndef FASTTRASP1
   for(g=0;g<count;g++){
     // Init registers 
@@ -567,7 +578,7 @@ static void block_decypher_group(
 #endif
   }
 
-#define FASTTRASP2
+//#define FASTTRASP2
 #ifndef FASTTRASP2
   for(g=0;g<count;g++){
     // Copy results

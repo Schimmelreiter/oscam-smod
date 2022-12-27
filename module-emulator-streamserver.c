@@ -379,7 +379,7 @@ static void ParsePmtData(emu_stream_client_data *cdata)
 		{
 			caid = b2i(2, data + i + 2);
 
-			if (caid_is_powervu(caid) || caid == 0xA101 || caid_is_icam(caid)) // add all supported caids here
+			if (chk_ctab_ex(caid, &cfg.emu_stream_relay_ctab) && (caid_is_powervu(caid) || caid == 0xA101 || caid_is_icam(caid))) // add all supported caids here
 			{
 				if (cdata->caid == NO_CAID_VALUE)
 				{
@@ -1326,15 +1326,6 @@ static int32_t connect_to_stream(char *http_buf, int32_t http_buf_len, char *str
 		return -1;
 	}
 
-	struct timeval tv;
-	tv.tv_sec = 2;
-	tv.tv_usec = 0;
-	if (setsockopt(streamfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv, sizeof tv))
-	{
-		cs_log("ERROR: setsockopt() failed for SO_RCVTIMEO");
-		return -1;
-	}
-
 	bzero(&cservaddr, sizeof(cservaddr));
 	cservaddr.sin_family = AF_INET;
 	cs_resolve(emu_stream_source_host, &in_addr, NULL, NULL);
@@ -1368,6 +1359,8 @@ static int32_t connect_to_stream(char *http_buf, int32_t http_buf_len, char *str
 	{
 		return -1;
 	}
+
+	fcntl(streamfd, F_SETFL, fcntl(streamfd, F_GETFL) | O_NONBLOCK);
 
 	return streamfd;
 }
@@ -1416,6 +1409,9 @@ static void *stream_client_handler(void *arg)
 	uint8_t *stream_buf;
 	uint16_t packetCount = 0, packetSize = 0, startOffset = 0;
 	uint32_t remainingDataPos, remainingDataLength, tmp_pids[4];
+
+	struct pollfd pfd[2];
+	int ret;
 
 	cs_log("Stream client %i connected", conndata->connid);
 
@@ -1539,7 +1535,7 @@ static void *stream_client_handler(void *arg)
 				cur_dvb_buffer_size = EMU_DVB_BUFFER_SIZE_CSA;
 				cur_dvb_buffer_wait = EMU_DVB_BUFFER_WAIT_CSA;
 			}
-			else if (data->key.icam_csa_used)
+			else if (emu_fixed_key_data[conndata->connid].icam_csa_used)
 			{
 				cur_dvb_buffer_size = 188 * cluster_size;
 				cur_dvb_buffer_wait = 188 * (cluster_size - 3);
@@ -1549,30 +1545,45 @@ static void *stream_client_handler(void *arg)
 				cur_dvb_buffer_size = EMU_DVB_BUFFER_SIZE_DES;
 				cur_dvb_buffer_wait = EMU_DVB_BUFFER_WAIT_DES;
 			}
-			streamStatus = recv(streamfd, stream_buf + bytesRead, cur_dvb_buffer_size - bytesRead, MSG_WAITALL);
 
-			if (streamStatus == 0) // socket closed
+			pfd[0].fd = streamfd;
+			pfd[0].events = POLLIN | POLLRDHUP | POLLHUP;
+			pfd[1].fd = conndata->connfd;
+			pfd[1].events = POLLRDHUP | POLLHUP;
+
+			ret = poll(pfd, 2, 2000);
+
+			if (ret < 0) // poll error
 			{
-				cs_log("WARNING: stream client %i - stream source closed connection", conndata->connid);
-				streamConnectErrorCount++;
-				cs_sleepms(100);
-				break;
-			}
-
-			if (streamStatus < 0) // error
-			{
-				if ((errno == EWOULDBLOCK) | (errno == EAGAIN))
-				{
-					cs_log("WARNING: stream client %i no data from stream source", conndata->connid);
-					streamDataErrorCount++; // 2 sec timeout * 15 = 30 seconds no data -> close
-					cs_sleepms(100);
-					continue;
-				}
-
 				cs_log("WARNING: stream client %i error receiving data from stream source", conndata->connid);
 				streamConnectErrorCount++;
 				cs_sleepms(100);
 				break;
+			}
+			else if (ret == 0) // timeout
+			{
+				cs_log("WARNING: stream client %i no data from stream source", conndata->connid);
+				streamDataErrorCount++; // 2 sec timeout * 15 = 30 seconds no data -> close
+				continue;
+			}
+			else
+			{
+				if (pfd[0].revents & POLLIN) // new incoming data
+				{
+					streamStatus = recv(streamfd, stream_buf + bytesRead, cur_dvb_buffer_size - bytesRead, MSG_DONTWAIT);
+				}
+				if ((pfd[0].revents & POLLHUP) || (pfd[0].revents & POLLRDHUP)) // incoming connection closed
+				{
+					cs_log("WARNING: stream client %i - stream source closed connection", conndata->connid);
+					streamConnectErrorCount++;
+					cs_sleepms(100);
+					break;
+				}
+				if ((pfd[1].revents & POLLHUP) || (pfd[1].revents & POLLRDHUP)) // outgoing connection was closed -> e.g. user zapped to other channel
+				{
+					clientStatus = -1;
+					break;
+				}
 			}
 
 			if (streamStatus < cur_dvb_buffer_size - bytesRead) // probably just received header but no stream
