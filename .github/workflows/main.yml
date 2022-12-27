@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        gcc: [8, 9, 10, 11]
+        gcc: [9, 10, 11]
     steps:
       - name: Install prerequisites
         run: |
