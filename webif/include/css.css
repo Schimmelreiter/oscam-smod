@@ -363,6 +363,8 @@ table.ECM_totals {
 	margin-bottom:20px
 }
 table.ECM_totals,
+tr.r_undefined td {background-color:#FFA}
+tr.r_connected td {background-color:#BCFFAD}
 table.user_totals {
 	width:50%
 }
@@ -1793,6 +1795,10 @@ div.extract {
 
 .sorting-asc, .sorting-desc {background-color:#aaa}
 .readers .td-sorting,
+.readers tr.r_undefined .td-sorting {background-color: #EAEA95}
+.readers tr.r_connected .td-sorting {background-color: #A6EA95}
+.readers tr.enabledreader .td-sorting {background-color: #D9D9D9}
+.readers tr.disabledreader .td-sorting {background-color: #D9D9D9}
 .users tr.offline .td-sorting,
 .users tr.disabled .td-sorting,
 .statsbalance .td-sorting {background-color: #d9d9d9}
