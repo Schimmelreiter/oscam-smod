@@ -7,6 +7,8 @@
 #include "oscam-net.h"
 #include "oscam-string.h"
 #include "oscam-reader.h"
+#include "module-emulator-streamserver.h"
+#include "oscam-chk.h"
 
 static int32_t radegast_connect(void);
 
@@ -86,6 +88,9 @@ static void radegast_send_dcw(struct s_client *client, ECM_REQUEST *er)
 	mbuf[0] = 0x02; // DCW
 	if(er->rc < E_NOTFOUND)
 	{
+		if(chk_ctab_ex(er->caid, &cfg.emu_stream_relay_ctab) && cfg.emu_stream_relay_enabled)
+			stream_write_cw(er);
+
 		mbuf[1] = 0x12; // len (overall)
 		mbuf[2] = 0x05; // ACCESS
 		mbuf[3] = 0x10; // len
@@ -147,6 +152,12 @@ static void radegast_process_ecm(uint8_t *buf, int32_t l)
 				break;
 
 			case 8: // ECM PROCESS PID ?? don't know, not needed
+				break;
+
+			case 9: // Adding srvid because ECM contains 0000
+				if(i+2 >= l)
+					{ break; }
+				er->srvid = (buf[i + 4] << 8 ) | (buf[i + 2]);
 				break;
 		}
 	}

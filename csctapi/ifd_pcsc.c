@@ -88,7 +88,7 @@ static int32_t pcsc_init(struct s_reader *pcsc_reader)
 		ptr = mszReaders;
 		while(*ptr != '\0')
 		{
-			ptr += strlen(ptr) + 1;
+			ptr += cs_strlen(ptr) + 1;
 			nbReaders++;
 		}
 
@@ -124,7 +124,7 @@ static int32_t pcsc_init(struct s_reader *pcsc_reader)
 			if ((reader_nb == -1) && (device_second != NULL) && strstr(ptr,device_second)){
 				reader_nb = nbReaders;
 			}
-			ptr += strlen(ptr) + 1;
+			ptr += cs_strlen(ptr) + 1;
 			nbReaders++;
 		}
 
@@ -364,7 +364,7 @@ const struct s_cardreader cardreader_pcsc =
 {
 	.desc                    = "pcsc",
 	.typ                     = R_PCSC,
-	.skip_extra_atr_parsing  = 0,
+	.skip_extra_atr_parsing  = 1,
 	.skip_t1_command_retries = 1,
 	.skip_setting_ifsc       = 1,
 	.reader_init             = pcsc_init,

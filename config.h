@@ -2,12 +2,13 @@
 #define CONFIG_H_
 
 #define WITH_EMU 1
-//#define WITH_SOFTCAM 1
+#define WITH_SOFTCAM 1
+#define WITH_ARM_NEON 1
 #define WEBIF 1
 #define WEBIF_LIVELOG 1
 #define WEBIF_JQUERY 1
 #define TOUCH 1
-//#define WITH_SSL 1
+#define WITH_SSL 1
 #if defined(__linux__) || defined(__CYGWIN__)
 #define HAVE_DVBAPI 1
 #endif
@@ -17,6 +18,7 @@
 #define CS_ANTICASC 1
 #define WITH_DEBUG 1
 #define WITH_LB 1
+//#define CS_CACHEEX_AIO 1
 #define CS_CACHEEX 1
 #define CW_CYCLE_CHECK 1
 //#define LCDSUPPORT 1

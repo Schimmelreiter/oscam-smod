@@ -114,9 +114,14 @@ static int32_t ecm_ratelimit_findspace(struct s_reader *reader, ECM_REQUEST *er,
 		if(reader->rlecmh[h].srvid == er->srvid && reader->rlecmh[h].caid == rl.caid && reader->rlecmh[h].provid == rl.provid
 			&& (!reader->rlecmh[h].chid || (reader->rlecmh[h].chid == rl.chid)))
 		{
-			int64_t gone = comp_timeb(&actualtime, &reader->rlecmh[h].last);
-			cs_log_dbg(D_CLIENT, "ratelimiter found srvid %04X for %"PRId64" ms in slot %d/%d of reader %s", er->srvid, gone, h + 1, MAXECMRATELIMIT, reader->label);
-
+			int64_t gone = 0;
+#ifdef WITH_DEBUG
+			if(cs_dblevel & D_CLIENT)
+			{
+				gone = comp_timeb(&actualtime, &reader->rlecmh[h].last);
+				cs_log_dbg(D_CLIENT, "ratelimiter found srvid %04X for %"PRId64" ms in slot %d/%d of reader %s", er->srvid, gone, h + 1, MAXECMRATELIMIT, reader->label);
+			}
+#endif
 			// check ecmunique if enabled and ecmunique time is done
 			if(reader_mode && reader->ecmunique)
 			{
@@ -130,11 +135,15 @@ static int32_t ecm_ratelimit_findspace(struct s_reader *reader, ECM_REQUEST *er,
 						if(er->ecm[0] == reader->rlecmh[h].kindecm)
 						{
 							// same ecm type!
-							char ecmd5[17 * 3];
-							cs_hexdump(0, reader->rlecmh[h].ecmd5, 16, ecmd5, sizeof(ecmd5));
-							cs_log_dbg(D_CLIENT, "ratelimiter ecm %s in this slot for next %d ms!", ecmd5,
-										(int)(reader->rlecmh[h].ratelimittime - gone));
-
+#ifdef WITH_DEBUG
+							if(cs_dblevel & D_CLIENT)
+							{
+								char ecmd5[17 * 3];
+								cs_hexdump(0, reader->rlecmh[h].ecmd5, 16, ecmd5, sizeof(ecmd5));
+								cs_log_dbg(D_CLIENT, "ratelimiter ecm %s in this slot for next %d ms!", ecmd5,
+											(int)(reader->rlecmh[h].ratelimittime - gone));
+							}
+#endif
 							struct ecm_request_t *erold = NULL;
 							if(!cs_malloc(&erold, sizeof(struct ecm_request_t)))
 								{ return -2; }
@@ -259,9 +268,14 @@ static int32_t ecm_ratelimit_findspace(struct s_reader *reader, ECM_REQUEST *er,
 		}
 		else // occupied slots
 		{
-			int64_t gone = comp_timeb(&actualtime, &reader->rlecmh[h].last);
-			cs_log_dbg(D_CLIENT, "ratelimiter srvid %04X for %"PRId64" ms present in slot %d/%d of reader %s",
-						reader->rlecmh[h].srvid, gone , h + 1, maxecms, reader->label);
+#ifdef WITH_DEBUG
+			if(cs_dblevel & D_CLIENT)
+			{
+				int64_t gone = comp_timeb(&actualtime, &reader->rlecmh[h].last);
+				cs_log_dbg(D_CLIENT, "ratelimiter srvid %04X for %"PRId64" ms present in slot %d/%d of reader %s",
+							reader->rlecmh[h].srvid, gone , h + 1, maxecms, reader->label);
+			}
+#endif
 		}
 	}
 
@@ -316,6 +330,7 @@ static void sort_ecmrl(struct s_reader *reader)
 
 // If reader_mode is 1, ECM_REQUEST need to be assigned to reader and slot.
 // Else just report if a free slot is available.
+int32_t maxslots = MAXECMRATELIMIT;
 int32_t ecm_ratelimit_check(struct s_reader *reader, ECM_REQUEST *er, int32_t reader_mode)
 {
 	// No rate limit set
@@ -324,7 +339,7 @@ int32_t ecm_ratelimit_check(struct s_reader *reader, ECM_REQUEST *er, int32_t re
 		return OK;
 	}
 
-	int32_t foundspace = -1, h, maxslots = MAXECMRATELIMIT; // init slots to oscam global maximums
+	int32_t foundspace = -1, h; // init slots to oscam global maximums
 	struct ecmrl rl;
 	struct timeb now;
 	rl = get_ratelimit(er);
@@ -405,8 +420,7 @@ int32_t ecm_ratelimit_check(struct s_reader *reader, ECM_REQUEST *er, int32_t re
 			reader->cooldownstate = 0; // set cooldown setup phase
 			reader->cooldowntime.time = -1; // reset cooldowntime
 			maxslots = MAXECMRATELIMIT; //use oscam defined max slots
-			cs_log("Reader: %s ratelimiter returning to setup phase cooling down period of %d seconds is done!",
-					reader->label, reader->cooldown[1]);
+			cs_log("Reader: %s ratelimiter returning to setup phase cooling down period of %d seconds is done!", reader->label, reader->cooldown[1]);
 		}
 	} // if cooldownstate == 1
 
@@ -434,22 +448,18 @@ int32_t ecm_ratelimit_check(struct s_reader *reader, ECM_REQUEST *er, int32_t re
 			reader->cooldownstate = 0; // set cooldown setup phase
 			reader->cooldowntime.time = -1; // reset cooldowntime
 			maxslots = MAXECMRATELIMIT; // maxslots is maxslots again
-			cs_log("Reader: %s ratelimiter returning to setup phase after %d seconds cooldowndelay!",
-					reader->label, reader->cooldown[0]);
-		}
-		else
+			cs_log("Reader: %s ratelimiter returning to setup phase after %d seconds cooldowndelay!", reader->label, reader->cooldown[0]);
+		} else
 		{
 			reader->cooldownstate = 1; // Entering ratelimit for cooldown ratelimitseconds
 			cs_ftime(&reader->cooldowntime); // set time to enforce ecmratelimit for defined cooldowntime
 			maxslots = reader->ratelimitecm; // maxslots is maxslots again
 			sort_ecmrl(reader); // keep youngest ecm requests in list + housekeeping
-			cs_log("Reader: %s ratelimiter starting cooling down period of %d seconds!",
-					reader->label, reader->cooldown[1]);
+			cs_log("Reader: %s ratelimiter starting cooling down period of %d seconds!", reader->label, reader->cooldown[1]);
 		}
 	} // if cooldownstate == 2
 
-	cs_log_dbg(D_CLIENT, "ratelimiter cooldownphase %d find a slot for srvid %04X on reader %s",
-				reader->cooldownstate, er->srvid, reader->label);
+	cs_log_dbg(D_CLIENT, "ratelimiter cooldownphase %d find a slot for srvid %04X on reader %s", reader->cooldownstate, er->srvid, reader->label);
 
 	foundspace = ecm_ratelimit_findspace(reader, er, rl, reader_mode);
 
@@ -459,8 +469,7 @@ int32_t ecm_ratelimit_check(struct s_reader *reader, ECM_REQUEST *er, int32_t re
 		{
 			if(foundspace != -2)
 			{
-				cs_log_dbg(D_CLIENT, "ratelimiter cooldownphase %d no free slot for srvid %04X on reader %s -> dropping!",
-							reader->cooldownstate, er->srvid, reader->label);
+				cs_log_dbg(D_CLIENT, "ratelimiter cooldownphase %d no free slot for srvid %04X on reader %s -> dropping!", reader->cooldownstate, er->srvid, reader->label);
 				write_ecm_answer(reader, er, E_NOTFOUND, E2_RATELIMIT, NULL, "Ratelimiter: cooldown no slots free!", 0, NULL);
 			}
 		}
@@ -716,6 +725,12 @@ void casc_check_dcw(struct s_reader *reader, int32_t idx, int32_t rc, uint8_t *c
 			}
 			else if(rc)
 			{
+#ifdef CS_CACHEEX_AIO
+				if(rc == 0x86) // lg-flagged rc
+				{
+					ecm->localgenerated = 1;
+				}
+#endif
 				write_ecm_answer(reader, ecm, E_FOUND, 0, cw, NULL, 0, NULL);
 			}
 			else
@@ -1105,50 +1120,50 @@ void reader_get_ecm(struct s_reader *reader, ECM_REQUEST *er)
 
 	cs_readlock(__func__, &ecmcache_lock);
 
-	for(ecm = ecmcwcache; ecm; ecm = ecm->next)
-	{
-		timeout = time(NULL) - ((cfg.ctimeout+500)/1000+1);
-		if(ecm->tps.time <= timeout)
-			{ break; }
-
-		if(!ecm->matching_rdr || ecm == er || ecm->rc == E_99) { continue; }
-
-		// match same ecm
-		if(er->caid == ecm->caid && !memcmp(er->ecmd5, ecm->ecmd5, CS_ECMSTORESIZE))
+		for(ecm = ecmcwcache; ecm; ecm = ecm->next)
 		{
-			//check if ask this reader
-			ea = get_ecm_answer(reader, ecm);
-			if(ea && !ea->is_pending && (ea->status & REQUEST_SENT) && ea->rc != E_TIMEOUT && ea->rcEx != E2_RATELIMIT) { break; }
-			ea = NULL;
+			timeout = time(NULL) - ((cfg.ctimeout+500)/1000+1);
+			if(ecm->tps.time <= timeout)
+				{ break; }
+
+			if(!ecm->matching_rdr || ecm == er || ecm->rc == E_99) { continue; }
+
+			// match same ecm
+			if(er->caid == ecm->caid && !memcmp(er->ecmd5, ecm->ecmd5, CS_ECMSTORESIZE))
+			{
+				//check if ask this reader
+				ea = get_ecm_answer(reader, ecm);
+				if(ea && !ea->is_pending && (ea->status & REQUEST_SENT) && ea->rc != E_TIMEOUT && ea->rcEx != E2_RATELIMIT) { break; }
+				ea = NULL;
+			}
 		}
-	}
 
-	cs_readunlock(__func__, &ecmcache_lock);
+		cs_readunlock(__func__, &ecmcache_lock);
 
-	if(ea) // found ea in cached ecm, asking for this reader
-	{
-		ea_er->is_pending = true;
-
-		cs_readlock(__func__, &ea->ecmanswer_lock);
-		if(ea->rc < E_99)
+		if(ea) // found ea in cached ecm, asking for this reader
 		{
-			cs_readunlock(__func__, &ea->ecmanswer_lock);
-			cs_log_dbg(D_LB, "{client %s, caid %04X, prid %06X, srvid %04X} [reader_get_ecm] ecm already sent to reader %s (%s)", (check_client(er->client) ? er->client->account->usr : "-"), er->caid, er->prid, er->srvid, reader ? reader->label : "-", ea->rc==E_FOUND?"OK":"NOK");
+			ea_er->is_pending = true;
 
-			//e.g. we cannot send timeout, because "ea_temp->er->client" could wait/ask other readers! Simply set not_found if different from E_FOUND!
-			write_ecm_answer(reader, er, (ea->rc==E_FOUND? E_FOUND : E_NOTFOUND), ea->rcEx, ea->cw, NULL, ea->tier, &ea->cw_ex);
+			cs_readlock(__func__, &ea->ecmanswer_lock);
+			if(ea->rc < E_99)
+			{
+				cs_readunlock(__func__, &ea->ecmanswer_lock);
+				cs_log_dbg(D_LB, "{client %s, caid %04X, prid %06X, srvid %04X} [reader_get_ecm] ecm already sent to reader %s (%s)", (check_client(er->client) ? er->client->account->usr : "-"), er->caid, er->prid, er->srvid, reader ? reader->label : "-", ea->rc==E_FOUND?"OK":"NOK");
+
+				//e.g. we cannot send timeout, because "ea_temp->er->client" could wait/ask other readers! Simply set not_found if different from E_FOUND!
+				write_ecm_answer(reader, er, (ea->rc==E_FOUND? E_FOUND : E_NOTFOUND), ea->rcEx, ea->cw, NULL, ea->tier, &ea->cw_ex);
+				return;
+			}
+			else
+			{
+				ea_prev = ea->pending;
+				ea->pending = ea_er;
+				ea->pending->pending_next = ea_prev;
+				cs_log_dbg(D_LB, "{client %s, caid %04X, prid %06X, srvid %04X} [reader_get_ecm] ecm already sent to reader %s... set as pending", (check_client(er->client) ? er->client->account->usr : "-"), er->caid, er->prid, er->srvid, reader ? reader->label : "-");
+			}
+			cs_readunlock(__func__, &ea->ecmanswer_lock);
 			return;
 		}
-		else
-		{
-			ea_prev = ea->pending;
-			ea->pending = ea_er;
-			ea->pending->pending_next = ea_prev;
-			cs_log_dbg(D_LB, "{client %s, caid %04X, prid %06X, srvid %04X} [reader_get_ecm] ecm already sent to reader %s... set as pending", (check_client(er->client) ? er->client->account->usr : "-"), er->caid, er->prid, er->srvid, reader ? reader->label : "-");
-		}
-		cs_readunlock(__func__, &ea->ecmanswer_lock);
-		return;
-	}
 
 	lb_update_last(ea_er, reader);
 
@@ -1384,17 +1399,28 @@ static int32_t restart_cardreader_int(struct s_reader *rdr, int32_t restart)
 	struct s_client *cl = rdr->client;
 	if(restart)
 	{
+		uint16_t waitme = 1500;
 		remove_reader_from_active(rdr); // remove from list
 		kill_thread(cl); // kill old thread
-		cs_sleepms(1500); // we have to wait a bit so free_client is ended and socket closed too!
-	}
 
-	while(restart && is_valid_client(cl))
-	{
-		// If we quick disable+enable a reader (webif), remove_reader_from_active is called from
-		// cleanup. this could happen AFTER reader is restarted, so oscam crashes or reader is hidden
-		// rdr_log(rdr, "CHECK: WAITING FOR CLEANUP");
-		cs_sleepms(500);
+		// wait a bit if socket not closed and is_valid_client, othervise safe for reload?
+		do
+		{
+			if (!is_valid_client(cl))
+			{
+				// 100 mS I think is enought for freeing garbage
+				cs_sleepms(100);
+				break;
+			}
+			else
+			{
+				// If we quick disable+enable a reader (webif), remove_reader_from_active is called from
+				// cleanup. this could happen AFTER reader is restarted, so oscam crashes or reader is hidden
+				// rdr_log(rdr, "CHECK: WAITING FOR CLEANUP");
+				cs_sleepms(500); // we have to wait a bit so free_client is ended and socket closed too!
+				waitme -= 500;
+			}
+		} while(waitme || cl->pfd);
 	}
 
 	rdr->client = NULL;
@@ -1485,6 +1511,9 @@ void kill_all_readers(void)
 			{ continue; }
 		rdr_log(rdr, "Killing reader");
 		kill_thread(cl);
+#ifdef CS_CACHEEX_AIO
+			ll_destroy_data(&cl->ll_cacheex_stats);
+#endif
 	}
 	first_active_reader = NULL;
 }

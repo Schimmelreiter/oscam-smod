@@ -2,15 +2,15 @@ project (OSCam C)
 
 #----------------------- minimum version of cmake to use ------------
 
-# if you want to switch to 2.6 min, please look at the escaped definitions
-# later in this file (the add_definitions in 2.6 don't need to be escaped),
-# and remove the CMP0005 policy.
-# the CMP0003 could also be removed for cmake 2.6
-cmake_minimum_required (VERSION 2.4)
-if(COMMAND cmake_policy)
-	cmake_policy(SET CMP0005 OLD)
-	cmake_policy(SET CMP0003 NEW)
-endif(COMMAND cmake_policy)
+cmake_minimum_required(VERSION 2.8.12)
+
+cmake_policy(SET CMP0003 NEW)
+if(POLICY CMP0042)
+  cmake_policy(SET CMP0042 NEW)
+endif()
+if(POLICY CMP0054)
+  cmake_policy(SET CMP0054 NEW)
+endif()
 
 #----------------------- detect system ------------------------------
 
@@ -198,7 +198,7 @@ elseif (OSCamOperatingSystem MATCHES "FriendlyARM")
 endif (OSCamOperatingSystem MATCHES "Linux")
 
 set (CS_CONFDIR ${DEFAULT_CS_CONFDIR} CACHE STRING "Default path for the config files")
-add_definitions ("-DCS_CONFDIR=\\\"${CS_CONFDIR}\\\"")
+add_definitions ("-DCS_CONFDIR=\"${CS_CONFDIR}\"")
 
 
 #----------------------- subdirectories ------------------------------
@@ -690,7 +690,7 @@ if (CMAKE_COMPILER_IS_GNUCC)
 	list(GET GCC_VERSION_COMPONENTS 0 GCC_MAJOR)
 	list(GET GCC_VERSION_COMPONENTS 0 GCC_MINOR)
 	add_definitions ("-W -Wall ")
-	set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -O2")
+	set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -O3 -pipe -ffunction-sections -fdata-sections -funroll-loops -fomit-frame-pointer -fno-schedule-insns")
 	set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -O2")
 	set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0 -ggdb")
 	set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -ggdb")

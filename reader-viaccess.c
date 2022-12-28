@@ -983,7 +983,7 @@ static int32_t viaccess_card_init(struct s_reader *reader, ATR *newatr)
 		reader->prid[i][0] = 0;
 		memcpy(&reader->prid[i][1], cta_res, 3);
 		memcpy(&csystem_data->availkeys[i][0], cta_res + 10, 16);
-		snprintf((char *)buf + strlen((char *)buf), sizeof(buf) - strlen((char *)buf), ",%06X", b2i(3, &reader->prid[i][1]));
+		snprintf((char *)buf + cs_strlen((char *)buf), sizeof(buf) - cs_strlen((char *)buf), ",%06X", b2i(3, &reader->prid[i][1]));
 		// rdr_log(reader, "[viaccess-reader] buf: %s", buf);
 
 		insac[2] = 0xa5;
@@ -1753,6 +1753,10 @@ static int32_t viaccess_do_emm(struct s_reader *reader, EMM_PACKET *ep)
 		{
 			nanoF0Data = emmParsed;
 		}
+		else if(emmParsed[0] == 0xF0 && emmParsed[1] == 0x10 && (emm_provid >> 8) == 0x0702)
+		{
+			nanoF0Data = emmParsed;
+		}
 		else if(emmParsed[0] == 0xD8 && emmParsed[2] == 0x45)
 		{
 			uint8_t pos = 4 + emmParsed[3];
@@ -1903,7 +1907,6 @@ static int32_t viaccess_do_emm(struct s_reader *reader, EMM_PACKET *ep)
 		if((cta_res[cta_lr - 2] == 0x90 || cta_res[cta_lr - 2] == 0x91) && (cta_res[cta_lr - 1] == 0x00 || cta_res[cta_lr - 1] == 0x08))
 		{
 			rdr_log(reader, "update successfully written");
-			rc = 1; // written
 		}
 		rc = 1;
 	}
@@ -2163,6 +2166,19 @@ static int32_t viaccess_reassemble_emm(struct s_reader *rdr, struct s_client *cl
 				memcpy(emmbuf + pos, "\xF0\x08", 2);
 				memcpy(emmbuf + pos + 2, buffer + 39, 8);
 				pos += 10;
+			}
+
+			else if(buffer[2] == 0x34 && (provid >> 8) == 0x0702)
+			{
+				//add 9E 20 nano + first 32 uint8_ts of emm content
+				memcpy(emmbuf + pos, "\x9E\x20", 2);
+				memcpy(emmbuf + pos + 2, buffer + 7, 32);
+				pos += 34;
+
+				//add F0 10 nano + 16 subsequent uint8_ts of emm content
+				memcpy(emmbuf + pos, "\xF0\x10", 2);
+				memcpy(emmbuf + pos + 2, buffer + 39, 16);
+				pos += 18;
 			}
 			else
 			{

@@ -28,7 +28,7 @@ static pthread_t log_thread;
 static pthread_cond_t log_thread_sleep_cond;
 static pthread_mutex_t log_thread_sleep_cond_mutex;
 static int32_t syslog_socket = -1;
-static struct sockaddr_in syslog_addr;
+static struct SOCKADDR syslog_addr;
 
 
 struct s_log
@@ -56,7 +56,7 @@ static void switch_log(char *file, FILE **f, int32_t (*pfinit)(void))
 		if(*f != NULL && ftell(*f) >= cfg.max_log_size * 1024)
 		{
 			int32_t rc;
-			char prev_log[strlen(file) + 6];
+			char prev_log[cs_strlen(file) + 6];
 			snprintf(prev_log, sizeof(prev_log), "%s-prev", file);
 			fprintf(*f, "switch log file\n");
 			fflush(*f);
@@ -379,11 +379,13 @@ static void write_to_log(char *txt, struct s_log *log, int8_t do_flush)
 			}
 
 			snprintf(tmp, sizeof(tmp), "%s %s oscam[%u]: %s", timebuf, hostname, getpid(), txt + log->header_info_offset);
-			sendto(syslog_socket, tmp, strlen(tmp), 0, (struct sockaddr*) &syslog_addr, sizeof(syslog_addr));
+			sendto(syslog_socket, tmp, cs_strlen(tmp), 0, (struct sockaddr*) &syslog_addr, sizeof(syslog_addr));
 		}
 	}
 
-	strcat(txt, "\n");
+	if (!cs_strncat(txt, "\n", LOG_BUF_SIZE)) {
+		cs_log("FIXME!");
+	}
 	cs_write_log(txt, do_flush, log->header_date_offset, log->header_time_offset);
 
 #if defined(WEBIF) || defined(MODULE_MONITOR)
@@ -404,7 +406,7 @@ static void write_to_log(char *txt, struct s_log *log, int8_t do_flush)
 
 		if(cs_malloc(&hist, sizeof(struct s_log_history)))
 		{
-			int32_t target_len = strlen(log->cl_text) + strlen(txt+log->header_date_offset) + 1;
+			int32_t target_len = cs_strlen(log->cl_text) + cs_strlen(txt+log->header_date_offset) + 1;
 
 			if(cs_malloc(&hist->txt, sizeof(char) * (target_len + 1)))
 			{
@@ -757,14 +759,14 @@ static void init_syslog_socket(void)
 	{
 		IN_ADDR_T in_addr;
 
-		if ((syslog_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
+		if ((syslog_socket = socket(DEFAULT_AF, SOCK_DGRAM, IPPROTO_UDP)) == -1)
 		{
 			perror("Socket create error!");
 		}
 
 		memset((char *) &syslog_addr, 0, sizeof(syslog_addr));
-		syslog_addr.sin_family = AF_INET;
-		syslog_addr.sin_port = htons(cfg.syslogport);
+		SIN_GET_FAMILY(syslog_addr) = DEFAULT_AF;
+		SIN_GET_PORT(syslog_addr) = htons(cfg.syslogport);
 		cs_resolve(cfg.sysloghost, &in_addr, NULL, NULL);
 		SIN_GET_ADDR(syslog_addr) = in_addr;
 	}
