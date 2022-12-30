@@ -877,33 +877,6 @@ static int32_t cacheex_add_to_cache_int(struct s_client *cl, ECM_REQUEST *er, in
 #ifdef CS_CACHEEX_AIO
 	if(caid_is_videoguard(er->caid))
 	{
-		if(cl->typ == 'p' && chk_if_ignore_checksum(er, &cl->reader->disablecrccws_only_for))
-		{
-			if(check_nds_cwex(er))
-			{
-				if(cl->reader->dropbadcws)
-				{
-					cs_log_dbg(D_CACHEEX, "Probably got pushed bad CW to cacheex reader: %s, caid %04X, srvid %04X - dropping CW", cl->reader->label, er->caid, er->srvid);
-					return 0;
-				}
-				else
-				{
-					cs_log_dbg(D_CACHEEX, "Probably got pushed bad CW to cacheex reader: %s, caid %04X, srvid %04X", cl->reader->label, er->caid, er->srvid);				
-				}
-			}
-		}
-	
-		if(cl->typ == 'c' && chk_if_ignore_checksum(er, &cl->account->disablecrccacheex_only_for))
-		{
-			if(check_nds_cwex(er))
-			{
-				cs_log_dbg(D_CACHEEX, "Probably got bad CW from cacheex user: %s, caid %04X, srvid %04X", username(cl), er->caid, er->srvid);
-			}
-		}
-	}
-
-	if(caid_is_videoguard(er->caid))
-	{
 		if(cl->typ == 'p' && chk_if_ignore_checksum(er, &cl->reader->disablecrccws_only_for) && !chk_srvid_disablecrccws_only_for_exception(er))
 		{
 			if(check_nds_cwex(er))

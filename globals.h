@@ -1636,6 +1636,7 @@ struct s_reader										// contains device info, reader info and card info
 	uint8_t			result[104];
 	uint8_t			stillencrypted[0x50];
 	uint8_t			resultrsa[0x50];
+	uint32_t		cak7_restart;
 	uint32_t		cak7_seq;
 	uint32_t		needrestart;
 	uint8_t			otpcsc[2];
@@ -1652,7 +1653,6 @@ struct s_reader										// contains device info, reader info and card info
 	int8_t			evensa;
 	int8_t			forceemmg;
 	int8_t                  cwpkota;
-
 #endif
 #ifdef CS_CACHEEX
 	CECSP			cacheex;						// CacheEx Settings

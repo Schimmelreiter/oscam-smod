@@ -39,14 +39,14 @@ Repositories
 ============
 
 SVN repository:
-   svn checkout https://svn.streamboard.tv/oscam./ oscam-svn
+   svn checkout https://svn.streamboard.tv/oscam/trunk oscam-svn
 
 
 Building OSCam from source
 ==========================
 
  - Get the lastest sources from SVN
-    svn checkout https://svn.streamboard.tv/oscam./ oscam-trunk
+    svn checkout https://svn.streamboard.tv/oscam/trunk oscam-trunk
 
  - Go to oscam-trunk directory.
 

@@ -2038,6 +2038,28 @@ static char *send_oscam_reader(struct templatevars *vars, struct uriparams *para
 			{
 				tpl_printf(vars, TPLAPPEND, "EXISTING_INS", ",'%s'", urlencode(vars, rdr->label));
 			}
+#ifdef CS_CACHEEX_AIO
+			if(rdr->cacheex.feature_bitfield)
+			{
+				tpl_addVar(vars, TPLADD, "CTYPSORT", (const char*)new_proto);
+				tpl_addVar(vars, TPLADD, "CTYP", (const char*)new_proto);
+
+				if(rdr->cacheex.feature_bitfield & 32)
+					tpl_addVar(vars, TPLADD, "CLIENTPROTOTITLE", rdr->cacheex.aio_version);
+				else if(cl->reader->cacheex.feature_bitfield)
+					tpl_addVar(vars, TPLADD, "CLIENTPROTOTITLE", "[cx-aio < 9.2.3]");
+				else
+					tpl_addVar(vars, TPLADD, "CLIENTPROTOTITLE", "");
+			}
+			else
+			{
+				tpl_addVar(vars, TPLADD, "CTYPSORT", proto);
+				tpl_addVar(vars, TPLADD, "CTYP", proto);
+			}
+#else
+			tpl_addVar(vars, TPLADD, "CTYP", reader_get_type_desc(rdr, 0));
+			tpl_addVar(vars, TPLADD, "CTYPSORT", reader_get_type_desc(rdr, 0));
+#endif
 			tpl_addVar(vars, TPLADD, "READERCLASS", rdr->enable ? "enabledreader" : "disabledreader");
 
 			if(rdr->enable) { active_readers += 1; }
@@ -2137,12 +2159,12 @@ static char *send_oscam_reader(struct templatevars *vars, struct uriparams *para
 #ifdef CS_CACHEEX_AIO
 				if(rdr->cacheex.feature_bitfield)
 				{
-					tpl_addVar(vars, TPLADD, "CLIENTPROTO", picon_exists(xml_encode(vars, (const char*)new_proto)) ? tpl_getTpl(vars, "READERCTYPBIT") : tpl_getTpl(vars, "READERCTYPNOICON"));
+					tpl_addVar(vars, TPLADD, "CTYP", picon_exists(xml_encode(vars, (const char*)new_proto)) ? tpl_getTpl(vars, "READERCTYPBIT") : tpl_getTpl(vars, "READERCTYPNOICON"));
 				}
 				else
 				{
 #endif
-				tpl_addVar(vars, TPLADD, "CLIENTPROTO", picon_exists(xml_encode(vars, reader_get_type_desc(rdr, 0))) ? tpl_getTpl(vars, "READERCTYPBIT") : tpl_getTpl(vars, "READERCTYPNOICON"));
+				tpl_addVar(vars, TPLADD, "CTYP", picon_exists(xml_encode(vars, reader_get_type_desc(rdr, 0))) ? tpl_getTpl(vars, "READERCTYPBIT") : tpl_getTpl(vars, "READERCTYPNOICON"));
 #ifdef CS_CACHEEX_AIO
 				}
 #endif

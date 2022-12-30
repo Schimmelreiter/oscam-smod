@@ -1943,7 +1943,11 @@ int32_t write_ecm_answer(struct s_reader *reader, ECM_REQUEST *er, int8_t rc, ui
 			cs_log_dbg(D_TRACE, "notice: CW checksum check disabled");
 		}
 
-		if(chk_if_ignore_checksum(er, &reader->disablecrccws_only_for) && caid_is_videoguard(er->caid))
+		if(chk_if_ignore_checksum(er, &reader->disablecrccws_only_for) && caid_is_videoguard(er->caid)
+#ifdef CS_CACHEEX_AIO
+		 && !chk_srvid_disablecrccws_only_for_exception(er)
+#endif
+		)
 		{
 			uint8_t k, csum;
 			uint8_t hit = 0;
@@ -1964,14 +1968,25 @@ int32_t write_ecm_answer(struct s_reader *reader, ECM_REQUEST *er, int8_t rc, ui
 				{
 					rc = E_NOTFOUND;
 					rcEx = E2_WRONG_CHKSUM;
-					cs_log("Probably got bad CW from reader: %s, caid %04X, srvid %04X (%s) - dropping CW", reader->label, er->caid, er->srvid, ecmd5s);
+					cs_log("Probably got bad CW from reader: %s, caid %04X, srvid %04X (%s) - dropping CW, lg: %i", reader->label, er->caid, er->srvid, ecmd5s
+#ifdef CS_CACHEEX_AIO
+						, er->localgenerated);
+#else
+						, 0);
+#endif
 				}
 				else
 				{
-					cs_log("Probably got bad CW from reader: %s, caid %04X, srvid %04X (%s)", reader->label, er->caid, er->srvid, ecmd5s);
+					cs_log("Probably got bad CW from reader: %s, caid %04X, srvid %04X (%s), lg: %i", reader->label, er->caid, er->srvid, ecmd5s
+#ifdef CS_CACHEEX_AIO
+						, er->localgenerated);
+#else
+						, 0);
+#endif
 				}
 			}
 		}
+
 	}
 
 #ifdef CW_CYCLE_CHECK
