@@ -300,7 +300,6 @@ update_deps() {
 	# Calculate dependencies
 	enabled_any $(get_opts readers) $(get_opts card_readers) WITH_EMU && enable_opt WITH_CARDREADER >/dev/null
 	disabled_all $(get_opts readers) $(get_opts card_readers) WITH_EMU && disable_opt WITH_CARDREADER >/dev/null
-	enabled CS_CACHEEX_AIO && enable_opt CS_CACHEEX >/dev/null
 	disabled WEBIF && disable_opt WEBIF_LIVELOG >/dev/null
 	disabled WEBIF && disable_opt WEBIF_JQUERY >/dev/null
 	enabled MODULE_CCCSHARE && enable_opt MODULE_CCCAM >/dev/null
@@ -478,10 +477,10 @@ menu_addons() {
 		LCDSUPPORT			"LCD support"							$(check_test "LCDSUPPORT") \
 		LEDSUPPORT			"LED support"							$(check_test "LEDSUPPORT") \
 		IPV6SUPPORT			"IPv6 support (experimental)"			$(check_test "IPV6SUPPORT") \
-		WITH_EMU                        "Emulator support"                                              $(check_test "WITH_EMU") \
-		WITH_SOFTCAM            "Built-in SoftCam.Key"                                  $(check_test "WITH_SOFTCAM") \
-		WITH_ARM_NEON           "ARM Neon Support"                                              $(check_test "WITH_ARM_NEON") \
-		WITH_CARDLIST		"Cardlist support"					$(check_test "WITH_CARDLIST") \
+		WITH_EMU			"Emulator support"						$(check_test "WITH_EMU") \
+		WITH_SOFTCAM		"Built-in SoftCam.Key"					$(check_test "WITH_SOFTCAM") \
+		WITH_ARM_NEON		"ARM Neon Support"						$(check_test "WITH_ARM_NEON") \
+		WITH_CARDLIST		"Cardlist support"						$(check_test "WITH_CARDLIST") \
 		2> ${tempfile}
 
 	opt=${?}

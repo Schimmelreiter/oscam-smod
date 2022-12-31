@@ -551,8 +551,8 @@ td.subheadline {
 /* default alignment for all rows status.html/userconfig.html/readers.html */
 td.centered,
 td[class*='statuscol'],    /* shorthand notation td[class*='statuscol'] for  td.statuscol0 -  td.statuscol16. */
-td[class*='usercol'],      /* shorthand notation td[class*='usercol'] for  td.usercol0 -  td.usercol25 */
-td[class*='readercol'] {   /* shorthand notation td[class*='readercol'] for  td.readercol0 -  td.readercol18 */
+td[class*='usercol'],		/* shorthand notation td[class*='usercol'] for  td.usercol0 -  td.usercol25 */
+td[class*='readercol'] {	/* shorthand notation td[class*='readercol'] for  td.readercol0 -  td.readercol18 */
 	text-align:center
 }
 td.statuscol0 {
@@ -730,7 +730,7 @@ div.info {
 	max-width:1300px;
 	margin:20px auto
 }
-/* debugmenu	- status_sdebug.html 
+/* debugmenu	- status_sdebug.html
  * logmenu		- file.html
 */
 div.debugmenu, div.logmenu, div.logsizemenu {
@@ -877,11 +877,11 @@ input[type=submit]:disabled:hover {
 td.configcolsave {
 	text-align:center
 }
-/* settings for first option in select 
+/* settings for first option in select
  * otherdropdown	- in script.html, menu.html
  */
 #otherdropdown option:first-child {
-    display:none
+	display:none
 }
 /* only for statusheadline button in status.html */
 td.subheadline input[type="button"] {
@@ -987,7 +987,7 @@ span.span_notifier{
 	position:relative;
 }
 /* module-webif.c value for STATUS item ( more info in Changeset 6668 by alno )
- * Class for formating values in statusview column "Idle" 
+ * Class for formating values in statusview column "Idle"
  * In new WebIf column Idle is not used. Info about Idle is in title */
 span.idlesec_normal, span.idlesec_alert {
 	font-size:9px;
@@ -1196,6 +1196,7 @@ input.pintervall {
 #picolor {
 	background-color:#A00
 }
+
 /* **************** 18. ECM BAR HISTORY */
 #chart {
 	position:absolute;
@@ -1318,7 +1319,7 @@ div.bar {
 		}
 		input[type=checkbox] + label {
 		background-repeat: no-repeat;
-		}
+	}
 }
 
 
@@ -1347,14 +1348,14 @@ div.bar {
 			-o-text-overflow:ellipsis
 		}
 	/* livelog in logpoll.htm */
-        #livelog {
+	#livelog {
                 font-size: 10px;
-        }
+	}
 	/* change width for table config for readers and users*/
         table.config,
         table.configuser  {
                 width: 80%;
-        }
+	}
 
 	/* table in userconfig - hide whole columns CW Cycle */
         table.users tbody td:nth-child(18) {display: none;} /* for TD in TBODY */
@@ -1532,7 +1533,7 @@ h4 {
 		.subtoggle:hover:after{}
 		#subtoggle:checked + .subtoggle:after{
 			content:'Close SubMenu'
-		}
+	}
 
 	/* subnav */
 		#subnav {
@@ -1615,7 +1616,7 @@ table#cachexstats {
 			padding:6px
 		}
 	/* texteditor in file.html */
-		textarea.editor {
+	textarea.editor {
 			width:90%
 		}
 
@@ -1630,7 +1631,7 @@ table#cachexstats {
 			position: absolute;
 			top: -9999px;
 			left: -9999px;
-		}
+ 	}
 		
 		table.readers tr { border: 1px solid #ccc; }
 		

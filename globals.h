@@ -1562,12 +1562,6 @@ struct s_reader										// contains device info, reader info and card info
 #ifdef READER_CRYPTOWORKS
 	int8_t			needsglobalfirst;				// 0:Write one Global EMM for SHARED EMM disabled 1:Write one Global EMM for SHARED EMM enabled
 #endif
-#if defined(READER_NAGRA_MERLIN) || defined(READER_NAGRA)
-	uint8_t			nuid[4];
-	uint8_t			nuid_length;
-	uint8_t			cwekey[16];
-	uint8_t			cwekey_length;
-#endif
 #ifdef READER_NAGRA_MERLIN
 	uint8_t			mod1[112];
 	uint8_t			mod1_length;
@@ -1636,7 +1630,6 @@ struct s_reader										// contains device info, reader info and card info
 	uint8_t			result[104];
 	uint8_t			stillencrypted[0x50];
 	uint8_t			resultrsa[0x50];
-	uint32_t		cak7_restart;
 	uint32_t		cak7_seq;
 	uint32_t		needrestart;
 	uint8_t			otpcsc[2];
@@ -1648,11 +1641,11 @@ struct s_reader										// contains device info, reader info and card info
 	uint8_t			cak7_camstate;
 	uint8_t			cak7_aes_key[32];
 	uint8_t			cak7_aes_iv[16];
-	struct timeb	last_refresh;
 	int8_t			forcecwswap;
 	int8_t			evensa;
 	int8_t			forceemmg;
 	int8_t                  cwpkota;
+
 #endif
 #ifdef CS_CACHEEX
 	CECSP			cacheex;						// CacheEx Settings
@@ -1681,6 +1674,8 @@ struct s_reader										// contains device info, reader info and card info
 	uint8_t			cak7type;
 	uint8_t			cwpkcaid[2];
 	uint8_t			cwpkcaid_length;
+	uint8_t			nuid[4];
+	uint8_t			nuid_length;
 	int8_t			nagra_read;						// read nagra ncmed records: 0 Disabled (default), 1 read all records, 2 read valid records only
 	int8_t			detect_seca_nagra_tunneled_card;
 	int8_t			force_irdeto;

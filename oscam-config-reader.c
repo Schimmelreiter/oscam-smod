@@ -792,7 +792,7 @@ static void forcepair_fn(const char *token, char *value, void *setting, FILE *f)
 	struct s_reader *rdr = setting;
 	if(value)
 	{
-		int32_t len = strlen(value);
+		int32_t len = cs_strlen(value);
 		if(len != 2)
 		{
 			rdr->forcepair_length = 0;
@@ -936,7 +936,7 @@ static void cwekey0_fn(const char *token, char *value, void *setting, FILE *f)
 	struct s_reader *rdr = setting;
 	if(value)
 	{
-		int32_t len = cs_strlen(value);
+		int32_t len = strlen(value);
 		if(len != 32)
 		{
 			rdr->cwekey0_length = 0;

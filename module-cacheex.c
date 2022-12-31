@@ -921,6 +921,33 @@ static int32_t cacheex_add_to_cache_int(struct s_client *cl, ECM_REQUEST *er, in
 	}
 #endif
 
+	if(caid_is_videoguard(er->caid))
+	{
+		if(cl->typ == 'p' && chk_if_ignore_checksum(er, &cl->reader->disablecrccws_only_for))
+		{
+			if(check_nds_cwex(er))
+			{
+				if(cl->reader->dropbadcws)
+				{
+					cs_log_dbg(D_CACHEEX, "Probably got pushed bad CW to cacheex reader: %s, caid %04X, srvid %04X - dropping CW", cl->reader->label, er->caid, er->srvid);
+					return 0;
+				}
+				else
+				{
+					cs_log_dbg(D_CACHEEX, "Probably got pushed bad CW to cacheex reader: %s, caid %04X, srvid %04X", cl->reader->label, er->caid, er->srvid);				
+				}
+			}
+		}
+
+		if(cl->typ == 'c' && chk_if_ignore_checksum(er, &cl->account->disablecrccacheex_only_for))
+		{
+			if(check_nds_cwex(er))
+			{
+				cs_log_dbg(D_CACHEEX, "Probably got bad CW from cacheex user: %s, caid %04X, srvid %04X", username(cl), er->caid, er->srvid);
+			}
+		}
+	}
+
 	// Skip check for BISS1 - cw could be indeed zero
 	// Skip check for BISS2 - we use the extended cw, so the "simple" cw is always zero
 	if(chk_is_null_CW(er->cw) && !caid_is_biss(er->caid))

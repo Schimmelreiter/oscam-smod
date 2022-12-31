@@ -1,9 +1,3 @@
-# generated config header file
-oscam-ostype.h
-
-# generated libraries
-*.a
-
 # generated binaries
 Distribution/oscam-*
 Distribution/list_smargo-*
