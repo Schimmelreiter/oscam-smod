@@ -1,0 +1,3008 @@
+diff -Nur oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod/config.h oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/config.h
+--- oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod/config.h	2022-12-31 13:46:06.471044138 +0100
++++ oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/config.h	2022-12-31 13:55:28.489452764 +0100
+@@ -55,6 +55,8 @@
+ #define READER_VIDEOGUARD 1
+ #define READER_DRE 1
+ #define READER_TONGFANG 1
++#define READER_STREAMGUARD 1
++#define READER_JET 1
+ #define READER_BULCRYPT 1
+ #define READER_GRIFFIN 1
+ #define READER_DGCRYPT 1
+diff -Nur oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod/config.sh oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/config.sh
+--- oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod/config.sh	2022-12-31 13:46:06.471044138 +0100
++++ oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/config.sh	2022-12-31 13:55:28.489452764 +0100
+@@ -2,7 +2,7 @@
+ 
+ addons="WEBIF WEBIF_LIVELOG WEBIF_JQUERY TOUCH WITH_SSL HAVE_DVBAPI WITH_NEUTRINO READ_SDT_CHARSETS IRDETO_GUESSING CS_ANTICASC WITH_DEBUG MODULE_MONITOR WITH_LB CS_CACHEEX CS_CACHEEX_AIO CW_CYCLE_CHECK LCDSUPPORT LEDSUPPORT IPV6SUPPORT WITH_CARDLIST WITH_EMU WITH_SOFTCAM WITH_ARM_NEON"
+ protocols="MODULE_CAMD33 MODULE_CAMD35 MODULE_CAMD35_TCP MODULE_NEWCAMD MODULE_CCCAM MODULE_CCCSHARE MODULE_GBOX MODULE_RADEGAST MODULE_SCAM MODULE_SERIAL MODULE_CONSTCW MODULE_PANDORA MODULE_GHTTP"
+-readers="READER_NAGRA READER_NAGRA_MERLIN READER_IRDETO READER_CONAX READER_CRYPTOWORKS READER_SECA READER_VIACCESS READER_VIDEOGUARD READER_DRE READER_TONGFANG READER_BULCRYPT READER_GRIFFIN READER_DGCRYPT"
++readers="READER_NAGRA READER_NAGRA_MERLIN READER_IRDETO READER_CONAX READER_CRYPTOWORKS READER_SECA READER_VIACCESS READER_VIDEOGUARD READER_DRE READER_TONGFANG READER_STREAMGUARD READER_JET READER_BULCRYPT READER_GRIFFIN READER_DGCRYPT"
+ card_readers="CARDREADER_PHOENIX CARDREADER_INTERNAL CARDREADER_SC8IN1 CARDREADER_MP35 CARDREADER_SMARGO CARDREADER_DB2COM CARDREADER_STAPI CARDREADER_STAPI5 CARDREADER_STINGER CARDREADER_DRECAS"
+ 
+ defconfig="
+@@ -54,6 +54,8 @@
+ CONFIG_READER_VIDEOGUARD=y
+ CONFIG_READER_DRE=y
+ CONFIG_READER_TONGFANG=y
++CONFIG_READER_STREAMGUARD=y
++CONFIG_READER_JET=y
+ CONFIG_READER_BULCRYPT=y
+ CONFIG_READER_GRIFFIN=y
+ CONFIG_READER_DGCRYPT=y
+@@ -356,8 +358,9 @@
+ 	not_have_flag USE_LIBCRYPTO && echo "CONFIG_LIB_AES=y" || echo "# CONFIG_LIB_AES=n"
+ 	enabled MODULE_CCCAM && echo "CONFIG_LIB_RC6=y" || echo "# CONFIG_LIB_RC6=n"
+ 	not_have_flag USE_LIBCRYPTO && enabled MODULE_CCCAM && echo "CONFIG_LIB_SHA1=y" || echo "# CONFIG_LIB_SHA1=n"
+-	enabled_any READER_DRE MODULE_SCAM READER_VIACCESS READER_NAGRA READER_NAGRA_MERLIN READER_VIDEOGUARD READER_CONAX WITH_EMU && echo "CONFIG_LIB_DES=y" || echo "# CONFIG_LIB_DES=n"
++	enabled_any READER_DRE MODULE_SCAM READER_VIACCESS READER_TONGFANG READER_VIDEOGUARD READER_STREAMGUARD READER_JET READER_CONAX READER_NAGRA_MERLIN WITH_EMU && echo "CONFIG_LIB_DES=y" || echo "# CONFIG_LIB_DES=n"
+ 	enabled_any MODULE_CCCAM READER_NAGRA READER_NAGRA_MERLIN READER_SECA WITH_EMU && echo "CONFIG_LIB_IDEA=y" || echo "# CONFIG_LIB_IDEA=n"
++	enabled_any READER_JET && echo "CONFIG_LIB_TWOFISH=y" || echo "CONFIG_LIB_TWOFISH=n"
+ 	not_have_flag USE_LIBCRYPTO && enabled_any READER_CONAX READER_CRYPTOWORKS READER_NAGRA READER_NAGRA_MERLIN WITH_EMU && echo "CONFIG_LIB_BIGNUM=y" || echo "# CONFIG_LIB_BIGNUM=n"
+ 	enabled READER_NAGRA_MERLIN && echo "CONFIG_LIB_MDC2=y" || echo "# CONFIG_LIB_MDC2=n"
+ 	enabled READER_NAGRA_MERLIN && echo "CONFIG_LIB_FAST_AES=y" || echo "# CONFIG_LIB_FAST_AES=n"
+@@ -523,6 +526,8 @@
+ 		READER_VIDEOGUARD	"NDS Videoguard"	$(check_test "READER_VIDEOGUARD") \
+ 		READER_DRE			"DRE Crypt"			$(check_test "READER_DRE") \
+ 		READER_TONGFANG		"Tongfang"			$(check_test "READER_TONGFANG") \
++		READER_STREAMGUARD	"Streamguard"		$(check_test "READER_STREAMGUARD") \
++		READER_JET			"Jet"				$(check_test "READER_JET") \
+ 		READER_BULCRYPT		"Bulcrypt"			$(check_test "READER_BULCRYPT") \
+ 		READER_GRIFFIN		"Griffin"			$(check_test "READER_GRIFFIN") \
+ 		READER_DGCRYPT		"DGCrypt"			$(check_test "READER_DGCRYPT") \
+diff -Nur oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod/cscrypt/jet_dh.c oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/cscrypt/jet_dh.c
+--- oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod/cscrypt/jet_dh.c	1970-01-01 01:00:00.000000000 +0100
++++ oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/cscrypt/jet_dh.c	2022-12-31 13:55:28.417454505 +0100
+@@ -0,0 +1,454 @@
++#include <stdio.h>
++#include <string.h>
++#include <memory.h>
++#include "../globals.h"
++#include "jet_dh.h"
++
++static unsigned char default_DH[128] =
++{
++	0x01, 0x0B, 0xDC, 0x71, 0x5D, 0x2B, 0xCE, 0xFB, 0x36, 0xC6, 0x89, 0xFB, 0x0A, 0x6D, 0x31, 0x9E,
++	0x05, 0xB9, 0x16, 0xFC, 0xA9, 0x61, 0xB1, 0x77, 0x56, 0x82, 0x95, 0x9B, 0xC4, 0x05, 0x70, 0xEE,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0xDD, 0x2D, 0x72, 0x2A, 0x47, 0x8F, 0xCC, 0x51, 0xDA, 0xD2, 0x14, 0x24, 0x8B, 0xEB, 0x30, 0xC0,
++	0xF5, 0x41, 0xBD, 0x16, 0x82, 0x1F, 0xD5, 0x8A, 0x4F, 0x10, 0x56, 0x3F, 0xCC, 0xB2, 0x92, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
++};
++
++static inline int  IsLittleEndian(void)
++{
++	int i = 1;
++	return (int) * ((unsigned char *)&i) == 1;
++}
++
++DH_NUMBERS NUMBERS_ONE =
++{
++	1,
++	{ (uint16_t)1, },
++};
++
++DH_NUMBERS NUMBERS_TWO =
++{
++#if MAXINT == 1
++	2,
++	{ 0, (uint16_t)1, },
++#else
++	1,
++	{ (uint16_t)2, },
++#endif
++};
++
++
++static int n_cmp( uint16_t *i1, uint16_t *i2, int  l )
++{
++	i1 += (l - 1);
++	i2 += (l - 1);
++
++	for (; l--;)
++		if ( *i1-- != *i2-- )
++		    return( i1[1] > i2[1] ? 1 : -1 );
++
++	return(0);
++}
++
++static int nm_cmp( DH_NUMBERS *c1, DH_NUMBERS *c2 )
++{
++	int l;
++	if ( (l = c1->length) != c2->length)
++		return( l - c2->length);
++
++	return( n_cmp( c1->values, c2->values, l) );
++}
++
++static void nm_assign( DH_NUMBERS *d, DH_NUMBERS *s )
++{
++	int l;
++	if (s == d)
++		return;
++
++	if ( (l = s->length) )
++		memcpy( d->values, s->values, sizeof(uint16_t) * l);
++
++	d->length = l;
++}
++
++static int n_sub( uint16_t *p1, uint16_t *p2, uint16_t *p3, int l, int lo )
++{
++	int ld, lc, same;
++	int over = 0;
++	register uint64_t dif;
++	uint64_t a, b;
++
++	same = (p1 == p3);
++
++	for (lc = 1, ld = 0; l--; lc++)
++	{
++		a = (uint64_t) * p1++;
++		if (lo)
++		{
++		    lo--;
++		    b = (uint64_t) * p2++;
++		}
++		else
++		    b = 0;
++
++		if (over)
++		    b++;
++		if ( b > a )
++		{
++		    over = 1;
++		    dif = (MAXINT + 1) + a;
++		}
++		else
++		{
++		    over = 0;
++		    dif = a;
++		}
++		dif -= b;
++		*p3++ = (uint16_t)dif;
++
++		if (dif)
++		    ld = lc;
++		if (!lo && same && !over)
++		{
++		    if (l > 0)
++		        ld = lc + l;
++		    break;
++		}
++	}
++
++	return( ld );
++}
++
++static void nm_imult( DH_NUMBERS *n, uint16_t m, DH_NUMBERS *d )
++{
++
++	if (m == 0)
++		d->length = 0;
++	else if (m == 1)
++		nm_assign( d, n );
++	else{
++
++		int i;
++		register uint64_t mul;
++
++		int l = n->length;
++		uint16_t *pvn = n->values, *pvd = d->values;
++
++		for (i = l, mul = 0; i; i--)
++		{
++			mul += (uint64_t)m * (uint64_t)*pvn++;
++			*pvd++ = TOINT(mul);
++			mul  = DIVMAX1( mul );
++		}
++
++		if (mul)
++		{
++			 l++;
++			*pvd = mul;
++		}
++		d->length = l;
++	}
++}
++
++static void n_div( DH_NUMBERS *d1, DH_NUMBERS *z2, DH_NUMBERS *q, DH_NUMBERS *r )
++
++{
++	static	DH_NUMBERS dummy_rest;
++	static	DH_NUMBERS dummy_quot;
++	uint16_t *i1, *i1e, *i3;
++	int l2, ld, l, lq;
++#if MAXINT != 1
++	uint16_t z;
++	int pw, l2t;
++#endif
++
++	if (!z2->length)
++		// abort();
++		return;
++
++	if (!r)
++		r = &dummy_rest;
++	if (!q)
++		q = &dummy_quot;
++
++	nm_assign( r, d1 );
++
++	l2 = z2->length;
++	l = r->length - l2;
++	lq = l + 1;
++	i3 = q->values + l;
++	i1 = r->values + l;
++	ld = l2;
++	i1e = i1 + (ld - 1);
++
++	for (; l >= 0; ld++, i1--, i1e--, l--, i3--)
++	{
++		*i3 = 0;
++
++		if (ld == l2 && ! *i1e)
++		{
++		    ld--;
++		    continue;
++		}
++
++		if ( ld > l2 || (ld == l2 && n_cmp( i1, z2->values, l2) >= 0 ) )
++		{
++#if MAXINT != 1
++		    for (pw = MAXBIT - 1, z = (uint16_t)HIGHBIT; pw >= 0; pw--, z /= 2)
++		    {
++		        if ( ld > (l2t = z2[pw].length)
++		                || (ld == l2t
++		                    && n_cmp( i1, z2[pw].values, ld) >= 0) )
++		        {
++		            ld = n_sub( i1, z2[pw].values, i1, ld, l2t );
++		            (*i3) += z;
++		        }
++		    }
++#else
++		    ld = n_sub( i1, z2->values, i1, ld, l2 );
++		    (*i3) ++;
++#endif
++		}
++	}
++
++	l ++;
++	lq -= l;
++	ld += l;
++
++	if (lq > 0 && !q->values[lq - 1])
++		lq--;
++
++	q->length = lq;
++	r->length = ld - 1;
++}
++
++
++static void nm_div2( DH_NUMBERS *n )
++{
++#if MAXBIT == LOWBITS
++	register uint16_t *p;
++	int i;
++
++#if MAXINT != 1
++	register uint16_t h;
++	register int c;
++
++	c = 0;
++	i = n->length;
++	p = &n->values[i - 1];
++
++	for (; i--;)
++	{
++		if (c)
++		{
++		    c = (h = *p) & 1;
++		    h /= 2;
++		    h |= HIGHBIT;
++		}
++		else
++		{
++		    c = (h = *p) & 1;
++		    h /= 2;
++		}
++
++		*p-- = h;
++	}
++
++	if ( (i = n->length) && n->values[i - 1] == 0 )
++		n->length = i - 1;
++
++#else  /* MAXBIT != 1 */
++	p = n->values;
++	i = n->length;
++
++	if (i)
++	{
++		n->length = i - 1;
++		for (; --i ; p++)
++		    p[0] = p[1];
++	}
++#endif /* MAXBIT != 1 */
++#else  /* MAXBIT == LOWBITS */
++	a_div( n, &NUMBERS_TWO, n, NUM0P );
++#endif /* MAXBIT == LOWBITS */
++}
++
++static DH_NUMBERS mod_z2[ MAXBIT ];
++
++static void nm_init( DH_NUMBERS *n, DH_NUMBERS *o)
++{
++	uint16_t z;
++	int i;
++
++	if (o)
++		nm_assign( o, &mod_z2[0] );
++
++	if (!nm_cmp( n, &mod_z2[0] ) )
++		return;
++
++	for (i = 0, z = 1; i < MAXBIT; i++, z *= 2)
++	{
++		nm_imult( n, z, &mod_z2[i] );
++	}
++}
++
++
++static void nm_mult( DH_NUMBERS *m1, DH_NUMBERS *m2, DH_NUMBERS *d )
++
++{
++	static uint16_t id[ MAXLEN ];
++	register uint16_t *vp;
++	register uint64_t sum;
++	register uint64_t tp1;
++	register uint16_t *p2;
++	uint16_t *p1;
++	int l1, l2, ld, lc, l, i, j;
++
++	l1 = m1->length;
++	l2 = m2->length;
++	l = l1 + l2;
++	if (l >= MAXLEN)
++		// abort();
++		return;
++
++	for (i = l, vp = id; i--;)
++		*vp++ = 0;
++
++	for ( p1 = m1->values, i = 0; i < l1 ; i++, p1++ )
++	{
++
++		tp1 = (uint64_t) * p1;
++		vp = &id[i];
++		sum = 0;
++		for ( p2 = m2->values, j = l2; j--;)
++		{
++		    sum += (uint64_t) * vp + (tp1 * (uint64_t) * p2++);
++		    *vp++ = TOINT( sum );
++		    sum = DIVMAX1(sum);
++		}
++		*vp++ += (uint16_t)sum;
++	}
++
++	ld = 0;
++	for (lc = 0, vp = id, p1 = d->values; lc++ < l;)
++	{
++		if ( (*p1++ = *vp++) )
++		    ld = lc;
++	}
++
++	d->length = ld;
++
++	n_div( d, mod_z2, NUM0P, d );
++}
++
++static void nm_exp( DH_NUMBERS *x, DH_NUMBERS *n, DH_NUMBERS *z )
++{
++	DH_NUMBERS xt, nt;
++
++	nm_assign( &nt, n );
++	nm_assign( &xt, x );
++	nm_assign( z, &NUMBERS_ONE );
++
++	while (nt.length)
++	{
++		while ( ! (nt.values[0] & 1) )
++		{
++		    nm_mult( &xt, &xt, &xt );
++		    nm_div2( &nt );
++		}
++		nm_mult( &xt, z, z );
++		nt.length = n_sub( nt.values, NUMBERS_ONE.values, nt.values, nt.length, NUMBERS_ONE.length );
++
++	}
++}
++
++
++
++static void nm_toBytes(DH_NUMBERS *n, unsigned char *s)
++{
++
++	unsigned int result = 0;
++	unsigned char my_char, *p;
++	int i;
++
++
++	p = (unsigned char *)n->values;
++
++	if ( ! IsLittleEndian() )
++	{
++		i = 0;
++		do
++		{
++		    result = 2 * i;
++		    i++;
++		    my_char = p[result + 1 ];
++		    p[result + 1] = p[result];
++		    p[result] = my_char;
++		}
++		while ( i < n->length );
++	}
++
++	memcpy(s, (char *)n->values, n->length * 2);
++
++}
++
++
++
++static void bytesToNumbers( DH_NUMBERS *n, unsigned char *s, int len )
++{
++	unsigned int result = 0;
++	unsigned char my_char, *p;
++	int i;
++
++	n->length = len / 2;
++	p = (unsigned char *)n->values;
++
++
++	memcpy((char *)n->values, s, len);
++
++	if ( ! IsLittleEndian() )
++	{
++		i = 0;
++		do
++		{
++		    result = 2 * i;
++		    i++;
++		    my_char = p[result + 1 ];
++		    p[result + 1] = p[result];
++		    p[result] = my_char;
++		}
++		while ( i < n->length );
++	}
++
++
++}
++
++
++void DH_Public_Key_Gen(unsigned char *in_buf, int len, unsigned char *out_buf)
++{
++	DH_NUMBERS n, x, g;
++	DH_NUMBERS o;
++
++	bytesToNumbers( &n, default_DH, 32);
++	bytesToNumbers( &x, in_buf, len);
++	bytesToNumbers( &g, default_DH + 64 , 32);
++	nm_init( &n, NUM0P );
++	nm_exp(  &g, &x, &o );
++	nm_toBytes(&o, out_buf);
++}
++
++
++void DH_Agree_Key_Gen(unsigned char *Y, int len, unsigned char *xx, int len1, unsigned char *kb)
++{
++	DH_NUMBERS n, x, g;
++	DH_NUMBERS o;
++
++	bytesToNumbers( &n, default_DH, 32);
++	bytesToNumbers( &g, Y , len);
++	bytesToNumbers( &x, xx,   len1);
++	nm_init( &n, NUM0P );
++	nm_exp(  &g, &x, &o );
++	nm_toBytes(&o, kb);
++}
+diff -Nur oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod/cscrypt/jet_dh.h oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/cscrypt/jet_dh.h
+--- oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod/cscrypt/jet_dh.h	1970-01-01 01:00:00.000000000 +0100
++++ oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/cscrypt/jet_dh.h	2022-12-31 13:55:28.417454505 +0100
+@@ -0,0 +1,83 @@
++#ifndef _CSCRIPT_JET_DH_H_
++#define _CSCRIPT_JET_DH_H_
++
++//typedef	unsigned short uint16_t;
++//typedef	unsigned long uint64_t;
++
++#if defined( M_XENIX )
++#define	P(x)	x
++#else
++#define	P(x)	()
++#endif
++
++/*
++ *	MAXINT		Maximum number per Elemenmt (must be uint16_t)
++ *	MAXBIT		Maximum bit of MAXINT
++ *	LOWBITS		Number of consekutiven low bits of MAXINT
++ *	HIGHBIT		Highest bit MAXINT
++ *	TOINT		must evaluate (uint16_t) ((x) % MAXINT)
++ *	MAXLEN		Length of the uint16_t of array in each DH_NUMBERS
++ */
++
++#define MAXINT		0xFFFF
++
++#if MAXINT == 99
++#define	MAXBIT		7
++#define	LOWBITS 	2
++#endif
++#if MAXINT == 9
++#define	MAXBIT		4
++#define	LOWBITS 	1
++#endif
++#if MAXINT == 1
++#define MAXBIT		1
++#endif
++#if MAXINT == 0xFF
++#define MAXBIT		8
++#define	TOINT(x)	((uint16_t)(x))
++#endif
++#if MAXINT == 0xFFFF
++#define MAXBIT		16
++#define	TOINT(x)	((uint16_t)(x))
++#endif
++
++#ifndef	MAXBIT
++#include	"<< ERROR: MAXBIT must be defined >>"
++#endif
++#ifndef	LOWBITS
++#if MAXINT == (1 << MAXBIT) - 1
++#define	LOWBITS		MAXBIT
++#else
++#include	"<< ERROR: LOWBITS must be defined >>"
++#endif
++#endif
++
++#define	MAXLEN		(300*8/(MAXBIT + 1))
++#define	STRLEN		(MAXLEN*MAXBIT/4)
++#define	HIGHBIT		(1 << (MAXBIT-1) )
++
++#if LOWBITS == MAXBIT
++#define	DIVMAX1(x)	((x) >> MAXBIT)
++#define	MODMAX1(x)	((x) & MAXINT)
++#define	MULMAX1(x)	((x) << MAXBIT)
++#else
++#define	DIVMAX1(x)	((x) / (MAXINT+1))
++#define	MODMAX1(x)	((x) % (MAXINT+1))
++#define	MULMAX1(x)	((x) * (unsigned)(MAXINT+1))
++#endif
++
++#ifndef	TOINT
++#define	TOINT(x)	((uint16_t)MODMAX1(x))
++#endif
++
++typedef struct
++{
++	int             length;
++	uint16_t       values[MAXLEN];
++} DH_NUMBERS;
++
++#define	NUM0P	((DH_NUMBERS *)0)
++
++void DH_Public_Key_Gen(unsigned char *in_buf, int len, unsigned char *out_buf);
++void DH_Agree_Key_Gen(unsigned char *Y, int len, unsigned char *xx, int len1, unsigned char *kb);
++#endif
+diff -Nur oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod/cscrypt/jet_twofish.c oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/cscrypt/jet_twofish.c
+--- oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod/cscrypt/jet_twofish.c	1970-01-01 01:00:00.000000000 +0100
++++ oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/cscrypt/jet_twofish.c	2022-12-31 13:55:28.417454505 +0100
+@@ -0,0 +1,639 @@
++/******************************************************************************
++ *
++ * Copyright (c) 1999-2005 AppGate Network Security AB. All Rights Reserved.
++ * 
++ * This file contains Original Code and/or Modifications of Original Code as
++ * defined in and that are subject to the MindTerm Public Source License,
++ * Version 2.0, (the 'License'). You may not use this file except in compliance
++ * with the License.
++ * 
++ * You should have received a copy of the MindTerm Public Source License
++ * along with this software; see the file LICENSE.  If not, write to
++ * AppGate Network Security AB, Otterhallegatan 2, SE-41118 Goteborg, SWEDEN
++ *
++ *****************************************************************************/
++
++/*
++ * Author's comment: The contents of this file is heavily based upon
++ * the (free) public implementation from Counterpane Systems found here:
++ * http://www.counterpane.com/download-twofish.html
++ *
++ * Twofish is an AES candidate algorithm. It is a balanced 128-bit Feistel
++ * cipher, consisting of 16 rounds. In each round, a 64-bit S-box value is
++ * computed from 64 bits of the block, and this value is xored into the other
++ * half of the block. The two half-blocks are then exchanged, and the next round
++ * begins. Before the first round, all input bits are xored with key- dependent
++ * "whitening" subkeys, and after the final round the output bits are xored with
++ * other key-dependent whitening subkeys; these subkeys are not used anywhere
++ * else in the algorithm.<p>
++ *
++ * Twofish was submitted by Bruce Schneier, Doug Whiting, John Kelsey, Chris
++ * Hall and David Wagner.<p>
++ */
++
++#include <errno.h>  
++#include "jet_twofish.h"
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
++
++
++#define Mx_1(x) (x)
++#define Mx_X(x) ((x) ^ LFSR2(x))
++#define Mx_Y(x) ((x) ^ LFSR1(x) ^ LFSR2(x))
++
++#define LR(x, n) ((x) << ((n) & 0x1F) | x >> (32 - ((n) & 0x1F)))
++#define RR(x, n) ((x) >> ((n) & 0x1F) | x << (32 - ((n) & 0x1F)))
++//#define LR(x, n) ((x) << (n) | (x) >> (32 - (n)))
++//#define RR(x, n) ((x) >> (n) | (x) << (32 - (n)))
++
++#define b0(x) ((x) & 0xFF)
++#define b1(x) (((x) >>  8) & 0xFF)
++#define b2(x) (((x) >> 16) & 0xFF)
++#define b3(x) (((x) >> 24) & 0xFF)
++
++
++#define ROUNDS		16
++#define BLOCK_SIZE	16
++/* Subkey array indices */
++#define INPUT_WHITEN	0
++#define OUTPUT_WHITEN	4
++#define ROUND_SUBKEYS	8
++
++static const int SK_STEP = 0x02020202;
++static const int SK_BUMP = 0x01010101;
++static const int SK_ROTL = 9;
++
++/**
++ * Define the fixed p0/p1 permutations used in keyed S-box lookup.
++ * By changing the following constant definitions, the S-boxes will
++ * automatically get changed in the Twofish engine.
++ */
++static const int P_01 = 0;
++static const int P_02 = 0;
++static const int P_03 = 1;
++static const int P_04 = 1;
++
++static const int P_11 = 0;
++static const int P_12 = 1;
++static const int P_13 = 1;
++static const int P_14 = 0;
++
++static const int P_21 = 1;
++static const int P_22 = 0;
++static const int P_23 = 0;
++static const int P_24 = 0;
++
++static const int P_31 = 1;
++static const int P_32 = 1;
++static const int P_33 = 0;
++static const int P_34 = 1;
++
++/** Primitive polynomial for GF(256) */
++static const int GF256_FDBK_2 = 0x169 / 2;
++static const int GF256_FDBK_4 = 0x169 / 4;
++static const int RS_GF_FDBK = 0x14D; // field generator
++
++struct twofish_ctx * __twofish_ctx;
++
++/** MDS matrix */
++static const int MDS[4][256]={
++   {0xBCBC3275, 0xECEC21F3, 0x202043C6, 0xB3B3C9F4, 0xDADA03DB, 0x02028B7B, 0xE2E22BFB, 0x9E9EFAC8, 
++    0xC9C9EC4A, 0xD4D409D3, 0x18186BE6, 0x1E1E9F6B, 0x98980E45, 0xB2B2387D, 0xA6A6D2E8, 0x2626B74B, 
++    0x3C3C57D6, 0x93938A32, 0x8282EED8, 0x525298FD, 0x7B7BD437, 0xBBBB3771, 0x5B5B97F1, 0x474783E1, 
++    0x24243C30, 0x5151E20F, 0xBABAC6F8, 0x4A4AF31B, 0xBFBF4887, 0x0D0D70FA, 0xB0B0B306, 0x7575DE3F, 
++    0xD2D2FD5E, 0x7D7D20BA, 0x666631AE, 0x3A3AA35B, 0x59591C8A, 0x00000000, 0xCDCD93BC, 0x1A1AE09D, 
++    0xAEAE2C6D, 0x7F7FABC1, 0x2B2BC7B1, 0xBEBEB90E, 0xE0E0A080, 0x8A8A105D, 0x3B3B52D2, 0x6464BAD5, 
++    0xD8D888A0, 0xE7E7A584, 0x5F5FE807, 0x1B1B1114, 0x2C2CC2B5, 0xFCFCB490, 0x3131272C, 0x808065A3, 
++    0x73732AB2, 0x0C0C8173, 0x79795F4C, 0x6B6B4154, 0x4B4B0292, 0x53536974, 0x94948F36, 0x83831F51, 
++    0x2A2A3638, 0xC4C49CB0, 0x2222C8BD, 0xD5D5F85A, 0xBDBDC3FC, 0x48487860, 0xFFFFCE62, 0x4C4C0796, 
++    0x4141776C, 0xC7C7E642, 0xEBEB24F7, 0x1C1C1410, 0x5D5D637C, 0x36362228, 0x6767C027, 0xE9E9AF8C, 
++    0x4444F913, 0x1414EA95, 0xF5F5BB9C, 0xCFCF18C7, 0x3F3F2D24, 0xC0C0E346, 0x7272DB3B, 0x54546C70, 
++    0x29294CCA, 0xF0F035E3, 0x0808FE85, 0xC6C617CB, 0xF3F34F11, 0x8C8CE4D0, 0xA4A45993, 0xCACA96B8, 
++    0x68683BA6, 0xB8B84D83, 0x38382820, 0xE5E52EFF, 0xADAD569F, 0x0B0B8477, 0xC8C81DC3, 0x9999FFCC, 
++    0x5858ED03, 0x19199A6F, 0x0E0E0A08, 0x95957EBF, 0x70705040, 0xF7F730E7, 0x6E6ECF2B, 0x1F1F6EE2, 
++    0xB5B53D79, 0x09090F0C, 0x616134AA, 0x57571682, 0x9F9F0B41, 0x9D9D803A, 0x111164EA, 0x2525CDB9, 
++    0xAFAFDDE4, 0x4545089A, 0xDFDF8DA4, 0xA3A35C97, 0xEAEAD57E, 0x353558DA, 0xEDEDD07A, 0x4343FC17, 
++    0xF8F8CB66, 0xFBFBB194, 0x3737D3A1, 0xFAFA401D, 0xC2C2683D, 0xB4B4CCF0, 0x32325DDE, 0x9C9C71B3, 
++    0x5656E70B, 0xE3E3DA72, 0x878760A7, 0x15151B1C, 0xF9F93AEF, 0x6363BFD1, 0x3434A953, 0x9A9A853E, 
++    0xB1B1428F, 0x7C7CD133, 0x88889B26, 0x3D3DA65F, 0xA1A1D7EC, 0xE4E4DF76, 0x8181942A, 0x91910149, 
++    0x0F0FFB81, 0xEEEEAA88, 0x161661EE, 0xD7D77321, 0x9797F5C4, 0xA5A5A81A, 0xFEFE3FEB, 0x6D6DB5D9, 
++    0x7878AEC5, 0xC5C56D39, 0x1D1DE599, 0x7676A4CD, 0x3E3EDCAD, 0xCBCB6731, 0xB6B6478B, 0xEFEF5B01, 
++    0x12121E18, 0x6060C523, 0x6A6AB0DD, 0x4D4DF61F, 0xCECEE94E, 0xDEDE7C2D, 0x55559DF9, 0x7E7E5A48, 
++    0x2121B24F, 0x03037AF2, 0xA0A02665, 0x5E5E198E, 0x5A5A6678, 0x65654B5C, 0x62624E58, 0xFDFD4519, 
++    0x0606F48D, 0x404086E5, 0xF2F2BE98, 0x3333AC57, 0x17179067, 0x05058E7F, 0xE8E85E05, 0x4F4F7D64, 
++    0x89896AAF, 0x10109563, 0x74742FB6, 0x0A0A75FE, 0x5C5C92F5, 0x9B9B74B7, 0x2D2D333C, 0x3030D6A5, 
++    0x2E2E49CE, 0x494989E9, 0x46467268, 0x77775544, 0xA8A8D8E0, 0x9696044D, 0x2828BD43, 0xA9A92969, 
++    0xD9D97929, 0x8686912E, 0xD1D187AC, 0xF4F44A15, 0x8D8D1559, 0xD6D682A8, 0xB9B9BC0A, 0x42420D9E, 
++    0xF6F6C16E, 0x2F2FB847, 0xDDDD06DF, 0x23233934, 0xCCCC6235, 0xF1F1C46A, 0xC1C112CF, 0x8585EBDC, 
++    0x8F8F9E22, 0x7171A1C9, 0x9090F0C0, 0xAAAA539B, 0x0101F189, 0x8B8BE1D4, 0x4E4E8CED, 0x8E8E6FAB, 
++    0xABABA212, 0x6F6F3EA2, 0xE6E6540D, 0xDBDBF252, 0x92927BBB, 0xB7B7B602, 0x6969CA2F, 0x3939D9A9, 
++    0xD3D30CD7, 0xA7A72361, 0xA2A2AD1E, 0xC3C399B4, 0x6C6C4450, 0x07070504, 0x04047FF6, 0x272746C2, 
++    0xACACA716, 0xD0D07625, 0x50501386, 0xDCDCF756, 0x84841A55, 0xE1E15109, 0x7A7A25BE, 0x1313EF91},
++
++   {0xA9D93939, 0x67901717, 0xB3719C9C, 0xE8D2A6A6, 0x04050707, 0xFD985252, 0xA3658080, 0x76DFE4E4, 
++    0x9A084545, 0x92024B4B, 0x80A0E0E0, 0x78665A5A, 0xE4DDAFAF, 0xDDB06A6A, 0xD1BF6363, 0x38362A2A, 
++    0x0D54E6E6, 0xC6432020, 0x3562CCCC, 0x98BEF2F2, 0x181E1212, 0xF724EBEB, 0xECD7A1A1, 0x6C774141, 
++    0x43BD2828, 0x7532BCBC, 0x37D47B7B, 0x269B8888, 0xFA700D0D, 0x13F94444, 0x94B1FBFB, 0x485A7E7E, 
++    0xF27A0303, 0xD0E48C8C, 0x8B47B6B6, 0x303C2424, 0x84A5E7E7, 0x54416B6B, 0xDF06DDDD, 0x23C56060, 
++    0x1945FDFD, 0x5BA33A3A, 0x3D68C2C2, 0x59158D8D, 0xF321ECEC, 0xAE316666, 0xA23E6F6F, 0x82165757, 
++    0x63951010, 0x015BEFEF, 0x834DB8B8, 0x2E918686, 0xD9B56D6D, 0x511F8383, 0x9B53AAAA, 0x7C635D5D, 
++    0xA63B6868, 0xEB3FFEFE, 0xA5D63030, 0xBE257A7A, 0x16A7ACAC, 0x0C0F0909, 0xE335F0F0, 0x6123A7A7, 
++    0xC0F09090, 0x8CAFE9E9, 0x3A809D9D, 0xF5925C5C, 0x73810C0C, 0x2C273131, 0x2576D0D0, 0x0BE75656, 
++    0xBB7B9292, 0x4EE9CECE, 0x89F10101, 0x6B9F1E1E, 0x53A93434, 0x6AC4F1F1, 0xB499C3C3, 0xF1975B5B, 
++    0xE1834747, 0xE66B1818, 0xBDC82222, 0x450E9898, 0xE26E1F1F, 0xF4C9B3B3, 0xB62F7474, 0x66CBF8F8, 
++    0xCCFF9999, 0x95EA1414, 0x03ED5858, 0x56F7DCDC, 0xD4E18B8B, 0x1C1B1515, 0x1EADA2A2, 0xD70CD3D3, 
++    0xFB2BE2E2, 0xC31DC8C8, 0x8E195E5E, 0xB5C22C2C, 0xE9894949, 0xCF12C1C1, 0xBF7E9595, 0xBA207D7D, 
++    0xEA641111, 0x77840B0B, 0x396DC5C5, 0xAF6A8989, 0x33D17C7C, 0xC9A17171, 0x62CEFFFF, 0x7137BBBB, 
++    0x81FB0F0F, 0x793DB5B5, 0x0951E1E1, 0xADDC3E3E, 0x242D3F3F, 0xCDA47676, 0xF99D5555, 0xD8EE8282, 
++    0xE5864040, 0xC5AE7878, 0xB9CD2525, 0x4D049696, 0x44557777, 0x080A0E0E, 0x86135050, 0xE730F7F7, 
++    0xA1D33737, 0x1D40FAFA, 0xAA346161, 0xED8C4E4E, 0x06B3B0B0, 0x706C5454, 0xB22A7373, 0xD2523B3B, 
++    0x410B9F9F, 0x7B8B0202, 0xA088D8D8, 0x114FF3F3, 0x3167CBCB, 0xC2462727, 0x27C06767, 0x90B4FCFC, 
++    0x20283838, 0xF67F0404, 0x60784848, 0xFF2EE5E5, 0x96074C4C, 0x5C4B6565, 0xB1C72B2B, 0xAB6F8E8E, 
++    0x9E0D4242, 0x9CBBF5F5, 0x52F2DBDB, 0x1BF34A4A, 0x5FA63D3D, 0x9359A4A4, 0x0ABCB9B9, 0xEF3AF9F9, 
++    0x91EF1313, 0x85FE0808, 0x49019191, 0xEE611616, 0x2D7CDEDE, 0x4FB22121, 0x8F42B1B1, 0x3BDB7272, 
++    0x47B82F2F, 0x8748BFBF, 0x6D2CAEAE, 0x46E3C0C0, 0xD6573C3C, 0x3E859A9A, 0x6929A9A9, 0x647D4F4F, 
++    0x2A948181, 0xCE492E2E, 0xCB17C6C6, 0x2FCA6969, 0xFCC3BDBD, 0x975CA3A3, 0x055EE8E8, 0x7AD0EDED, 
++    0xAC87D1D1, 0x7F8E0505, 0xD5BA6464, 0x1AA8A5A5, 0x4BB72626, 0x0EB9BEBE, 0xA7608787, 0x5AF8D5D5, 
++    0x28223636, 0x14111B1B, 0x3FDE7575, 0x2979D9D9, 0x88AAEEEE, 0x3C332D2D, 0x4C5F7979, 0x02B6B7B7, 
++    0xB896CACA, 0xDA583535, 0xB09CC4C4, 0x17FC4343, 0x551A8484, 0x1FF64D4D, 0x8A1C5959, 0x7D38B2B2, 
++    0x57AC3333, 0xC718CFCF, 0x8DF40606, 0x74695353, 0xB7749B9B, 0xC4F59797, 0x9F56ADAD, 0x72DAE3E3, 
++    0x7ED5EAEA, 0x154AF4F4, 0x229E8F8F, 0x12A2ABAB, 0x584E6262, 0x07E85F5F, 0x99E51D1D, 0x34392323, 
++    0x6EC1F6F6, 0x50446C6C, 0xDE5D3232, 0x68724646, 0x6526A0A0, 0xBC93CDCD, 0xDB03DADA, 0xF8C6BABA, 
++    0xC8FA9E9E, 0xA882D6D6, 0x2BCF6E6E, 0x40507070, 0xDCEB8585, 0xFE750A0A, 0x328A9393, 0xA48DDFDF, 
++    0xCA4C2929, 0x10141C1C, 0x2173D7D7, 0xF0CCB4B4, 0xD309D4D4, 0x5D108A8A, 0x0FE25151, 0x00000000, 
++    0x6F9A1919, 0x9DE01A1A, 0x368F9494, 0x42E6C7C7, 0x4AECC9C9, 0x5EFDD2D2, 0xC1AB7F7F, 0xE0D8A8A8},
++
++   {0xBC75BC32, 0xECF3EC21, 0x20C62043, 0xB3F4B3C9, 0xDADBDA03, 0x027B028B, 0xE2FBE22B, 0x9EC89EFA, 
++    0xC94AC9EC, 0xD4D3D409, 0x18E6186B, 0x1E6B1E9F, 0x9845980E, 0xB27DB238, 0xA6E8A6D2, 0x264B26B7, 
++    0x3CD63C57, 0x9332938A, 0x82D882EE, 0x52FD5298, 0x7B377BD4, 0xBB71BB37, 0x5BF15B97, 0x47E14783, 
++    0x2430243C, 0x510F51E2, 0xBAF8BAC6, 0x4A1B4AF3, 0xBF87BF48, 0x0DFA0D70, 0xB006B0B3, 0x753F75DE, 
++    0xD25ED2FD, 0x7DBA7D20, 0x66AE6631, 0x3A5B3AA3, 0x598A591C, 0x00000000, 0xCDBCCD93, 0x1A9D1AE0, 
++    0xAE6DAE2C, 0x7FC17FAB, 0x2BB12BC7, 0xBE0EBEB9, 0xE080E0A0, 0x8A5D8A10, 0x3BD23B52, 0x64D564BA, 
++    0xD8A0D888, 0xE784E7A5, 0x5F075FE8, 0x1B141B11, 0x2CB52CC2, 0xFC90FCB4, 0x312C3127, 0x80A38065, 
++    0x73B2732A, 0x0C730C81, 0x794C795F, 0x6B546B41, 0x4B924B02, 0x53745369, 0x9436948F, 0x8351831F, 
++    0x2A382A36, 0xC4B0C49C, 0x22BD22C8, 0xD55AD5F8, 0xBDFCBDC3, 0x48604878, 0xFF62FFCE, 0x4C964C07, 
++    0x416C4177, 0xC742C7E6, 0xEBF7EB24, 0x1C101C14, 0x5D7C5D63, 0x36283622, 0x672767C0, 0xE98CE9AF, 
++    0x441344F9, 0x149514EA, 0xF59CF5BB, 0xCFC7CF18, 0x3F243F2D, 0xC046C0E3, 0x723B72DB, 0x5470546C, 
++    0x29CA294C, 0xF0E3F035, 0x088508FE, 0xC6CBC617, 0xF311F34F, 0x8CD08CE4, 0xA493A459, 0xCAB8CA96, 
++    0x68A6683B, 0xB883B84D, 0x38203828, 0xE5FFE52E, 0xAD9FAD56, 0x0B770B84, 0xC8C3C81D, 0x99CC99FF, 
++    0x580358ED, 0x196F199A, 0x0E080E0A, 0x95BF957E, 0x70407050, 0xF7E7F730, 0x6E2B6ECF, 0x1FE21F6E, 
++    0xB579B53D, 0x090C090F, 0x61AA6134, 0x57825716, 0x9F419F0B, 0x9D3A9D80, 0x11EA1164, 0x25B925CD, 
++    0xAFE4AFDD, 0x459A4508, 0xDFA4DF8D, 0xA397A35C, 0xEA7EEAD5, 0x35DA3558, 0xED7AEDD0, 0x431743FC, 
++    0xF866F8CB, 0xFB94FBB1, 0x37A137D3, 0xFA1DFA40, 0xC23DC268, 0xB4F0B4CC, 0x32DE325D, 0x9CB39C71, 
++    0x560B56E7, 0xE372E3DA, 0x87A78760, 0x151C151B, 0xF9EFF93A, 0x63D163BF, 0x345334A9, 0x9A3E9A85, 
++    0xB18FB142, 0x7C337CD1, 0x8826889B, 0x3D5F3DA6, 0xA1ECA1D7, 0xE476E4DF, 0x812A8194, 0x91499101, 
++    0x0F810FFB, 0xEE88EEAA, 0x16EE1661, 0xD721D773, 0x97C497F5, 0xA51AA5A8, 0xFEEBFE3F, 0x6DD96DB5, 
++    0x78C578AE, 0xC539C56D, 0x1D991DE5, 0x76CD76A4, 0x3EAD3EDC, 0xCB31CB67, 0xB68BB647, 0xEF01EF5B, 
++    0x1218121E, 0x602360C5, 0x6ADD6AB0, 0x4D1F4DF6, 0xCE4ECEE9, 0xDE2DDE7C, 0x55F9559D, 0x7E487E5A, 
++    0x214F21B2, 0x03F2037A, 0xA065A026, 0x5E8E5E19, 0x5A785A66, 0x655C654B, 0x6258624E, 0xFD19FD45, 
++    0x068D06F4, 0x40E54086, 0xF298F2BE, 0x335733AC, 0x17671790, 0x057F058E, 0xE805E85E, 0x4F644F7D, 
++    0x89AF896A, 0x10631095, 0x74B6742F, 0x0AFE0A75, 0x5CF55C92, 0x9BB79B74, 0x2D3C2D33, 0x30A530D6, 
++    0x2ECE2E49, 0x49E94989, 0x46684672, 0x77447755, 0xA8E0A8D8, 0x964D9604, 0x284328BD, 0xA969A929, 
++    0xD929D979, 0x862E8691, 0xD1ACD187, 0xF415F44A, 0x8D598D15, 0xD6A8D682, 0xB90AB9BC, 0x429E420D, 
++    0xF66EF6C1, 0x2F472FB8, 0xDDDFDD06, 0x23342339, 0xCC35CC62, 0xF16AF1C4, 0xC1CFC112, 0x85DC85EB, 
++    0x8F228F9E, 0x71C971A1, 0x90C090F0, 0xAA9BAA53, 0x018901F1, 0x8BD48BE1, 0x4EED4E8C, 0x8EAB8E6F, 
++    0xAB12ABA2, 0x6FA26F3E, 0xE60DE654, 0xDB52DBF2, 0x92BB927B, 0xB702B7B6, 0x692F69CA, 0x39A939D9, 
++    0xD3D7D30C, 0xA761A723, 0xA21EA2AD, 0xC3B4C399, 0x6C506C44, 0x07040705, 0x04F6047F, 0x27C22746, 
++    0xAC16ACA7, 0xD025D076, 0x50865013, 0xDC56DCF7, 0x8455841A, 0xE109E151, 0x7ABE7A25, 0x139113EF},
++
++   {0xD939A9D9, 0x90176790, 0x719CB371, 0xD2A6E8D2, 0x05070405, 0x9852FD98, 0x6580A365, 0xDFE476DF, 
++    0x08459A08, 0x024B9202, 0xA0E080A0, 0x665A7866, 0xDDAFE4DD, 0xB06ADDB0, 0xBF63D1BF, 0x362A3836, 
++    0x54E60D54, 0x4320C643, 0x62CC3562, 0xBEF298BE, 0x1E12181E, 0x24EBF724, 0xD7A1ECD7, 0x77416C77, 
++    0xBD2843BD, 0x32BC7532, 0xD47B37D4, 0x9B88269B, 0x700DFA70, 0xF94413F9, 0xB1FB94B1, 0x5A7E485A, 
++    0x7A03F27A, 0xE48CD0E4, 0x47B68B47, 0x3C24303C, 0xA5E784A5, 0x416B5441, 0x06DDDF06, 0xC56023C5, 
++    0x45FD1945, 0xA33A5BA3, 0x68C23D68, 0x158D5915, 0x21ECF321, 0x3166AE31, 0x3E6FA23E, 0x16578216, 
++    0x95106395, 0x5BEF015B, 0x4DB8834D, 0x91862E91, 0xB56DD9B5, 0x1F83511F, 0x53AA9B53, 0x635D7C63, 
++    0x3B68A63B, 0x3FFEEB3F, 0xD630A5D6, 0x257ABE25, 0xA7AC16A7, 0x0F090C0F, 0x35F0E335, 0x23A76123, 
++    0xF090C0F0, 0xAFE98CAF, 0x809D3A80, 0x925CF592, 0x810C7381, 0x27312C27, 0x76D02576, 0xE7560BE7, 
++    0x7B92BB7B, 0xE9CE4EE9, 0xF10189F1, 0x9F1E6B9F, 0xA93453A9, 0xC4F16AC4, 0x99C3B499, 0x975BF197, 
++    0x8347E183, 0x6B18E66B, 0xC822BDC8, 0x0E98450E, 0x6E1FE26E, 0xC9B3F4C9, 0x2F74B62F, 0xCBF866CB, 
++    0xFF99CCFF, 0xEA1495EA, 0xED5803ED, 0xF7DC56F7, 0xE18BD4E1, 0x1B151C1B, 0xADA21EAD, 0x0CD3D70C, 
++    0x2BE2FB2B, 0x1DC8C31D, 0x195E8E19, 0xC22CB5C2, 0x8949E989, 0x12C1CF12, 0x7E95BF7E, 0x207DBA20, 
++    0x6411EA64, 0x840B7784, 0x6DC5396D, 0x6A89AF6A, 0xD17C33D1, 0xA171C9A1, 0xCEFF62CE, 0x37BB7137, 
++    0xFB0F81FB, 0x3DB5793D, 0x51E10951, 0xDC3EADDC, 0x2D3F242D, 0xA476CDA4, 0x9D55F99D, 0xEE82D8EE, 
++    0x8640E586, 0xAE78C5AE, 0xCD25B9CD, 0x04964D04, 0x55774455, 0x0A0E080A, 0x13508613, 0x30F7E730, 
++    0xD337A1D3, 0x40FA1D40, 0x3461AA34, 0x8C4EED8C, 0xB3B006B3, 0x6C54706C, 0x2A73B22A, 0x523BD252, 
++    0x0B9F410B, 0x8B027B8B, 0x88D8A088, 0x4FF3114F, 0x67CB3167, 0x4627C246, 0xC06727C0, 0xB4FC90B4, 
++    0x28382028, 0x7F04F67F, 0x78486078, 0x2EE5FF2E, 0x074C9607, 0x4B655C4B, 0xC72BB1C7, 0x6F8EAB6F, 
++    0x0D429E0D, 0xBBF59CBB, 0xF2DB52F2, 0xF34A1BF3, 0xA63D5FA6, 0x59A49359, 0xBCB90ABC, 0x3AF9EF3A, 
++    0xEF1391EF, 0xFE0885FE, 0x01914901, 0x6116EE61, 0x7CDE2D7C, 0xB2214FB2, 0x42B18F42, 0xDB723BDB, 
++    0xB82F47B8, 0x48BF8748, 0x2CAE6D2C, 0xE3C046E3, 0x573CD657, 0x859A3E85, 0x29A96929, 0x7D4F647D, 
++    0x94812A94, 0x492ECE49, 0x17C6CB17, 0xCA692FCA, 0xC3BDFCC3, 0x5CA3975C, 0x5EE8055E, 0xD0ED7AD0, 
++    0x87D1AC87, 0x8E057F8E, 0xBA64D5BA, 0xA8A51AA8, 0xB7264BB7, 0xB9BE0EB9, 0x6087A760, 0xF8D55AF8, 
++    0x22362822, 0x111B1411, 0xDE753FDE, 0x79D92979, 0xAAEE88AA, 0x332D3C33, 0x5F794C5F, 0xB6B702B6, 
++    0x96CAB896, 0x5835DA58, 0x9CC4B09C, 0xFC4317FC, 0x1A84551A, 0xF64D1FF6, 0x1C598A1C, 0x38B27D38, 
++    0xAC3357AC, 0x18CFC718, 0xF4068DF4, 0x69537469, 0x749BB774, 0xF597C4F5, 0x56AD9F56, 0xDAE372DA, 
++    0xD5EA7ED5, 0x4AF4154A, 0x9E8F229E, 0xA2AB12A2, 0x4E62584E, 0xE85F07E8, 0xE51D99E5, 0x39233439, 
++    0xC1F66EC1, 0x446C5044, 0x5D32DE5D, 0x72466872, 0x26A06526, 0x93CDBC93, 0x03DADB03, 0xC6BAF8C6, 
++    0xFA9EC8FA, 0x82D6A882, 0xCF6E2BCF, 0x50704050, 0xEB85DCEB, 0x750AFE75, 0x8A93328A, 0x8DDFA48D, 
++    0x4C29CA4C, 0x141C1014, 0x73D72173, 0xCCB4F0CC, 0x09D4D309, 0x108A5D10, 0xE2510FE2, 0x00000000, 
++    0x9A196F9A, 0xE01A9DE0, 0x8F94368F, 0xE6C742E6, 0xECC94AEC, 0xFDD25EFD, 0xAB7FC1AB, 0xD8A8E0D8}
++}; 
++
++/** Fixed 8x8 permutation S-boxes */
++static const uint8_t P[2][256] = { 
++  { 0xa9, 0x67, 0xb3, 0xe8, 0x04, 0xfd, 0xa3, 0x76, 0x9a, 0x92, 0x80, 0x78, 0xe4, 0xdd, 0xd1, 0x38,
++    0x0d, 0xc6, 0x35, 0x98, 0x18, 0xf7, 0xec, 0x6c, 0x43, 0x75, 0x37, 0x26, 0xfa, 0x13, 0x94, 0x48,
++    0xf2, 0xd0, 0x8b, 0x30, 0x84, 0x54, 0xdf, 0x23, 0x19, 0x5b, 0x3d, 0x59, 0xf3, 0xae, 0xa2, 0x82,
++    0x63, 0x01, 0x83, 0x2e, 0xd9, 0x51, 0x9b, 0x7c, 0xa6, 0xeb, 0xa5, 0xbe, 0x16, 0x0c, 0xe3, 0x61,
++    0xc0, 0x8c, 0x3a, 0xf5, 0x73, 0x2c, 0x25, 0x0b, 0xbb, 0x4e, 0x89, 0x6b, 0x53, 0x6a, 0xb4, 0xf1,
++    0xe1, 0xe6, 0xbd, 0x45, 0xe2, 0xf4, 0xb6, 0x66, 0xcc, 0x95, 0x03, 0x56, 0xd4, 0x1c, 0x1e, 0xd7,
++    0xfb, 0xc3, 0x8e, 0xb5, 0xe9, 0xcf, 0xbf, 0xba, 0xea, 0x77, 0x39, 0xaf, 0x33, 0xc9, 0x62, 0x71,
++    0x81, 0x79, 0x09, 0xad, 0x24, 0xcd, 0xf9, 0xd8, 0xe5, 0xc5, 0xb9, 0x4d, 0x44, 0x08, 0x86, 0xe7,
++    0xa1, 0x1d, 0xaa, 0xed, 0x06, 0x70, 0xb2, 0xd2, 0x41, 0x7b, 0xa0, 0x11, 0x31, 0xc2, 0x27, 0x90,
++    0x20, 0xf6, 0x60, 0xff, 0x96, 0x5c, 0xb1, 0xab, 0x9e, 0x9c, 0x52, 0x1b, 0x5f, 0x93, 0x0a, 0xef,
++    0x91, 0x85, 0x49, 0xee, 0x2d, 0x4f, 0x8f, 0x3b, 0x47, 0x87, 0x6d, 0x46, 0xd6, 0x3e, 0x69, 0x64,
++    0x2a, 0xce, 0xcb, 0x2f, 0xfc, 0x97, 0x05, 0x7a, 0xac, 0x7f, 0xd5, 0x1a, 0x4b, 0x0e, 0xa7, 0x5a,
++    0x28, 0x14, 0x3f, 0x29, 0x88, 0x3c, 0x4c, 0x02, 0xb8, 0xda, 0xb0, 0x17, 0x55, 0x1f, 0x8a, 0x7d,
++    0x57, 0xc7, 0x8d, 0x74, 0xb7, 0xc4, 0x9f, 0x72, 0x7e, 0x15, 0x22, 0x12, 0x58, 0x07, 0x99, 0x34,
++    0x6e, 0x50, 0xde, 0x68, 0x65, 0xbc, 0xdb, 0xf8, 0xc8, 0xa8, 0x2b, 0x40, 0xdc, 0xfe, 0x32, 0xa4,
++    0xca, 0x10, 0x21, 0xf0, 0xd3, 0x5d, 0x0f, 0x00, 0x6f, 0x9d, 0x36, 0x42, 0x4a, 0x5e, 0xc1, 0xe0
++  },
++  { 0x75, 0xf3, 0xc6, 0xf4, 0xdb, 0x7b, 0xfb, 0xc8, 0x4a, 0xd3, 0xe6, 0x6b, 0x45, 0x7d, 0xe8, 0x4b,
++    0xd6, 0x32, 0xd8, 0xfd, 0x37, 0x71, 0xf1, 0xe1, 0x30, 0x0f, 0xf8, 0x1b, 0x87, 0xfa, 0x06, 0x3f,
++    0x5e, 0xba, 0xae, 0x5b, 0x8a, 0x00, 0xbc, 0x9d, 0x6d, 0xc1, 0xb1, 0x0e, 0x80, 0x5d, 0xd2, 0xd5,
++    0xa0, 0x84, 0x07, 0x14, 0xb5, 0x90, 0x2c, 0xa3, 0xb2, 0x73, 0x4c, 0x54, 0x92, 0x74, 0x36, 0x51,
++    0x38, 0xb0, 0xbd, 0x5a, 0xfc, 0x60, 0x62, 0x96, 0x6c, 0x42, 0xf7, 0x10, 0x7c, 0x28, 0x27, 0x8c,
++    0x13, 0x95, 0x9c, 0xc7, 0x24, 0x46, 0x3b, 0x70, 0xca, 0xe3, 0x85, 0xcb, 0x11, 0xd0, 0x93, 0xb8,
++    0xa6, 0x83, 0x20, 0xff, 0x9f, 0x77, 0xc3, 0xcc, 0x03, 0x6f, 0x08, 0xbf, 0x40, 0xe7, 0x2b, 0xe2,
++    0x79, 0x0c, 0xaa, 0x82, 0x41, 0x3a, 0xea, 0xb9, 0xe4, 0x9a, 0xa4, 0x97, 0x7e, 0xda, 0x7a, 0x17,
++    0x66, 0x94, 0xa1, 0x1d, 0x3d, 0xf0, 0xde, 0xb3, 0x0b, 0x72, 0xa7, 0x1c, 0xef, 0xd1, 0x53, 0x3e,
++    0x8f, 0x33, 0x26, 0x5f, 0xec, 0x76, 0x2a, 0x49, 0x81, 0x88, 0xee, 0x21, 0xc4, 0x1a, 0xeb, 0xd9,
++    0xc5, 0x39, 0x99, 0xcd, 0xad, 0x31, 0x8b, 0x01, 0x18, 0x23, 0xdd, 0x1f, 0x4e, 0x2d, 0xf9, 0x48,
++    0x4f, 0xf2, 0x65, 0x8e, 0x78, 0x5c, 0x58, 0x19, 0x8d, 0xe5, 0x98, 0x57, 0x67, 0x7f, 0x05, 0x64,
++    0xaf, 0x63, 0xb6, 0xfe, 0xf5, 0xb7, 0x3c, 0xa5, 0xce, 0xe9, 0x68, 0x44, 0xe0, 0x4d, 0x43, 0x69,
++    0x29, 0x2e, 0xac, 0x15, 0x59, 0xa8, 0x0a, 0x9e, 0x6e, 0x47, 0xdf, 0x34, 0x35, 0x6a, 0xcf, 0xdc,
++    0x22, 0xc9, 0xc0, 0x9b, 0x89, 0xd4, 0xed, 0xab, 0x12, 0xa2, 0x0d, 0x52, 0xbb, 0x02, 0x2f, 0xa9,
++    0xd7, 0x61, 0x1e, 0xb4, 0x50, 0x04, 0xf6, 0xc2, 0x16, 0x25, 0x86, 0x56, 0x55, 0x09, 0xbe, 0x91
++    }
++};
++
++static inline uint32_t getIntLSBO( uint8_t *data, int offset ) {
++	return ( data[offset] | (data[offset + 1]) << 8 | (data[offset + 2]) << 16 | (data[offset + 3]) << 24 );
++}
++
++static inline void putIntLSBO( uint32_t value, uint8_t *out, int offset ) {
++	out[offset++] = value & 0xFF;
++	out[offset++] = (value >> 8) & 0xFF;
++	out[offset++] = (value >> 16) & 0xFF;
++	out[offset  ] = (value >> 24) & 0xFF;
++}
++
++static uint32_t LFSR1( uint32_t x ) {
++	return (x >> 1) ^
++	   ((x & 0x01) != 0 ? GF256_FDBK_2 : 0);
++}
++
++static int32_t LFSR2( uint32_t x ) {
++	return (x >> 2) ^
++	   ((x & 0x02) != 0 ? GF256_FDBK_2 : 0) ^
++	   ((x & 0x01) != 0 ? GF256_FDBK_4 : 0);
++}
++#if 0
++static uint32_t byte( uint32_t x, int N) {
++	int result = 0;
++	switch (N%4) {
++	case 0:
++		result = b0(x);
++		break;
++	case 1:
++		result = b1(x);
++		break;
++	case 2:
++		result = b2(x);
++		break;
++	case 3:
++		result = b3(x);
++		break;
++	}
++	return result;
++}
++#endif
++
++/*
++ * Reed-Solomon code parameters: (12, 8) reversible code:<p>
++ * <pre>
++ *   g(x) = x**4 + (a + 1/a) x**3 + a x**2 + (a + 1/a) x + 1
++ * </pre>
++ * where a = primitive root of field generator 0x14D
++ */
++static uint32_t RS_rem( uint32_t x ) {
++	uint32_t b  =  (x >> 24) & 0xFF;
++	uint32_t g2 = ((b  <<  1) ^ ( (b & 0x80) != 0 ? RS_GF_FDBK : 0 )) & 0xFF;
++	uint32_t g3 =  (b >>  1) ^ ( (b & 0x01) != 0 ? (RS_GF_FDBK >> 1) : 0 ) ^ g2 ;
++	uint32_t result = (x << 8) ^ (g3 << 24) ^ (g2 << 16) ^ (g3 << 8) ^ b;
++	return result;
++}
++
++/**
++ * Use (12, 8) Reed-Solomon code over GF(256) to produce a key S-box
++ * 32-bit entity from two key material 32-bit entities.
++ *
++ * @param  k0  1st 32-bit entity.
++ * @param  k1  2nd 32-bit entity.
++ * @return  Remainder polynomial generated using RS code
++ */
++static uint32_t RS_MDS_Encode( uint32_t k0, uint32_t k1) {
++	uint32_t r = k1;
++	int i;
++	for (i = 0; i < 4; i++) // shift 1 byte at a time
++		r = RS_rem( r );
++	r ^= k0;
++	for (i = 0; i < 4; i++)
++		r = RS_rem( r );
++	return r;
++}
++
++static uint32_t F32( int k64Cnt, uint32_t x, uint32_t * k32 ) {
++	uint32_t b0 = b0(x);
++	uint32_t b1 = b1(x);
++	uint32_t b2 = b2(x);
++	uint32_t b3 = b3(x);
++	uint32_t k0 = k32[0];
++	uint32_t k1 = k32[1];
++	uint32_t k2 = k32[2];
++	uint32_t k3 = k32[3];
++
++	uint32_t result = 0;
++	switch (k64Cnt & 3) {
++	case 0:  // same as 4
++		b0 = (P[P_04][b0] & 0xFF) ^ b0(k3);
++		b1 = (P[P_14][b1] & 0xFF) ^ b1(k3);
++		b2 = (P[P_24][b2] & 0xFF) ^ b2(k3);
++		b3 = (P[P_34][b3] & 0xFF) ^ b3(k3);
++		break;
++	case 1:
++		break;
++	case 2:                             // 128-bit keys (optimize for this case)
++		b0 = (P[P_01][(P[P_02][b0] & 0xFF) ^ b0(k1)] & 0xFF) ^ b0(k0);
++		b1 = (P[P_11][(P[P_12][b1] & 0xFF) ^ b1(k1)] & 0xFF) ^ b1(k0);
++		b2 = (P[P_21][(P[P_22][b2] & 0xFF) ^ b2(k1)] & 0xFF) ^ b2(k0);
++		b3 = (P[P_31][(P[P_32][b3] & 0xFF) ^ b3(k1)] & 0xFF) ^ b3(k0);
++		break;
++	case 3:
++		b0 = (P[P_03][b0] & 0xFF) ^ b0(k2);
++		b1 = (P[P_13][b1] & 0xFF) ^ b1(k2);
++		b2 = (P[P_23][b2] & 0xFF) ^ b2(k2);
++		b3 = (P[P_33][b3] & 0xFF) ^ b3(k2);
++		break;
++	}
++	result=(Mx_X(b3) ^ (Mx_Y(b2) ^ ((b1) ^ Mx_Y(b0)))) << 0x18 ^ ((b0) ^ Mx_Y(b1) ^ Mx_X(b2) ^ Mx_X(b3) ^ (Mx_X(b0) ^ Mx_Y(b1) ^ Mx_Y(b2) ^ (b3)) << 8 ^ (Mx_Y(b0) ^ Mx_X(b1) ^ (b2) ^ Mx_Y(b3)) << 0x10);
++	return result;
++}
++
++#if 0
++static uint32_t Fe32( uint32_t *sBox, uint32_t x, int R ) {
++	return
++		sBox[        2*byte(x, R  )    ] ^
++		sBox[        2*byte(x, R+1) + 1] ^
++		sBox[0x200 + 2*byte(x, R+2)    ] ^
++		sBox[0x200 + 2*byte(x, R+3) + 1];
++}
++#endif
++
++/**
++ * Expand a user-supplied key material into a session key.
++ *
++ * @param key  The 64/128/192/256-bit user-key to use.
++ * @exception  InvalidKeyException  If the key is invalid.
++ */
++int twofish_setkey(struct twofish_ctx* ctx, uint8_t * key, int length) {
++	if (key == NULL || length <= 0){
++		printf("Empty key\n");
++		return -1;
++	}
++	if (length > TWOFISH_MAX_KEY_LENGHT || (length % 8) != 0){
++		printf("Incorrect key length\n");
++		return -1;
++	}
++	memset((void*)ctx, 0, sizeof(struct twofish_ctx));
++
++	ctx->key_length = length;
++	memcpy(ctx->key, key, length);
++
++	int k64Cnt = length / 8;
++	int subkeyCnt = ROUND_SUBKEYS + 2*ROUNDS;
++	uint32_t *sBoxKey = ctx->sBoxKey;
++	uint32_t k32e[4] = {0}; // even 32-bit entities
++	uint32_t k32o[4] = {0}; // odd 32-bit entities
++
++	//
++	// split user key material into even and odd 32-bit entities and
++	// compute S-box keys using (12, 8) Reed-Solomon code over GF(256)
++	//
++	
++	int i, j, offset = 0;
++	for (i = 0, j = k64Cnt-1; i < 4 && offset < length; i++, j--) {
++		k32e[i] = getIntLSBO(key, offset);
++		offset += 4;
++		k32o[i] = getIntLSBO(key, offset);
++		offset += 4;
++		sBoxKey[j] = RS_MDS_Encode( k32e[i], k32o[i] ); // reverse order
++	}
++
++	// compute the round decryption subkeys for PHT. these same subkeys
++	// will be used in encryption but will be applied in reverse order.
++	uint32_t q, A, B;
++	uint32_t *subKeys = ctx->subKeys;
++	for (i = q = 0; i < subkeyCnt/2; i++, q += SK_STEP) {
++		A = F32( k64Cnt, q        , k32e ); // A uses even key entities
++		B = F32( k64Cnt, q+SK_BUMP, k32o ); // B uses odd  key entities
++		B = B << 8 | B >> 24;
++		A += B;
++		subKeys[2*i    ] = A;               // combine with a PHT
++		A += B;
++		subKeys[2*i + 1] = A << SK_ROTL | A >> (32-SK_ROTL);
++	}
++
++	//
++	// fully expand the table for speed
++	//
++	uint32_t k0 = sBoxKey[0];
++	uint32_t k1 = sBoxKey[1];
++	uint32_t k2 = sBoxKey[2];
++	uint32_t k3 = sBoxKey[3];
++	uint32_t b0, b1, b2, b3;
++	uint32_t *sBox = ctx->sBox;
++	for (i = 0; i < 256; i++) {
++		b0 = b1 = b2 = b3 = i;
++		switch (k64Cnt & 3) {
++		case 1:
++		    sBox[      2*i  ] = MDS[0][(P[P_01][b0] & 0xFF) ^ b0(k0)];
++		    sBox[      2*i+1] = MDS[1][(P[P_11][b1] & 0xFF) ^ b1(k0)];
++		    sBox[0x200+2*i  ] = MDS[2][(P[P_21][b2] & 0xFF) ^ b2(k0)];
++		    sBox[0x200+2*i+1] = MDS[3][(P[P_31][b3] & 0xFF) ^ b3(k0)];
++		    break;
++		case 0: // same as 4
++		    b0 = (P[P_04][b0] & 0xFF) ^ b0(k3);
++		    b1 = (P[P_14][b1] & 0xFF) ^ b1(k3);
++		    b2 = (P[P_24][b2] & 0xFF) ^ b2(k3);
++		    b3 = (P[P_34][b3] & 0xFF) ^ b3(k3); /* fallthrough */
++		case 3:
++		    b0 = (P[P_03][b0] & 0xFF) ^ b0(k2);
++		    b1 = (P[P_13][b1] & 0xFF) ^ b1(k2);
++		    b2 = (P[P_23][b2] & 0xFF) ^ b2(k2);
++		    b3 = (P[P_33][b3] & 0xFF) ^ b3(k2); /* fallthrough */
++		case 2: // 128-bit keys
++		    sBox[      2*i  ] = MDS[0][(P[P_01][(P[P_02][b0] & 0xFF) ^ b0(k1)] & 0xFF) ^ b0(k0)];
++		    sBox[      2*i+1] = MDS[1][(P[P_11][(P[P_12][b1] & 0xFF) ^ b1(k1)] & 0xFF) ^ b1(k0)];
++		    sBox[0x200+2*i  ] = MDS[2][(P[P_21][(P[P_22][b2] & 0xFF) ^ b2(k1)] & 0xFF) ^ b2(k0)];
++		    sBox[0x200+2*i+1] = MDS[3][(P[P_31][(P[P_32][b3] & 0xFF) ^ b3(k1)] & 0xFF) ^ b3(k0)];
++		}
++	}
++	return 0;
++}
++
++/**
++ * Encrypt exactly one block of plaintext.
++ *
++ * @param in         The plaintext.
++ * @param inOffset   Index of in from which to start considering data.
++ * @param out        The ciphertext generated from a plaintext.
++ * @param outOffset  Index of out into which to start putting data.
++ */
++static void block_encrypt(struct twofish_ctx* ctx, uint8_t* in, int inOffset, uint8_t *out, int outOffset) {
++	uint32_t x0 = getIntLSBO(in, inOffset);
++	uint32_t x1 = getIntLSBO(in, inOffset + 4);
++	uint32_t x2 = getIntLSBO(in, inOffset + 8);
++	uint32_t x3 = getIntLSBO(in, inOffset + 12);
++
++	uint32_t *subKeys = ctx->subKeys;
++	uint32_t *sBoxKey = ctx->sBoxKey;
++
++	x0 ^= subKeys[INPUT_WHITEN    ];
++	x1 ^= subKeys[INPUT_WHITEN + 1];
++	x2 ^= subKeys[INPUT_WHITEN + 2];
++	x3 ^= subKeys[INPUT_WHITEN + 3];
++
++	uint32_t t0, t1;
++	int k = ROUND_SUBKEYS;
++	int R;
++	for (R = 0; R < ROUNDS; R += 2) {
++		t0 = F32( 4, x0, sBoxKey );
++		t1 = F32( 4, LR(x1, 8), sBoxKey );
++		x2 ^= t0 + t1 + subKeys[k++];
++		x2  = x2 >> 1 | x2 << 31;
++		x3  = x3 << 1 | x3 >> 31;
++		x3 ^= t0 + 2*t1 + subKeys[k++];
++
++		t0 = F32( 4, x2, sBoxKey );
++		t1 = F32( 4, LR(x3,8), sBoxKey );
++		x0 ^= t0 + t1 + subKeys[k++];
++		x0  = x0 >> 1 | x0 << 31;
++		x1  = x1 << 1 | x1 >> 31;
++		x1 ^= t0 + 2*t1 + subKeys[k++];
++	}
++
++	x2 ^= subKeys[OUTPUT_WHITEN    ];
++	x3 ^= subKeys[OUTPUT_WHITEN + 1];
++	x0 ^= subKeys[OUTPUT_WHITEN + 2];
++	x1 ^= subKeys[OUTPUT_WHITEN + 3];
++
++	putIntLSBO(x2, out, outOffset);
++	putIntLSBO(x3, out, outOffset + 4);
++	putIntLSBO(x0, out, outOffset + 8);
++	putIntLSBO(x1, out, outOffset + 12);
++}
++
++/**
++ * Decrypt exactly one block of ciphertext.
++ *
++ * @param in        The ciphertext.
++ * @param inOffset  Index of in from which to start considering data.
++ * @param out       The plaintext generated from a ciphertext.
++ * @param outOffset Index of out into which to start putting data.
++ */
++static void block_decrypt(struct twofish_ctx* ctx, uint8_t * in, int inOffset, uint8_t* out, int outOffset) {
++	uint32_t x2 = getIntLSBO(in, inOffset);
++	uint32_t x3 = getIntLSBO(in, inOffset + 4);
++	uint32_t x0 = getIntLSBO(in, inOffset + 8);
++	uint32_t x1 = getIntLSBO(in, inOffset + 12);
++
++	uint32_t *subKeys = ctx->subKeys;
++	uint32_t *sBoxKey = ctx->sBoxKey;
++
++	x2 ^= subKeys[OUTPUT_WHITEN    ];
++	x3 ^= subKeys[OUTPUT_WHITEN + 1];
++	x0 ^= subKeys[OUTPUT_WHITEN + 2];
++	x1 ^= subKeys[OUTPUT_WHITEN + 3];
++
++	int k = ROUND_SUBKEYS + 2*ROUNDS - 1;
++	uint32_t t0, t1;
++	int R;
++	for (R = 0; R < ROUNDS; R += 2) {
++		t0 = F32(4, x2, sBoxKey);
++		t1 = F32(4, LR(x3, 8), sBoxKey );
++		x1 ^= t0 + 2*t1 + subKeys[k--];
++		x1  = x1 >> 1 | x1 << 31;
++		x0  = x0 << 1 | x0 >> 31;
++		x0 ^= t0 + t1 + subKeys[k--];
++
++		t0 = F32(4, x0, sBoxKey);
++		t1 = F32(4, LR(x1, 8), sBoxKey );
++		x3 ^= t0 + 2*t1 + subKeys[k--];
++		x3  = x3 >> 1 | x3 << 31;
++		x2  = x2 << 1 | x2 >> 31;
++		x2 ^= t0 + t1 + subKeys[k--];
++	}
++
++	x0 ^= subKeys[INPUT_WHITEN    ];
++	x1 ^= subKeys[INPUT_WHITEN + 1];
++	x2 ^= subKeys[INPUT_WHITEN + 2];
++	x3 ^= subKeys[INPUT_WHITEN + 3];
++
++	putIntLSBO(x0, out, outOffset);
++	putIntLSBO(x1, out, outOffset + 4);
++	putIntLSBO(x2, out, outOffset + 8);
++	putIntLSBO(x3, out, outOffset + 12);
++}
++
++int twofish_encrypt(struct twofish_ctx* ctx, uint8_t *in, int len, uint8_t *out, int maxlen){
++	if(ctx == NULL)
++		return 0;
++	int aligned_len = (len + BLOCK_SIZE - 1) / BLOCK_SIZE * BLOCK_SIZE;
++	uint8_t *data = in;
++	if(len != aligned_len){
++		data = malloc(aligned_len);
++		if(data == NULL)
++			return 0;
++		memset(data, 0xFF, aligned_len);
++		memcpy(data, in, len);
++	}
++	int i,offset;
++	for(i = 0,offset = 0; i < (aligned_len / BLOCK_SIZE) && offset < maxlen; i++, offset += BLOCK_SIZE)
++		block_encrypt(ctx, data, i * BLOCK_SIZE, out, i * BLOCK_SIZE);
++	if(data != in)
++		free(data);
++	return offset;
++}
++
++int twofish_decrypt(struct twofish_ctx* ctx, uint8_t *in, int len, uint8_t *out, int maxlen){
++	if(ctx == NULL)
++		return 0;
++	int aligned_len = len / BLOCK_SIZE * BLOCK_SIZE;
++	uint8_t *data = in;
++	int i,offset;
++	for(i = 0,offset = 0; i < (aligned_len / BLOCK_SIZE) && offset < maxlen; i++, offset += BLOCK_SIZE)
++		block_decrypt(ctx, data, i * BLOCK_SIZE, out, i * BLOCK_SIZE);
++	return offset;
++}
++
++
++int twofish(uint8_t * data, int len, uint8_t *out, int maxlen, uint8_t * key, int keylen, int bDecrypt){
++	if( __twofish_ctx == NULL){
++		__twofish_ctx = malloc(sizeof(struct twofish_ctx));
++		if(__twofish_ctx == NULL)
++			return 0;
++		twofish_setkey(__twofish_ctx, key, keylen);
++	}
++	if(keylen != __twofish_ctx->key_length || memcmp(key,__twofish_ctx->key, keylen))
++		twofish_setkey(__twofish_ctx, key, keylen);
++	int result = 0;
++	if(bDecrypt == TWOFISH_MODE_DECRYPT)
++		result = twofish_decrypt(__twofish_ctx, data, len, out, maxlen);
++	else
++		result = twofish_encrypt(__twofish_ctx, data, len, out, maxlen);
++	return result;
++}
++
+diff -Nur oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod/cscrypt/jet_twofish.h oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/cscrypt/jet_twofish.h
+--- oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod/cscrypt/jet_twofish.h	1970-01-01 01:00:00.000000000 +0100
++++ oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/cscrypt/jet_twofish.h	2022-12-31 13:55:28.417454505 +0100
+@@ -0,0 +1,41 @@
++#ifndef _TWOFISH_H_
++#define _TWOFISH_H_
++
++#include "stdint.h"
++#define u8 unsigned char
++#define u16 unsigned short int
++#define u32 unsigned int
++
++#define CRYPTO_TFM_REQ_MASK             0x000fff00
++#define CRYPTO_TFM_RES_MASK             0xfff00000
++
++#define CRYPTO_TFM_REQ_WEAK_KEY         0x00000100
++#define CRYPTO_TFM_REQ_MAY_SLEEP        0x00000200
++#define CRYPTO_TFM_REQ_MAY_BACKLOG      0x00000400
++#define CRYPTO_TFM_RES_WEAK_KEY         0x00100000
++#define CRYPTO_TFM_RES_BAD_KEY_LEN      0x00200000
++#define CRYPTO_TFM_RES_BAD_KEY_SCHED    0x00400000
++#define CRYPTO_TFM_RES_BAD_BLOCK_LEN    0x00800000
++#define CRYPTO_TFM_RES_BAD_FLAGS        0x01000000
++
++#define TWOFISH_MAX_KEY_LENGHT          32
++#define TWOFISH_MODE_ENCRYPT            0
++#define TWOFISH_MODE_DECRYPT            1
++
++struct twofish_ctx {  
++    uint32_t sBox[4*256];
++    uint32_t subKeys[40];
++    uint32_t sBoxKey[4];
++    uint8_t  key[TWOFISH_MAX_KEY_LENGHT];
++    uint8_t  key_length;
++}; 
++
++int twofish_setkey(struct twofish_ctx* ctx, uint8_t * key, int length);
++int twofish_encrypt(struct twofish_ctx* ctx, uint8_t *in, int len, uint8_t *out, int maxlen);
++int twofish_decrypt(struct twofish_ctx* ctx, uint8_t *in, int len, uint8_t *out, int maxlen);
++
++// bDecrypt & 0x7F == 0, encrypt
++// bDecrypt & 0x7F == 1, decrypt
++int twofish(uint8_t * data, int len, uint8_t *out, int maxlen, uint8_t * key, int keylen, int bDecrypt);
++
++#endif
+diff -Nur oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod/globals.h oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/globals.h
+--- oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod/globals.h	2022-12-31 13:48:08.800085989 +0100
++++ oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/globals.h	2022-12-31 13:55:28.485452861 +0100
+@@ -1740,6 +1740,21 @@
+ 	int8_t			ncd_proto;
+ 	int8_t			currenthops;					// number of hops (cccam & gbox)
+ 	int8_t			sh4_stb;						// to set sh4 type box used to identify sci type.
++	uint32_t		cas_version;
++#ifdef READER_TONGFANG
++	uint32_t		tongfang3_calibsn;
++	uint8_t			tongfang3_commkey[8];
++#endif
++#ifdef READER_JET
++	uint8_t			jet_vendor_key[32];
++	uint8_t			jet_root_key[8];
++	uint8_t			jet_service_key[8];
++	uint8_t			jet_derive_key[56];
++	uint8_t			jet_auth_key[10];
++	uint8_t			jet_authorize_id[8];
++	uint8_t			jet_fix_ecm;                   // for dvn jet ,ecm head is 0x50, this option indicate if fix it to 0x80 or 0x81.
++	uint8_t			jet_resync_vendorkey;
++#endif
+ #ifdef MODULE_CCCAM
+ 	char			cc_version[7];					// cccam version
+ 	char			cc_build[7];					// cccam build number
+@@ -2639,7 +2654,10 @@
+ static inline bool caid_is_betacrypt(uint16_t caid) { return caid >> 8 == 0x17; }
+ static inline bool caid_is_nagra(uint16_t caid) { return caid >> 8 == 0x18; }
+ static inline bool caid_is_bulcrypt(uint16_t caid) { return caid == 0x5581 || caid == 0x4AEE; }
+-static inline bool caid_is_dre(uint16_t caid) { return caid == 0x4AE0 || caid == 0x4AE1 || caid == 0x2710;}
++static inline bool caid_is_dre(uint16_t caid) { return caid == 0x4AE0 || caid == 0x4AE1 || caid == 0x2710; }
++static inline bool caid_is_streamguard(uint16_t caid) { return caid == 0x4AD2; }
++static inline bool caid_is_dvn(uint16_t caid) { return caid == 0x4A30; }
++static inline bool caid_is_tongfang(uint16_t caid) { return (caid == 0x4A02) || (caid >= 0x4B00 && caid <= 0x4BFF); }
+ const char *get_cardsystem_desc_by_caid(uint16_t caid);
+ 
+ #ifdef WITH_EMU
+diff -Nur oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod/Makefile oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/Makefile
+--- oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod/Makefile	2022-12-31 13:44:02.330046013 +0100
++++ oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/Makefile	2022-12-31 13:55:28.485452861 +0100
+@@ -242,6 +242,8 @@
+ SRC-$(CONFIG_LIB_BIGNUM) += cscrypt/bn_word.c
+ SRC-$(CONFIG_LIB_BIGNUM) += cscrypt/mem.c
+ SRC-$(CONFIG_LIB_DES) += cscrypt/des.c
++SRC-$(CONFIG_LIB_TWOFISH) += cscrypt/jet_twofish.c
++SRC-$(CONFIG_READER_JET) += cscrypt/jet_dh.c
+ SRC-$(CONFIG_LIB_IDEA) += cscrypt/i_cbc.c
+ SRC-$(CONFIG_LIB_IDEA) += cscrypt/i_ecb.c
+ SRC-$(CONFIG_LIB_IDEA) += cscrypt/i_skey.c
+@@ -360,6 +362,8 @@
+ SRC-$(CONFIG_READER_NAGRA_MERLIN) += reader-nagracak7.c
+ SRC-$(CONFIG_READER_SECA) += reader-seca.c
+ SRC-$(CONFIG_READER_TONGFANG) += reader-tongfang.c
++SRC-$(CONFIG_READER_STREAMGUARD) += reader-streamguard.c
++SRC-$(CONFIG_READER_JET) += reader-jet.c
+ SRC-$(CONFIG_READER_VIACCESS) += reader-viaccess.c
+ SRC-$(CONFIG_READER_VIDEOGUARD) += reader-videoguard-common.c
+ SRC-$(CONFIG_READER_VIDEOGUARD) += reader-videoguard1.c
+diff -Nur oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod/module-cccam.c oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/module-cccam.c
+--- oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod/module-cccam.c	2022-12-30 18:45:36.268720884 +0100
++++ oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/module-cccam.c	2022-12-31 13:55:28.481452958 +0100
+@@ -1344,7 +1344,7 @@
+ 	//		//Place here your own adjustments!
+ 	//}
+ 
+-	if(caid_is_bulcrypt(caid))
++	if(caid_is_bulcrypt(caid) || caid_is_streamguard(caid) || caid_is_tongfang(caid) || caid_is_dvn(caid))
+ 	{
+ 		out[4] = in[0];
+ 		out[5] = in[1];
+@@ -1380,7 +1380,7 @@
+ 	//		//Place here your own adjustments!
+ 	//}
+ 
+-	if(caid_is_bulcrypt(caid))
++	if(caid_is_bulcrypt(caid) || caid_is_streamguard(caid) || caid_is_tongfang(caid) || caid_is_dvn(caid))
+ 	{
+ 		out[0] = in[4];
+ 		out[1] = in[5];
+diff -Nur oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod/module-webif.c oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/module-webif.c
+--- oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod/module-webif.c	2022-12-31 13:51:12.039654752 +0100
++++ oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/module-webif.c	2022-12-31 13:55:28.485452861 +0100
+@@ -3214,6 +3214,21 @@
+ 	if(rdr->detect_seca_nagra_tunneled_card)
+ 		{ tpl_addVar(vars, TPLADD, "NAGRADETECTSECACARDCHECKED", "checked"); }
+ 
++#ifdef READER_TONGFANG
++	if(rdr->tongfang3_calibsn)
++		{ tpl_printf(vars, TPLADD, "TONGFANGCALIBSN", "%08X", rdr->tongfang3_calibsn); }
++
++#endif
++#ifdef READER_JET
++	for(i = 0; (size_t)i < sizeof(rdr->jet_authorize_id) && rdr->jet_authorize_id[i] == 0; i++);
++	if((size_t)i <  sizeof(rdr->jet_authorize_id))
++	{
++		for(i = 0; (size_t)i <  sizeof(rdr->jet_authorize_id) ; i++)
++			{ tpl_printf(vars, TPLAPPEND, "JETAUTHORIZEID", "%02X", rdr->jet_authorize_id[i]); }
++	}
++	tpl_addVar(vars, TPLADD, "JETFIXECM", (rdr->jet_fix_ecm == 1) ? "checked" : "");
++#endif
++
+ #ifdef MODULE_CCCAM
+ 	tpl_printf(vars, TPLADD, "CCCMAXHOPS",   "%d", rdr->cc_maxhops);
+ 	tpl_printf(vars, TPLADD, "CCCMINDOWN",   "%d", rdr->cc_mindown);
+diff -Nur oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod/oscam.c oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/oscam.c
+--- oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod/oscam.c	2022-12-31 13:44:02.282047174 +0100
++++ oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/oscam.c	2022-12-31 13:55:28.481452958 +0100
+@@ -475,6 +475,8 @@
+ 		write_readerconf(READER_VIDEOGUARD, "NDS Videoguard");
+ 		write_readerconf(READER_DRE, "DRE Crypt");
+ 		write_readerconf(READER_TONGFANG, "TONGFANG");
++		write_readerconf(READER_STREAMGUARD, "StreamGuard");
++		write_readerconf(READER_JET, "Jet");
+ 		write_readerconf(READER_BULCRYPT, "Bulcrypt");
+ 		write_readerconf(READER_GRIFFIN, "Griffin");
+ 		write_readerconf(READER_DGCRYPT, "DGCrypt");
+@@ -536,6 +538,8 @@
+ 		report_emm_support(READER_VIDEOGUARD, "NDS Videoguard");
+ 		report_emm_support(READER_DRE, "DRE Crypt");
+ 		report_emm_support(READER_TONGFANG, "TONGFANG");
++		report_emm_support(READER_STREAMGUARD, "STREAMGUARD");
++		report_emm_support(READER_JET, "JET");
+ 		report_emm_support(READER_BULCRYPT, "Bulcrypt");
+ 		report_emm_support(READER_GRIFFIN, "Griffin");
+ 		report_emm_support(READER_DGCRYPT, "DGCrypt");
+@@ -1606,6 +1610,12 @@
+ #ifdef READER_TONGFANG
+ 	&reader_tongfang,
+ #endif
++#ifdef READER_STREAMGUARD
++	&reader_streamguard,
++#endif
++#ifdef READER_JET
++	&reader_jet,
++#endif
+ #ifdef READER_BULCRYPT
+ 	&reader_bulcrypt,
+ #endif
+diff -Nur oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod/oscam-config-reader.c oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/oscam-config-reader.c
+--- oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod/oscam-config-reader.c	2022-12-31 12:28:54.506659951 +0100
++++ oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/oscam-config-reader.c	2022-12-31 13:55:28.457453538 +0100
+@@ -232,6 +232,55 @@
+ 		{ fprintf_conf(f, token, "\n"); }
+ }
+ 
++#ifdef READER_JET
++static void jet_authorize_id_fn(const char *token, char *value, void *setting, FILE *f)
++{
++	struct s_reader *rdr = setting;
++	if(value)
++	{
++		int32_t len = strlen(value);
++		if(len != 16)
++		{
++			memset(rdr->jet_authorize_id, 0, sizeof(rdr->jet_authorize_id));
++		}
++		else
++		{
++			if(key_atob_l(value, rdr->jet_authorize_id, len))
++			{
++				fprintf(stderr, "reader jet authoriz id parse error, %s=%s\n", token, value);
++				memset(rdr->jet_authorize_id, 0, sizeof(rdr->jet_authorize_id));
++			}
++		}
++		return;
++	}
++	size_t i;
++	for(i = 0; i < sizeof(rdr->jet_authorize_id) && rdr->jet_authorize_id[i] == 0; i++);
++	if( i < sizeof(rdr->jet_authorize_id))
++	{
++		char tmp[17];
++		fprintf_conf(f, "jet_authorize_id", "%s\n", cs_hexdump(0, rdr->jet_authorize_id, sizeof(rdr->jet_authorize_id), tmp, sizeof(tmp)));
++	}
++	else if(cfg.http_full_cfg)
++		{ fprintf_conf(f, token, "\n"); }
++}
++#endif
++
++#ifdef READER_TONGFANG
++static void tongfang3_calibsn_fn(const char *token, char *value, void *setting, FILE *f)
++{
++	struct s_reader *rdr = setting;
++	if(value)
++	{
++		rdr->tongfang3_calibsn = strlen(value) ? a2i(value, 4) : 0;
++		return;
++	}
++	if(rdr->tongfang3_calibsn)
++		fprintf_conf(f, token, "%08X\n", rdr->tongfang3_calibsn);
++	else if(cfg.http_full_cfg)
++		{ fprintf_conf(f, token, "\n"); }
++}
++#endif
++
+ static void cwpkkey_fn(const char *token, char *value, void *setting, FILE *f)
+ {
+ 	struct s_reader *rdr = setting;
+@@ -1752,6 +1801,14 @@
+ 	DEF_OPT_FUNC("caid"                           , OFS(ctab),                            reader_caid_fn),
+ 	DEF_OPT_FUNC("atr"                            , 0,                                    atr_fn),
+ 	DEF_OPT_FUNC("boxid"                          , 0,                                    boxid_fn),
++#ifdef READER_TONGFANG
++	DEF_OPT_FUNC("tongfang3_calibsn"    , 0,                            tongfang3_calibsn_fn),
++#endif
++#ifdef READER_JET
++	DEF_OPT_FUNC("jet_authorize_id"     , 0,                            jet_authorize_id_fn),
++	DEF_OPT_INT8("jet_fix_ecm"          , OFS(jet_fix_ecm),             0),
++	DEF_OPT_INT8("jet_resync_vendorkey" , OFS(jet_resync_vendorkey),    0),
++#endif
+ 	DEF_OPT_FUNC("boxkey"                         , 0,                                    boxkey_fn),
+ 	DEF_OPT_FUNC("rsakey"                         , 0,                                    rsakey_fn),
+ 	DEF_OPT_FUNC("cwpkkey"                        , 0,                                    cwpkkey_fn),
+diff -Nur oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod/reader-jet.c oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/reader-jet.c
+--- oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod/reader-jet.c	1970-01-01 01:00:00.000000000 +0100
++++ oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/reader-jet.c	2022-12-31 13:55:28.457453538 +0100
+@@ -0,0 +1,668 @@
++#include "globals.h"
++#ifdef READER_JET
++#include "oscam-time.h"
++#include "reader-common.h"
++#include "cscrypt/des.h"
++#include "cscrypt/jet_twofish.h"
++#include "cscrypt/jet_dh.h"
++
++#define CRC16 0x8005
++static const uint8_t vendor_key[32] = {0x54, 0xF5, 0x53, 0x12, 0xEA, 0xD4, 0xEC, 0x03, 0x28, 0x60, 0x80, 0x94, 0xD6, 0xC4, 0x3A, 0x48, 
++                                         0x43, 0x71, 0x28, 0x94, 0xF4, 0xE3, 0xAB, 0xC7, 0x36, 0x59, 0x17, 0x8E, 0xCC, 0x6D, 0xA0, 0x9B};
++static uint8_t boxkey[32];
++
++#define jet_write_cmd(reader, cmd, len, ins, title) \
++ do { \
++	uint8_t __cmd_buf[256];\
++	uint8_t __cmd_tmp[256];\
++	memset(__cmd_buf, 0, sizeof(__cmd_buf));\
++	memcpy(__cmd_buf, cmd, len);\
++	uint16_t crc=calc_crc16(__cmd_buf, len);\
++	__cmd_buf[len] = crc >> 8;\
++	__cmd_buf[len + 1] = crc & 0xFF;\
++	rdr_log_dump_dbg(reader, D_DEVICE, __cmd_buf, len + 2, "%s cmd :", title);\
++	if(!jet_encrypt(reader, ins, __cmd_buf, len + 2, __cmd_tmp, sizeof(__cmd_tmp))){\
++		rdr_log(reader, "error: %s failed... (encrypt cmd failed.)", title);\
++		return ERROR;\
++	}\
++	rdr_log_dump_dbg(reader, D_DEVICE, __cmd_tmp, __cmd_tmp[4] + 7, "%s cmd(encrypt) :", title);\
++	write_cmd(__cmd_tmp, __cmd_tmp + 5);\
++	if(cta_res[cta_lr - 2] != 0x90 || cta_res[cta_lr - 1] != 0x00){\
++		rdr_log(reader, "error: %s failed... ", title);\
++		return ERROR;\
++	}\
++  } while (0)
++
++#define jet_write_cmd_hold(reader, cmd, len, ins, title) \
++ do { \
++	uint8_t __cmd_buf[256];\
++	uint8_t __cmd_tmp[256];\
++	memset(__cmd_buf, 0, sizeof(__cmd_buf));\
++	memcpy(__cmd_buf, cmd, len);\
++	uint16_t crc=calc_crc16(__cmd_buf, len);\
++	__cmd_buf[len] = crc >> 8;\
++	__cmd_buf[len + 1] = crc & 0xFF;\
++	rdr_log_dump_dbg(reader, D_DEVICE, __cmd_buf, len + 2, "%s cmd :", title);\
++	if(jet_encrypt(reader, ins, __cmd_buf, len + 2, __cmd_tmp, sizeof(__cmd_tmp))){\
++		rdr_log_dump_dbg(reader, D_DEVICE, __cmd_tmp, __cmd_tmp[4] + 7, "%s cmd(encrypt) :",title);\
++		write_cmd(__cmd_tmp, __cmd_tmp + 5);\
++		if(cta_res[cta_lr - 2] != 0x90 || cta_res[cta_lr - 1] != 0x00){\
++			rdr_log(reader, "warning: %s failed... ", title);\
++		}\
++	}\
++	else \
++		rdr_log(reader, "warning: %s failed... (encrypt cmd failed.)", title);\
++  } while (0)
++
++static const uint16_t crc16_table[256]={
++    0x0000, 0xC0C1, 0xC181, 0x0140, 0xC301, 0x03C0, 0x0280, 0xC241,
++    0xC601, 0x06C0, 0x0780, 0xC741, 0x0500, 0xC5C1, 0xC481, 0x0440,
++    0xCC01, 0x0CC0, 0x0D80, 0xCD41, 0x0F00, 0xCFC1, 0xCE81, 0x0E40,
++    0x0A00, 0xCAC1, 0xCB81, 0x0B40, 0xC901, 0x09C0, 0x0880, 0xC841,
++    0xD801, 0x18C0, 0x1980, 0xD941, 0x1B00, 0xDBC1, 0xDA81, 0x1A40,
++    0x1E00, 0xDEC1, 0xDF81, 0x1F40, 0xDD01, 0x1DC0, 0x1C80, 0xDC41,
++    0x1400, 0xD4C1, 0xD581, 0x1540, 0xD701, 0x17C0, 0x1680, 0xD641,
++    0xD201, 0x12C0, 0x1380, 0xD341, 0x1100, 0xD1C1, 0xD081, 0x1040,
++    0xF001, 0x30C0, 0x3180, 0xF141, 0x3300, 0xF3C1, 0xF281, 0x3240,
++    0x3600, 0xF6C1, 0xF781, 0x3740, 0xF501, 0x35C0, 0x3480, 0xF441,
++    0x3C00, 0xFCC1, 0xFD81, 0x3D40, 0xFF01, 0x3FC0, 0x3E80, 0xFE41,
++    0xFA01, 0x3AC0, 0x3B80, 0xFB41, 0x3900, 0xF9C1, 0xF881, 0x3840,
++    0x2800, 0xE8C1, 0xE981, 0x2940, 0xEB01, 0x2BC0, 0x2A80, 0xEA41,
++    0xEE01, 0x2EC0, 0x2F80, 0xEF41, 0x2D00, 0xEDC1, 0xEC81, 0x2C40,
++    0xE401, 0x24C0, 0x2580, 0xE541, 0x2700, 0xE7C1, 0xE681, 0x2640,
++    0x2200, 0xE2C1, 0xE381, 0x2340, 0xE101, 0x21C0, 0x2080, 0xE041,
++    0xA001, 0x60C0, 0x6180, 0xA141, 0x6300, 0xA3C1, 0xA281, 0x6240,
++    0x6600, 0xA6C1, 0xA781, 0x6740, 0xA501, 0x65C0, 0x6480, 0xA441,
++    0x6C00, 0xACC1, 0xAD81, 0x6D40, 0xAF01, 0x6FC0, 0x6E80, 0xAE41,
++    0xAA01, 0x6AC0, 0x6B80, 0xAB41, 0x6900, 0xA9C1, 0xA881, 0x6840,
++    0x7800, 0xB8C1, 0xB981, 0x7940, 0xBB01, 0x7BC0, 0x7A80, 0xBA41,
++    0xBE01, 0x7EC0, 0x7F80, 0xBF41, 0x7D00, 0xBDC1, 0xBC81, 0x7C40,
++    0xB401, 0x74C0, 0x7580, 0xB541, 0x7700, 0xB7C1, 0xB681, 0x7640,
++    0x7200, 0xB2C1, 0xB381, 0x7340, 0xB101, 0x71C0, 0x7080, 0xB041,
++    0x5000, 0x90C1, 0x9181, 0x5140, 0x9301, 0x53C0, 0x5280, 0x9241,
++    0x9601, 0x56C0, 0x5780, 0x9741, 0x5500, 0x95C1, 0x9481, 0x5440,
++    0x9C01, 0x5CC0, 0x5D80, 0x9D41, 0x5F00, 0x9FC1, 0x9E81, 0x5E40,
++    0x5A00, 0x9AC1, 0x9B81, 0x5B40, 0x9901, 0x59C0, 0x5880, 0x9841,
++    0x8801, 0x48C0, 0x4980, 0x8941, 0x4B00, 0x8BC1, 0x8A81, 0x4A40,
++    0x4E00, 0x8EC1, 0x8F81, 0x4F40, 0x8D01, 0x4DC0, 0x4C80, 0x8C41,
++    0x4400, 0x84C1, 0x8581, 0x4540, 0x8701, 0x47C0, 0x4680, 0x8641,
++    0x8201, 0x42C0, 0x4380, 0x8341, 0x4100, 0x81C1, 0x8081, 0x4040
++};
++
++
++static uint16_t calc_crc16(uint8_t* in, int len) {
++        int i = 0;
++	uint16_t crc_value = 0;
++        while(len >= 0) {
++            int j = len - 1;
++            if(len <= 0) {
++                return crc_value;
++            }
++
++            crc_value = ((uint16_t)(((crc_value & 0xFFFF) >> 8) ^ crc16_table[((0xFFFF & crc_value) ^ (in[i] & 0xFF)) & 0xFF]));
++            ++i;
++            len = j;
++        }
++
++        return crc_value;
++    }
++
++static size_t jet_encrypt(struct s_reader* reader,uint8_t ins, uint8_t *data, size_t len, uint8_t *out, size_t maxlen)
++{
++	uint8_t buf[256];
++	size_t i;
++	size_t aligned_len = (len + 15) / 16 * 16;
++	if((aligned_len + 7) > maxlen || (aligned_len + 7) > 256)
++		return 0;
++	memset(buf, 0xFF, aligned_len + 7);
++
++	out[0] = 0x84;
++	out[1] = ins;
++	out[2] = 0;
++	out[3] = 0;
++	out[4] = aligned_len & 0xFF;
++	memcpy(buf, data, len);
++	if(ins == 0x15){
++		twofish(buf,len, out + 5, maxlen, reader->jet_vendor_key, sizeof(reader->jet_vendor_key), TWOFISH_MODE_ENCRYPT);
++	}
++	else if(ins == 0x16){
++		for(i = 0; i < (aligned_len / 8); i++)
++			des_ecb_encrypt(buf + 8 * i, reader->jet_vendor_key + (i % 4) * 8, 8);
++		memcpy(out + 5, buf, aligned_len);
++	}
++	else
++		memcpy(out + 5, buf, aligned_len);
++
++	out[aligned_len + 5] = 0x90;
++	out[aligned_len + 6] = 0x00;
++
++	return (aligned_len + 7);
++}
++#if 0
++static size_t jet_decrypt(struct s_reader* reader, uint8_t *data,  uint8_t *out, size_t maxlen)
++{
++	uint8_t buf[256];
++	size_t i;
++	uint8_t ins;
++	int len = data[4];
++
++	memset(buf, 0, sizeof(buf));
++	memset(out, 0, maxlen);
++	ins = data[1];
++
++	memcpy(buf, data + 5, len);
++	if(ins == 0x15){
++		twofish(buf,len, out,maxlen,reader->jet_vendor_key,sizeof(vendor_key),TWOFISH_MODE_DECRYPT);
++	}
++	else if(ins == 0x16){
++		for(i = 0; i < (len / 8); i++)
++			des_ecb_encrypt(buf + 8 * i, reader->vendor_key + (i % 4) * 8, 8);
++		memcpy(out, buf, len);
++	}
++	else
++		memcpy(out, buf, len);
++	return (len);
++}
++#endif
++
++/*================================================================*/
++
++static int32_t cw_is_valid(uint8_t *cw) //returns 1 if cw_is_valid, returns 0 if cw is all zeros
++{
++	int32_t i;
++
++	for(i = 0; i < 16; i++)
++	{
++		if(cw[i] != 0)  //test if cw = 00
++		{
++			return OK;
++		}
++	}
++	return ERROR;
++}
++
++static int generate_derivekey(struct s_reader *reader, uint8_t * out, int len)
++{
++	uint8_t mask_key[32] = {0x16,0x23,0x6A,0x8A,0xF5,0xC2,0x8E,0x6,0x14,0x53,0xCF,0x6E,0x12,0xA1,0x2E,0xC5,
++				0xE4,0xF8,0x94,0x10,0x03,0x0A,0xD8,0xC6,0xD4,0x55,0xE8,0x4A,0xB6,0x22,0x09,0xAD};
++	uint8_t temp[128];
++	uint8_t derivekey[56]={0x59, 0x32, 0x00, 0x00};
++	int i;
++
++	if(len < (int)sizeof(derivekey))
++		return 0;
++	memset(temp, 0 , sizeof(temp));
++	memcpy(temp + 56, mask_key, sizeof(mask_key));
++	memcpy(temp + 56 + sizeof(mask_key), reader->hexserial, 8);
++	memcpy(temp + 56 + sizeof(mask_key) + 8, reader->jet_root_key, 8);
++	temp[12] = temp[100] ^ temp[92];
++	temp[16] = temp[102] ^ temp[94];
++	temp[20] = temp[97];
++	temp[32] = temp[96] ^ temp[88];
++	temp[36] = temp[97] ^ temp[89];
++	temp[40] = temp[98] ^ temp[90];
++	temp[44] = temp[99] ^ temp[91];
++	temp[48] = temp[101] ^ temp[93];
++	temp[52] = temp[103];
++
++	memcpy(derivekey + 4, reader->jet_root_key, 8);
++	derivekey[12] = temp[32];
++	derivekey[13] = temp[36];
++	derivekey[14] = temp[40];
++	derivekey[15] = temp[44];
++	derivekey[16] = temp[12];
++	derivekey[17] = temp[48];
++	derivekey[18] = temp[16];
++	derivekey[19] = temp[52] ^ temp[95];
++
++	for(i = 0; i < 36; i++)
++		derivekey[20 + i] = temp[54 + i] ^ temp[ (i % 8) + 96];
++	uint16_t crc = calc_crc16(derivekey, 54);
++	derivekey[54] = crc >> 8;
++	derivekey[55] = crc & 0xFF;
++	memcpy(out, derivekey, sizeof(derivekey));
++	return sizeof(derivekey);
++}
++
++static int32_t jet_resync_vendorkey(struct s_reader *reader)
++{
++	int i;
++	uint8_t x[16], k1[32], X[32], buf[512];
++	uint8_t resync_vendorkey_cmd[108] = {0x11, 0x68, 0x00, 0x00};
++
++	srand((int32_t)time(0));
++	for(i = 0; i < 16; i++)
++	{
++		x[i] = rand();
++	}
++	DH_Public_Key_Gen(x, 16, X);
++	memset(resync_vendorkey_cmd + 4, 0, sizeof(resync_vendorkey_cmd) - 4);
++	memcpy(resync_vendorkey_cmd + 12, boxkey, sizeof(boxkey));
++	memcpy(resync_vendorkey_cmd + sizeof(boxkey), X, 32);
++	def_resp;
++	jet_write_cmd(reader, resync_vendorkey_cmd, sizeof(resync_vendorkey_cmd), 0x15, "resync vendorkey");
++	if(37 > twofish(cta_res + 5, cta_res[4], buf, sizeof(buf), reader->jet_vendor_key, sizeof(reader->jet_vendor_key), TWOFISH_MODE_DECRYPT))
++		return -1;
++	DH_Agree_Key_Gen(buf + 5, 32, x, 16, k1);
++	if(reader->cas_version > 52 && !memcmp(buf + 0x25, X, 32))
++		return -1;
++	memcpy(reader->jet_vendor_key, k1, sizeof(k1));
++	return 0;
++}
++
++static int32_t jet_card_init(struct s_reader *reader, ATR *newatr)
++{
++	uint8_t get_serial_cmd[37] = {0x21, 0x21, 0x00, 0x00, 0x00};
++	uint8_t get_key_cmd[6] = {0x58, 0x02, 0x00, 0x00, 0x00, 0x00};
++	uint8_t register_key_cmd[48] = {0x15, 0x2C, 0x00, 0x00};
++	uint8_t change_vendorkey_cmd[12] = {0x12, 0x08, 0x00, 0x00};
++	uint8_t pairing_cmd01[38] = {0x20, 0x22, 0x00, 0x00};
++	uint8_t pairing_cmd02[53] = {0x37, 0x31, 0x00, 0x00};
++	uint8_t confirm_box_cmd[55] = {0x93, 0x33, 0x00, 0x00, 0x00, 0x00};
++	uint8_t unknow_cmd1[39] = {0x71, 0x23, 0x00, 0x00, 0x04, 0x00};
++
++	get_hist;
++	def_resp;
++	uint8_t cmd_buf[256];
++	uint8_t temp[256];
++	uint8_t buf[256];
++	int i,len;
++	struct twofish_ctx ctx;
++
++	if((hist_size < 14) || (memcmp(hist,"FLASH ATR DVB", 13) && memcmp(hist, "DVN TECH", 8) != 0)) { return ERROR; }
++	reader->cas_version = (hist[12] - 0x30) * 10 + hist[13] - 0x30;
++
++	rdr_log(reader, "DVN Jetcas version %d.%d card detect",reader->cas_version / 10, reader->cas_version % 10);
++	reader->caid = 0x4A30;
++	reader->nprov = 1;
++	memset(reader->prid, 0x00, sizeof(reader->prid));
++
++	if(reader->boxkey_length == sizeof(boxkey))
++		memcpy(boxkey, reader->boxkey, sizeof(boxkey));
++	else
++		memset(boxkey, 0xEE, sizeof(boxkey));
++
++	if(reader->cas_version <= 52){
++		for(i = 0; i < 32; i++)
++			reader->jet_vendor_key[i] = i;
++	}
++	else
++		memcpy(reader->jet_vendor_key, vendor_key, sizeof(vendor_key));
++
++	// get serial step1
++	jet_write_cmd(reader, get_serial_cmd, sizeof(get_serial_cmd), 0xAA, "get serial step1");
++	memcpy(reader->hexserial, cta_res + 9, 8);
++	rdr_log_dump(reader, cta_res +9 , 8,  "serial step1,SN");
++
++	if(reader->cas_version >= 53){
++		//get root key
++		jet_write_cmd(reader, get_key_cmd, sizeof(get_key_cmd), 0xAA, "get rootkey");
++		memcpy(temp, cta_res + 5, cta_res[4]);
++		memset(temp + cta_res[4], 0, sizeof(temp) - cta_res[4]);
++		twofish_setkey(&ctx, reader->jet_vendor_key, sizeof(reader->jet_vendor_key));
++		twofish_decrypt(&ctx, temp, cta_res[4], buf, sizeof(buf));
++		memset(reader->jet_root_key, 0 ,sizeof(reader->jet_root_key));
++		memcpy(reader->jet_root_key, buf + 4, (cta_res[4] < sizeof(reader->jet_root_key)) ? cta_res[4] : sizeof(reader->jet_root_key));
++		rdr_log_dump_dbg(reader, D_DEVICE, reader->jet_root_key, sizeof(reader->jet_root_key), "root key");
++
++		//get derive key
++		memset(temp, 0, sizeof(temp));
++		if(!generate_derivekey(reader, temp, sizeof(temp))){
++			rdr_log(reader, "error: generate derivekey failed, buffer overflow!");
++			return ERROR;
++		}
++		//generate_derivekey has filled crc16. so call jet_write_cmd with len - 2.
++		jet_write_cmd(reader, temp, sizeof(reader->jet_derive_key) - 2, 0xAA, "get derivekey");
++		memcpy(reader->jet_derive_key, temp, sizeof(reader->jet_derive_key));
++		rdr_log_dump_dbg(reader, D_DEVICE, reader->jet_derive_key, sizeof(reader->jet_derive_key), "derive key");
++
++		//get auth key
++		memset(cmd_buf, 0, sizeof(cmd_buf));
++		memcpy(cmd_buf, get_key_cmd, sizeof(get_key_cmd));
++		memcpy(cmd_buf + 4, reader->jet_root_key, 2);
++		jet_write_cmd(reader, cmd_buf, sizeof(get_key_cmd), 0xAA, "get authkey");
++		memset(temp, 0, sizeof(temp));
++		memcpy(temp, cta_res, cta_res[4]);
++		twofish_decrypt(&ctx, temp, cta_res[4], buf, sizeof(buf));
++		memcpy(reader->jet_auth_key, buf + 4, 10);
++		rdr_log_dump_dbg(reader, D_DEVICE, reader->jet_auth_key, sizeof(reader->jet_auth_key), "auth key");
++
++		//register auth key
++		memcpy(register_key_cmd + 36, reader->jet_auth_key, 8);
++		register_key_cmd[42] = 0;
++		memcpy(register_key_cmd + 44, reader->jet_derive_key + 44, 4);
++		jet_write_cmd(reader, register_key_cmd, sizeof(register_key_cmd), 0x15, "register authkey");
++
++		//change vendor key
++		jet_write_cmd(reader, change_vendorkey_cmd, sizeof(change_vendorkey_cmd), 0x15, "change vendorkey");
++		memset(temp, 0, sizeof(temp));
++		memcpy(temp, cta_res + 5, cta_res[4]);
++		len = twofish_decrypt(&ctx, temp, cta_res[4], buf, sizeof(buf));
++		if(48 == len &&  buf[0] == 0x42 && buf[1] == 0x20){
++			memcpy(reader->jet_vendor_key, buf + 4, 32);
++			twofish_setkey(&ctx, reader->jet_vendor_key, sizeof(reader->jet_vendor_key));
++		}
++		else if(buf[0] != 0x40 || buf[1] != 0x05){
++			rdr_log_dump(reader, buf, len, "error: update vendor key failed, return data incorrect. returned data[%d]:",len);
++//			return ERROR;
++		}
++	}
++
++	//pairing step1
++	memcpy(pairing_cmd01 + 4, boxkey, sizeof(boxkey));
++	pairing_cmd01[36] = 0x00;
++	pairing_cmd01[37] = 0x01;
++	jet_write_cmd(reader, pairing_cmd01, sizeof(pairing_cmd01), 0x15, "pairing step 1");
++	memset(temp, 0, sizeof(temp));
++	memcpy(temp, cta_res + 5, cta_res[4]);
++	twofish_decrypt(&ctx, temp, cta_res[4], buf, sizeof(buf));
++	if(buf[0] != 0x41){
++		rdr_log(reader, "error: pairing step 1 failed(invalid data) ...");
++//		return ERROR;
++	}
++
++	//pairing step 2
++	memcpy(pairing_cmd02 + 4, boxkey, sizeof(boxkey));
++	pairing_cmd02[36] = 0x01;
++	for(i = 37;i < 45; i++)
++		pairing_cmd02[i] = 0x30;
++	if(reader->cas_version >= 5)
++		memcpy(pairing_cmd02 + 45, reader->jet_derive_key + 45, 8);
++	jet_write_cmd_hold(reader, pairing_cmd02, sizeof(pairing_cmd02), 0x15, "pairing step 2");
++
++	if(reader->cas_version <= 52){
++		for( i = 1; i <= 7; i++){
++			memcpy(cmd_buf, confirm_box_cmd, sizeof(confirm_box_cmd));
++			cmd_buf[0] = 0x38;
++			cmd_buf[4] = i;
++			memcpy(confirm_box_cmd + 6, boxkey, sizeof(boxkey));
++			confirm_box_cmd[38] = 0x01;
++			for(i = 39;i < 47; i++)
++				confirm_box_cmd[i] = 0x30;
++			jet_write_cmd_hold(reader, confirm_box_cmd, sizeof(confirm_box_cmd), 0x15, "confirm box");
++		}
++
++	}
++	else{
++		//get service key
++		memset(cmd_buf, 0, sizeof(cmd_buf));
++		memcpy(cmd_buf, get_key_cmd, sizeof(get_key_cmd));
++		memcpy(cmd_buf + 4, boxkey, 2);
++		jet_write_cmd(reader, cmd_buf, sizeof(get_key_cmd), 0xAA, "get service key");
++		memset(temp, 0, sizeof(temp));
++		memcpy(temp, cta_res + 5, cta_res[4]);
++		twofish_decrypt(&ctx, temp, cta_res[4], buf, sizeof(buf));
++		memcpy(reader->jet_service_key, buf + 4, 8);
++		reader->jet_service_key[3] += reader->jet_service_key[1];
++		rdr_log_dump_dbg(reader, D_DEVICE, reader->jet_service_key, sizeof(reader->jet_service_key), "service key");
++
++		//register service key
++		memset(cmd_buf, 0, sizeof(cmd_buf));
++		memcpy(cmd_buf, register_key_cmd, sizeof(register_key_cmd));
++		memcpy(cmd_buf + 4, boxkey, sizeof(boxkey));
++		memcpy(cmd_buf + 36, reader->jet_service_key, 8);
++		memcpy(cmd_buf + 44, reader->jet_derive_key + 44, 4);
++		cmd_buf[44] = 0x30;
++		jet_write_cmd(reader, cmd_buf, sizeof(register_key_cmd), 0x15, "register service key");
++
++		//confirm box 1
++		confirm_box_cmd[4] = 0x0F;
++		memcpy(confirm_box_cmd + 6, boxkey, sizeof(boxkey));
++		confirm_box_cmd[38] = 0x01;
++		for(i = 39;i < 47; i++)
++			confirm_box_cmd[i] = 0x30;
++		memcpy(confirm_box_cmd + 47, reader->jet_derive_key + 47, 8);
++		jet_write_cmd(reader, confirm_box_cmd, sizeof(confirm_box_cmd), 0x15, "confirm box step 1");
++	}
++
++	//unknow cmd 1
++	memcpy(unknow_cmd1 + 7, boxkey, sizeof(boxkey));
++	jet_write_cmd_hold(reader, unknow_cmd1, sizeof(unknow_cmd1), 0x15, "unknow_cmd1");
++
++	//update card serial
++	get_serial_cmd[4] = 0x01;
++	memcpy(get_serial_cmd + 5, boxkey, sizeof(boxkey));
++	jet_write_cmd_hold(reader, get_serial_cmd, sizeof(get_serial_cmd), 0xAA, "update serial");
++	memset(temp, 0, sizeof(temp));
++	memcpy(temp, cta_res + 5, cta_res[4]);
++	twofish_decrypt(&ctx, temp, cta_res[4], buf, sizeof(buf));
++	memcpy(reader->hexserial, buf + 4, 8);
++
++	if(reader->cas_version >= 53){
++		//confirm box 2
++		confirm_box_cmd[4] = 0x10;
++		jet_write_cmd_hold(reader, confirm_box_cmd, sizeof(confirm_box_cmd), 0x15, "confirm box step 2");
++
++		//confirm box 3
++		confirm_box_cmd[4] = 0x0E;
++		jet_write_cmd_hold(reader, confirm_box_cmd, sizeof(confirm_box_cmd), 0x15, "confirm box step 3");
++	}
++
++	rdr_log_sensitive(reader, "type: jet, caid: %04X, serial: %llu, hex serial: %08llX, boxkey: %s",
++			reader->caid, (unsigned long long)b2ll(8, reader->hexserial), (unsigned long long)b2ll(8, reader->hexserial),
++			cs_hexdump(0, boxkey, 32, (char*)buf, sizeof(buf)));
++
++	return OK;
++}
++
++
++static int32_t jet_do_ecm(struct s_reader *reader, const ECM_REQUEST *er, struct s_ecm_answer *ea)
++{
++	uint8_t cmd[256] = {0x00, 0xB2, 0x00, 0x00};
++	uint8_t temp[256] = {0};
++	uint8_t ecm[512] = {0};
++	int i, offset, len;
++	int ecm_len;
++	char * tmp;
++	static uint32_t count_for_resync_vendorkey = 0;
++
++	def_resp;
++
++	if(cs_malloc(&tmp, er->ecmlen * 3 + 1))
++	{
++		rdr_log_dbg(reader, D_IFD, "ECM: %s", cs_hexdump(1, er->ecm, er->ecmlen, tmp, er->ecmlen * 3 + 1));
++		NULLFREE(tmp);
++	}
++	if((ecm_len = check_sct_len(er->ecm, 3)) < 0)
++	{
++		return ERROR;
++	}
++
++	memcpy(ecm, er->ecm, ecm_len);
++	len = ((ecm[1] & 0x0F) << 8) + ecm[2];
++	if(len < 0x8A){
++		rdr_log(reader, "error: invalid ecm data...");
++		return ERROR;
++	}
++
++	offset = 0;
++	if(reader->cas_version <= 52){
++		ecm_len = len - 13;
++		len = len + 25;
++	}
++	else{
++		if(ecm[2] == 0x8B)
++			offset = 2;
++		ecm_len = len - 13 + offset;
++		if(ecm[2] == 0x9E){
++			ecm[23] = ecm[23] ^ ecm[80] ^ ecm[90] ^ ecm[140];
++			ecm[28] = ecm[28] ^ 0x59;
++			ecm[41] = ecm[41] ^ 0xAE;
++			ecm_len = 128;
++		}
++		len = ecm_len + 54;
++	}
++
++	if(ecm[8 - offset] == 4)
++		cmd[0] = 0x1F;
++	else if(ecm[8 - offset] == 3)
++		cmd[0] = 0x1E;
++	else if(reader->cas_version >= 5 && (ecm[8 - offset] & 0x7F) == 4 && ecm[2] == 0x9E)
++		cmd[0] = 0x1F;
++	else
++		cmd[0] = 0x1B;
++
++	if(reader->cas_version <= 52)
++		cmd[1] = 0xA2;
++	else
++		cmd[1] = 0xB2;
++
++	memcpy(cmd + 4, ecm + 12 - offset, ecm_len);
++	memcpy(cmd + 4 + ecm_len, boxkey, sizeof(boxkey));
++	cmd[ecm_len + 36] = ecm[10 - offset] ^ ecm[138 - offset];
++	cmd[ecm_len + 37] = ecm[11 - offset] ^ ecm[139 - offset];
++	if(reader->cas_version >= 5)
++		memcpy(cmd + ecm_len + 38, reader->jet_service_key, 8);
++	jet_write_cmd(reader, cmd, len, 0x16, "parse ecm");
++	if(cta_lr < 27){
++			rdr_log(reader, "error: get cw failed...(response data too short.)");
++			return ERROR;
++	}
++
++	memset(temp, 0, sizeof(temp));
++	memcpy(temp, cta_res, cta_res[4] + 5);
++	for(i = 0; i < (cta_res[4] / 8); i++)
++		des_ecb_decrypt(temp + 5 + 8 * i, reader->jet_vendor_key + (i % 4) * 8, 8);
++	if(temp[9] == 0xFF){
++		rdr_log(reader, "error: invalid cw data... (cw[9]=0xFF)");
++		return ERROR;
++	}
++	memcpy(ea->cw, temp + 11, 16);
++	if(ERROR == cw_is_valid(ea->cw)){
++		rdr_log(reader, "error: invalid cw data... (all zero)");
++		return ERROR;
++	}
++
++	if(reader->cas_version >= 40 && reader->jet_resync_vendorkey){
++		count_for_resync_vendorkey++;
++		if(count_for_resync_vendorkey > 48)
++		{
++			jet_resync_vendorkey(reader);
++			count_for_resync_vendorkey = 0;
++		}
++	}
++	return OK;
++}
++
++static int32_t jet_get_emm_type(EMM_PACKET *ep, struct s_reader *UNUSED(reader))
++{
++	ep->type = UNKNOWN;
++	return 1;
++}
++
++static int32_t jet_do_emm(struct s_reader *reader, EMM_PACKET *ep)
++{
++	uint8_t cmd[256] = { 0x1A, 0xB2, 0x00, 0x00};
++
++	int len;
++	def_resp;
++
++	len = ((ep->emm[1] & 0x0F) << 8) + ep->emm[2];
++	if(len < 148){
++		rdr_log(reader, "error: emm data too short,(%d) < 148 ...", len);
++		return ERROR;
++	}
++
++	if(ep->emm[10] != reader->hexserial[7]){
++		rdr_log(reader, "error: do emm failed, card not match...");
++		return ERROR;
++	}
++
++	len -= 4;
++	memcpy(cmd + 4, ep->emm + 17, len);
++	memcpy(cmd + 4 + len, reader->boxkey, sizeof(boxkey));
++	memcpy(cmd + len + 40,ep->emm + 13, 4);
++	cmd[len + 44] = 0x14;
++	cmd[len + 46] = 0x01;
++	cmd[len + 47] = 0x01;
++	cmd[len + 52] = ep->emm[17] ^ ep->emm[145];
++	cmd[len + 53] = ep->emm[144] ^ ep->emm[146];
++	jet_write_cmd(reader, cmd, len + 54, 0x15, "parse emm");
++
++	return OK;
++}
++
++static int32_t jet_card_info(struct s_reader *reader)
++{
++	uint8_t get_entitlements_cmd1[38] = {0x31, 0x22, 0x00, 0x00, 0x00, 0x01};
++	uint8_t get_entitlements_cmd2[56] = {0x34, 0x34, 0x00, 0x00, 0x00, 0x01, 0x00};
++	uint8_t temp[256];
++	uint8_t buf[256];
++	int entitlements_count = 0;
++	int i,page=0;
++	def_resp;
++
++	struct twofish_ctx ctx;
++	twofish_setkey(&ctx, reader->jet_vendor_key, sizeof(reader->jet_vendor_key));
++
++	memcpy(get_entitlements_cmd1 + 6, boxkey, sizeof(boxkey));
++	jet_write_cmd(reader, get_entitlements_cmd1, sizeof(get_entitlements_cmd1), 0x15, "get entitlements info");
++	memset(temp, 0, sizeof(temp));
++	memcpy(temp, cta_res + 5, cta_res[4]);
++	twofish_decrypt(&ctx, temp, cta_res[4], buf, sizeof(buf));
++	if(buf[0] != 0x42 && buf[1] != 0x03){
++		rdr_log(reader, "error: get entitlements info failed(invalid data) ...");
++		return ERROR;
++	}
++	entitlements_count = buf[4];
++	memcpy(get_entitlements_cmd2 + 7, boxkey, sizeof(boxkey));
++	get_entitlements_cmd2[39] = 0x01;
++	for(i = 40; i < 48; i++)
++		get_entitlements_cmd2[i] = 0x09;
++	memcpy(get_entitlements_cmd2 + 48, reader->jet_authorize_id, 8);
++	for(i=0; i < entitlements_count; page++){
++		get_entitlements_cmd2[6] = page;
++		jet_write_cmd(reader, get_entitlements_cmd2, sizeof(get_entitlements_cmd2), 0x15, "get entitlements data");
++		memset(temp, 0, sizeof(temp));
++		memcpy(temp, cta_res + 5, cta_res[4]);
++		twofish_decrypt(&ctx, temp, cta_res[4], buf, sizeof(buf));
++		if(buf[0] != 0x42 && buf[1] != 0xC9){
++			rdr_log(reader, "ERROR: get entitlements data failed(invalid data) ...");
++			return ERROR;
++		}
++		int k;
++		for(k=0; k < buf[4]; k++, i++){
++			struct tm tm_start,tm_end;
++			time_t start_t,end_t;
++
++			uint64_t product_id=b2i(2, buf + 5 + k * 20);
++			memset(&tm_start, 0, sizeof(tm_start));
++			tm_start.tm_year = buf[5 + k * 20 + 4] * 100 + buf[5 + k * 20 + 5] - 1900;
++			tm_start.tm_mon  = buf[5 + k * 20 + 6] - 1;
++			tm_start.tm_mday = buf[5 + k * 20 + 7];
++
++			memset(&tm_end, 0, sizeof(tm_end));
++			tm_end.tm_year = buf[5 + k * 20 + 12] * 100 + buf[5 + k * 20 + 13] - 1900;
++			tm_end.tm_mon  = buf[5 + k * 20 + 14] - 1;
++			tm_end.tm_mday = buf[5 + k * 20 + 15];
++
++			start_t = cs_timegm(&tm_start);
++			end_t = cs_timegm(&tm_end);
++
++			char start_day[11], end_day[11];
++
++			strftime(start_day, sizeof(start_day), "%Y/%m/%d", &tm_start);
++			strftime(end_day, sizeof(end_day), "%Y/%m/%d", &tm_end);
++
++			if (!i)
++				rdr_log(reader, "entitlements for (%04X:%06X):",  reader->caid, 0);
++			rdr_log(reader, "    chid: %04"PRIX64"  date: %s - %s", product_id, start_day, end_day);
++				
++			cs_add_entitlement(reader, reader->caid, 0, product_id, 0, start_t, end_t, 0, 1);
++		}
++	}
++	return OK;
++}
++
++const struct s_cardsystem reader_jet =
++{
++	.desc         = "dvn",
++	.caids        = (uint16_t[]){ 0x4A30, 0 },
++	.do_emm       = jet_do_emm,
++	.do_ecm       = jet_do_ecm,
++	.card_info    = jet_card_info,
++	.card_init    = jet_card_init,
++	.get_emm_type = jet_get_emm_type,
++};
++
++#endif
+diff -Nur oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod/readers.h oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/readers.h
+--- oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod/readers.h	2022-12-30 18:34:30.780629470 +0100
++++ oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/readers.h	2022-12-31 13:55:28.481452958 +0100
+@@ -17,6 +17,8 @@
+ extern const struct s_cardsystem reader_bulcrypt;
+ extern const struct s_cardsystem reader_griffin;
+ extern const struct s_cardsystem reader_dgcrypt;
++extern const struct s_cardsystem reader_streamguard;
++extern const struct s_cardsystem reader_jet;
+ extern const struct s_cardsystem reader_emu;
+ 
+ #endif
+diff -Nur oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod/reader-streamguard.c oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/reader-streamguard.c
+--- oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod/reader-streamguard.c	1970-01-01 01:00:00.000000000 +0100
++++ oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/reader-streamguard.c	2022-12-31 13:55:28.489452764 +0100
+@@ -0,0 +1,765 @@
++#include "globals.h"
++#ifdef READER_STREAMGUARD
++#include "reader-common.h"
++#include "cscrypt/des.h"
++#include "oscam-time.h"
++#include <time.h>
++
++/************* custom md5 functions begin *************/
++typedef struct md5Context {
++	uint32_t buf[4];
++	uint32_t bits[2];
++	uint32_t in[16];
++} md5_CTX;
++
++
++/* The four core functions - F1 is optimized somewhat */
++
++/*#define F1(x, y, z) (x & y | ~x & z)*/
++#define F1(x, y, z) (z ^ (x & (y ^ z)))
++#define F2(x, y, z) F1(z, x, y)
++#define F3(x, y, z) (x ^ y ^ z)
++#define F4(x, y, z) (y ^ (x | ~z))
++
++inline static int64_t md5_FF(uint64_t w, uint64_t x, uint64_t y, uint64_t z, uint64_t i, uint64_t s, uint64_t data) {
++	int64_t v = F1(x, y, z) + i + data + w;
++	return (int64_t)((((uint32_t)v)) >> (((int)(32 - s))) | (((int32_t)v) << s)) + x;
++}
++
++inline static int64_t md5_GG(uint64_t w, uint64_t x, uint64_t y, uint64_t z, uint64_t i, uint64_t s, uint64_t data) {
++	int64_t v = F2(x, y, z) + i + data + w;
++	return (int64_t)((((uint32_t)v)) >> (((int)(32 - s))) | (((int32_t)v) << s)) + x;
++}
++
++inline static int64_t md5_HH(uint64_t w, uint64_t x, uint64_t y, uint64_t z, uint64_t i, uint64_t s, uint64_t data) {
++	int64_t v = F3(x, y, z) + i + data + w;
++	return (int64_t)((((uint32_t)v)) >> (((int)(32 - s))) | (((int32_t)v) << s)) + x;
++}
++
++inline static int64_t md5_II(uint64_t w, uint64_t x, uint64_t y, uint64_t z, uint64_t i, uint64_t s, uint64_t data) {
++	int64_t v = F4(x, y, z) + i + data + w;
++	return (int64_t)((((uint32_t)v)) >> (((int)(32 - s))) | (((int32_t)v) << s)) + x;
++}
++
++#if __BYTE_ORDER__==__ORDER_LITTLE_ENDIAN__
++#define byteReverse(a, b)
++#else
++static void byteReverse(uint8_t *buf, unsigned int longs)
++{
++	uint32_t t;
++	do
++	{
++		t = (uint32_t)((unsigned int)buf[3] << 8 | buf[2]) << 16 |
++			((unsigned int)buf[1] << 8 | buf[0]);
++		memcpy(buf, &t, 4);
++		buf += 4;
++	}
++	while(--longs);
++}
++#endif
++
++/*
++ * The core of the MD5 algorithm, this alters an existing MD5 hash to
++ * reflect the addition of 64 byte of new data.  MD5_Update blocks
++ * the data and converts bytes into longwords for this routine.
++ */
++static void md5_transform(uint32_t *buf,  uint32_t *in)
++{
++	int64_t a = buf[0];
++	int64_t b = buf[1];
++	int64_t c = buf[2];
++	int64_t d = buf[3];
++	int64_t m = 0L;
++
++        a = md5_FF(a, b, c, d, in[0], 7, 0xD76AA478L);
++        d = md5_FF(d, a, b, c, in[1], 12, 0xE8C7B756L);
++        c = md5_FF(c, d, a, b, in[2], 17, 0x242070DB);
++        m = md5_FF(b, c, d, a, in[3], 22, 0xC1BDCEEEL);
++
++        a = md5_FF(a, m, c, d, in[4], 7, 0xF57C0FAFL);
++        d = md5_FF(d, a, m, c, in[5], 12, 0x4787C62A);
++        b = md5_FF(c, d, a, m, in[6], 17, 0xA8304613L);
++        c = md5_FF(m, b, d, a, in[7], 22, 0xFD469501L);
++
++        a = md5_FF(a, c, b, d, in[8], 7, 0x698098D8);
++        d = md5_FF(d, a, c, b, in[9], 12, 0x8B44F7AFL);
++        b = md5_FF(b, d, a, c, in[10], 17, 0xFFFF5BB1L);
++        c = md5_FF(c, b, d, a, in[11], 22, 0x895CD7BEL);
++
++        a = md5_FF(a, c, b, d, in[12], 7, 0x6B901122);
++        d = md5_FF(d, a, c, b, in[13], 12, 0xFD987193L);
++        b = md5_FF(b, d, a, c, in[14], 17, 0xA679438EL);
++        m = md5_FF(c, b, d, a, in[15], 22, 0x49B40821);
++
++        a = md5_GG(a, m, b, d, in[1], 5, 0xF61E2562L);
++        c = md5_GG(d, a, m, b, in[6], 9, 0xC040B340L);
++        b = md5_GG(b, c, a, m, in[11], 14, 0x265E5A51);
++        m = md5_GG(m, b, c, a, in[0], 20, 0xE9B6C7AAL);
++
++        d = md5_GG(a, m, b, c, in[5], 5, 0xD62F105DL);
++        c = md5_GG(c, d, m, b, in[10], 9, 0x2441453);
++        b = md5_GG(b, c, d, m, in[15], 14, 0xD8A1E681L);
++        a = md5_GG(m, b, c, d, in[4], 20, 0xE7D3FBC8L);
++
++        d = md5_GG(d, a, b, c, in[9], 5, 0x21E1CDE6);
++        c = md5_GG(c, d, a, b, in[14], 9, 0xC33707D6L);
++        b = md5_GG(b, c, d, a, in[3], 14, 0xF4D50D87L);
++        a = md5_GG(a, b, c, d, in[8], 20, 0x455A14ED);
++
++        d = md5_GG(d, a, b, c, in[13], 5, 0xA9E3E905L);
++        c = md5_GG(c, d, a, b, in[2], 9, 0xFCEFA3F8L);
++        b = md5_GG(b, c, d, a, in[7], 14, 0x676F02D9);
++        a = md5_GG(a, b, c, d, in[12], 20, 0x8D2A4C8AL);
++
++        d = md5_HH(d, a, b, c, in[5], 4, 0xFFFA3942L);
++        c = md5_HH(c, d, a, b, in[8], 11, 0x8771F681L);
++        b = md5_HH(b, c, d, a, in[11], 16, 0x6D9D6122);
++        a = md5_HH(a, b, c, d, in[14], 23, 0xFDE5380CL);
++
++        d = md5_HH(d, a, b, c, in[1], 4, 0xA4BEEA44L);
++        c = md5_HH(c, d, a, b, in[4], 11, 0x4BDECFA9);
++        b = md5_HH(b, c, d, a, in[7], 16, 0xF6BB4B60L);
++        a = md5_HH(a, b, c, d, in[10], 23, 0xBEBFBC70L);
++
++        d = md5_HH(d, a, b, c, in[13], 4, 0x289B7EC6);
++        c = md5_HH(c, d, a, b, in[0], 11, 0xEAA127FAL);
++        b = md5_HH(b, c, d, a, in[3], 16, 0xD4EF3085L);
++        a = md5_HH(a, b, c, d, in[6], 23, 0x4881D05);
++
++        d = md5_HH(d, a, b, c, in[9], 4, 0xD9D4D039L);
++        c = md5_HH(c, d, a, b, in[12], 11, 0xE6DB99E5L);
++        b = md5_HH(b, c, d, a, in[15], 16, 0x1FA27CF8);
++        a = md5_HH(a, b, c, d, in[2], 23, 0xC4AC5665L);
++
++        d = md5_II(d, a, b, c, in[0], 6, 0xF4292244L);
++        c = md5_II(c, d, a, b, in[7], 10, 0x432AFF97);
++        b = md5_II(b, c, d, a, in[14], 15, 0xAB9423A7L);
++        a = md5_II(a, b, c, d, in[5], 21, 0xFC93A039L);
++
++        d = md5_II(d, a, b, c, in[12], 6, 0x655B59C3);
++        c = md5_II(c, d, a, b, in[3], 10, 0x8F0CCC92L);
++        b = md5_II(b, c, d, a, in[10], 15, 0xFFEFF47DL);
++        a = md5_II(a, b, c, d, in[1], 21, 0x85845DD1L);
++
++        d = md5_II(d, a, b, c, in[8], 6, 0x6FA87E4F);
++        c = md5_II(c, d, a, b, in[15], 10, 0xFE2CE6E0L);
++        b = md5_II(b, c, d, a, in[6], 15, 0xA3014314L);
++        a = md5_II(a, b, c, d, in[13], 21, 0x4E0811A1);
++
++        d = md5_II(d, a, b, c, in[4], 6, 0xF7537E82L);
++        c = md5_II(c, d, a, b, in[11], 10, 0xBD3AF235L);
++        b = md5_II(b, c, d, a, in[2], 15, 0x2AD7D2BB);
++        a = md5_II(a, b, c, d, in[9], 21, 0xEB86D391L);
++
++	buf[0] += d;
++	buf[1] += a;
++	buf[2] += b;
++	buf[3] += c;
++}
++
++void md5_init(md5_CTX *ctx)
++{
++	ctx->buf[0] = 0x67452301;
++	ctx->buf[1] = 0xefcdab89;
++	ctx->buf[2] = 0x98badcfe;
++	ctx->buf[3] = 0x10325476;
++
++	ctx->bits[0] = 0;
++	ctx->bits[1] = 0;
++
++	memset(ctx->in, 0, 64);
++}
++
++static void md5_update(md5_CTX *ctx, const uint8_t *buf, uint32_t len)
++{
++	uint32_t temp[16];
++	memset(temp, 0 ,sizeof(temp));
++
++	int32_t t = (ctx->bits[0] >> 3) & 0x3F;
++	ctx->bits[0] += (len << 3);
++	if (ctx->bits[0] < (len << 3))
++		ctx->bits[1] += 1L;
++	ctx->bits[1] += (len >> 29);
++	if ((int32_t)len >= 64 - t)
++	{
++		memcpy((uint8_t*)ctx->in + t, buf, 64 - t);
++		byteReverse((uint8_t*)ctx->in, 16);
++		md5_transform(ctx->buf,ctx->in);
++		t = 64 - t;
++		while (t + 64 <= (int32_t)len)
++		{
++			memcpy((uint8_t*)temp, buf + t, 64);
++			byteReverse((uint8_t*)temp, 16);
++			md5_transform(ctx->buf, temp);
++			t += 64;
++		}
++		memcpy((uint8_t*)ctx->in, buf + t, len - t);
++		byteReverse((uint8_t*)ctx->in, 16);
++		return;
++	}
++	memcpy((uint8_t*)ctx->in + t, buf, len);
++	byteReverse((uint8_t*)ctx->in, t + len);
++}
++
++static void md5_final(uint8_t *digest, md5_CTX *ctx)
++{
++	uint8_t temp[8]={0};
++	uint8_t padding[64];
++	memset(padding, 0, 64);
++	padding[0] = 0x80;
++	memcpy(temp, (uint8_t*)ctx->bits, 8);
++	byteReverse(temp, 2);
++
++	uint32_t count = (ctx->bits[0] >> 3) & 0x3f;
++	if(count < 56)
++		count = 56 - count;
++	else
++		count = 120 - count;
++	md5_update(ctx, padding, count);
++	md5_update(ctx, temp, 8);
++	memcpy(digest,(uint8_t*)ctx->buf, 16);
++	byteReverse((uint8_t*)ctx->buf, 16);
++}
++
++uint8_t *md5(const uint8_t *input, unsigned long len, uint8_t *output)
++{
++	md5_CTX ctx;
++	md5_init(&ctx);
++	md5_update(&ctx, input, len);
++	md5_final(output, &ctx);
++	memset(&ctx, 0, sizeof(ctx));
++	return output;
++}
++
++/*********** custom md5 function end ****************/
++
++static int32_t is_valid(uint8_t *buf, size_t len)
++{
++	size_t i;
++
++	for(i = 0; i < len; i++)
++	{
++		if(buf[i] != 0)
++		{
++			return OK;
++		}
++	}
++	return ERROR;
++}
++
++static void  decrypt_cw_ex(int32_t tag, int32_t a, int32_t b, int32_t c, uint8_t *data)
++{
++	uint8_t key1[16] = {0xB5, 0xD5, 0xE8, 0x8A, 0x09, 0x98, 0x5E, 0xD0, 0xDA, 0xEE, 0x3E, 0xC3, 0x30, 0xB9, 0xCA, 0x35};
++	uint8_t key2[16] = {0x5F, 0xE2, 0x76, 0xF8, 0x04, 0xCB, 0x5A, 0x24, 0x79, 0xF9, 0xC9, 0x7F, 0x23, 0x21, 0x45, 0x84};
++	uint8_t key3[16] = {0xE3, 0x78, 0xB9, 0x8C, 0x74, 0x55, 0xBC, 0xEE, 0x03, 0x85, 0xFD, 0xA0, 0x2A, 0x86, 0xEF, 0xAF};
++	uint8_t keybuf[22] = {0xCC,0x65,0xE0, 0xCB,0x60,0x62,0x06,0x33,0x87,0xE3,0xB5,0x2D,0x4B,0x12,0x90,0xD9,0x00,0x00,0x00,0x00,0x00,0x00};
++	uint8_t md5key[16];
++	uint8_t md5tmp[20];
++	uint8_t deskey1[8], deskey2[8];
++
++	if(tag != 0x120 && tag != 0x100 && tag != 0x10A && tag != 0x101 && tag != 0x47 && tag != 0x92 && tag == 0xDE)
++		return;
++
++	if(tag == 0x100 || tag == 0x92){
++		key1[15] = 0x37;
++		memcpy(keybuf,key1,sizeof(key1));
++	}
++	else if(tag == 0x101){
++		key2[15] = 0x87;
++		memcpy(keybuf,key2,sizeof(key2));
++	}
++	else if(tag == 0x47){
++		key3[15] = 0xB3;
++		memcpy(keybuf,key3,sizeof(key3));
++	}
++	keybuf[16] = (c >> 24) & 0xFF;
++	keybuf[17] = (a >> 8) & 0xFF;
++	keybuf[18] = (c >> 16) & 0xFF;
++	keybuf[19] = (c >> 8) & 0xFF;
++	keybuf[20] = c & 0xFF;
++	keybuf[21] = a & 0xFF;
++	md5(keybuf,22,md5tmp);
++
++	md5tmp[16] = (b >> 8)& 0xFF;
++	md5tmp[17] = b & 0xFF;
++	md5tmp[18] = (a >> 8) & 0xFF;
++	md5tmp[19] = a & 0xff;
++	md5(md5tmp,20,md5key);
++
++	//3des decrypt
++	memcpy(deskey1, md5key, 8);
++	memcpy(deskey2, md5key + 8, 8);
++	des_ecb_decrypt(data, deskey1, 16);  //decrypt
++	des_ecb_encrypt(data, deskey2, 16);  //crypt
++	des_ecb_decrypt(data, deskey1, 16);  //decrypt
++}
++
++static int32_t streamguard_read_data(struct s_reader *reader, uint8_t size, uint8_t *cta_res, uint16_t *status)
++{
++	static uint8_t read_data_cmd[]={0x00,0xc0,0x00,0x00,0xff};
++	uint16_t cta_lr;
++
++	read_data_cmd[4] = size;
++	write_cmd(read_data_cmd, NULL);
++
++	*status = (cta_res[cta_lr - 2] << 8) | cta_res[cta_lr - 1];
++
++	return(cta_lr - 2);
++}
++
++static int32_t streamguard_card_init(struct s_reader *reader, ATR* newatr)
++{
++	uint8_t get_ppua_cmd[7] = {0x00,0xa4,0x04,0x00,0x02,0x3f,0x00};
++	uint8_t get_serial_cmd[11] = {0x00,0xb2,0x00,0x05,0x06,0x00,0x01,0xff,0x00,0x01,0xff};
++	uint8_t begin_cmd2[5] = {0x00,0x84,0x00,0x00,0x08};
++	uint8_t begin_cmd3[11] = {0x00,0x20,0x04,0x02,0x06,0x12,0x34,0x56,0x78,0x00,0x00};
++	uint8_t begin_cmd4[5] = {0x00,0xFC,0x00,0x00,0x00};
++	uint8_t pairing_cmd[25] = {0x80,0x5A,0x00,0x00,0x10,0x36,0x9A,0xEE,0x31,0xB2,0xDA,0x94,
++				 0x3D,0xEF,0xBA,0x10,0x22,0x67,0xA5,0x1F,0xFB,0x3B,0x9E,0x1F,0xCB};
++	uint8_t confirm_pairing_cmd[9] = {0x80,0x5A,0x00,0x01,0x04,0x3B,0x9E,0x1F,0xCB};
++
++	uint8_t seed[] = {0x00,0x00,0x00,0x00,0x24,0x30,0x28,0x73,0x40,0x33,0x46,0x2C,0x6D,0x2E,0x7E,0x3B,0x3D,0x6E,0x3C,0x37};
++	uint8_t randkey[128]={0};
++	uint8_t key1[8], key2[8];
++	uint8_t data[257];
++	uint8_t boxID[4] = {0xff, 0xff, 0xff, 0xff};
++	uint8_t md5_key[16] = {0};
++
++	int32_t data_len = 0;
++	uint16_t status = 0;
++
++	def_resp;
++	get_atr;
++
++	//rdr_log(reader, "[reader-streamguard] StreamGuard atr_size:%d, atr[0]:%02x, atr[1]:%02x", atr_size, atr[0], atr[1]);
++
++	if ((atr_size != 4) || (atr[0] != 0x3b) || (atr[1] != 0x02)) return ERROR;
++
++	reader->caid = 0x4AD2;
++	if(reader->cas_version == 0)
++		reader->cas_version=3;	//new version
++
++	memset(reader->des_key, 0, sizeof(reader->des_key));
++
++	reader->nprov = 1;
++	memset(reader->prid, 0x00, sizeof(reader->prid));
++
++	rdr_log(reader, "[reader-streamguard] StreamGuard card detected");
++
++	write_cmd(get_ppua_cmd, get_ppua_cmd + 5);
++	if((cta_res[cta_lr - 2] != 0x90) || (cta_res[cta_lr - 1] != 0x00)){
++		rdr_log(reader, "error: init get ppua 1 failed.");
++		return ERROR;
++	}
++	get_ppua_cmd[5] = 0x4A;
++	write_cmd(get_ppua_cmd, get_ppua_cmd + 5);
++	if((cta_res[cta_lr - 2] != 0x90) || (cta_res[cta_lr - 1] != 0x00)){
++		rdr_log(reader, "error: init get ppua 2 failed.");
++		return ERROR;
++	}
++
++	if(reader->cas_version > 1){
++		write_cmd(begin_cmd2, begin_cmd2 + 5);
++		if((cta_res[cta_lr - 2] & 0xf0) == 0x60) {
++			data_len = streamguard_read_data(reader,cta_res[cta_lr - 1], data, &status);
++			if(data_len < 0){
++				rdr_log(reader, "error: init read data failed 1.");
++				return ERROR;
++			}
++		}
++		else{
++			rdr_log(reader, "error: init begin_cmd2 failed 1.");
++			return ERROR;
++		}
++	}
++
++	write_cmd(get_serial_cmd, get_serial_cmd + 5);
++	if((cta_res[cta_lr - 2] & 0xf0) != 0x60) {
++		rdr_log(reader, "error: init run get serial cmd failed.");
++		return ERROR;
++	}
++
++	data_len = streamguard_read_data(reader, cta_res[cta_lr - 1], data, &status);
++	if(status != 0x9000 || data_len < 0){
++		rdr_log(reader, "error: init read data failed for get serial.");
++		return ERROR;
++	}
++	memset(reader->hexserial, 0, 8);
++	memcpy(reader->hexserial + 2, data + 3, 4);
++
++	if(reader->cas_version > 1){
++		memcpy(seed,data + 3, 4);
++		md5(seed,sizeof(seed),md5_key);
++
++		write_cmd(begin_cmd2, begin_cmd2 + 5);
++
++		if((cta_res[cta_lr - 2] & 0xf0) != 0x60) {
++			rdr_log(reader, "error: init begin cmd2 failed.");
++			return ERROR;
++		}
++
++		data_len = streamguard_read_data(reader,cta_res[cta_lr - 1], data, &status);
++		if(data_len < 0){
++			rdr_log(reader, "error: init read data failed for begin cmd2.");
++			return ERROR;
++		}
++
++		write_cmd(begin_cmd3, begin_cmd3 + 5);
++		if((cta_res[cta_lr - 2] != 0x90) || (cta_res[cta_lr - 1] != 0x00)){
++			rdr_log(reader, "error: init begin cmd3 failed.");
++			return ERROR;
++		}
++
++		write_cmd(begin_cmd4, NULL);
++		if((cta_res[cta_lr - 2] & 0xF0) != 0x60){
++			rdr_log(reader, "error: init begin cmd4 failed.");
++			return ERROR;
++		}
++		data_len = streamguard_read_data(reader,cta_res[cta_lr - 1], data, &status);
++		if(data_len < 0){
++			rdr_log(reader, "error: init read data failed for begin cmd4.");
++			return ERROR;
++		}
++
++
++		memcpy(key1, md5_key, 8);
++		memcpy(key2, md5_key + 8, 8);
++		memcpy(reader->des_key,randkey,sizeof(reader->des_key));
++		if(reader->cas_version > 2){
++			des_ecb_encrypt(randkey, key1, 16);  //encrypt
++			des_ecb_decrypt(randkey, key2, 16);  //decrypt
++			des_ecb_encrypt(randkey, key1, 16);  //encrypt
++			memcpy(pairing_cmd + 5, randkey, 16);
++		}
++
++		if(reader->boxid){
++			pairing_cmd[4]=0x14;
++			boxID[0] = (reader->boxid>>24) & 0xFF;
++			boxID[1] = (reader->boxid>>16) & 0xFF;
++			boxID[2] = (reader->boxid>>8) & 0xFF;
++			boxID[3] = (reader->boxid) & 0xFF;
++			memcpy(pairing_cmd + 21, boxID,4);
++		}
++
++		write_cmd(pairing_cmd, pairing_cmd + 5);
++		if((cta_res[cta_lr - 2] & 0xf0) != 0x60) {
++			rdr_log(reader, "error: init pairing failed.");
++			return ERROR;
++		}
++		data_len = streamguard_read_data(reader,cta_res[cta_lr - 1], data, &status);
++		if(data_len < 0){
++			rdr_log(reader, "error: init read data failed for pairing.");
++			return ERROR;
++		}
++
++		if(reader->boxid){
++			memcpy(confirm_pairing_cmd + 5, boxID, 4);
++			write_cmd(confirm_pairing_cmd, confirm_pairing_cmd + 5);
++			if((cta_res[cta_lr - 2] & 0xf0) != 0x60) {
++				rdr_log(reader, "error: init confirm_pairing_cmd failed.");
++				return ERROR;
++			}
++			data_len = streamguard_read_data(reader,cta_res[cta_lr - 1], data, &status);
++			if(data_len < 0){
++				rdr_log(reader, "error: init read data failed for confirm_pairing_cmd.");
++				return ERROR;
++			}
++		}
++	}
++
++	rdr_log(reader, "type: StreamGuard, caid: %04X, serial: %llu, hex serial: %02x%02x%02x%02x",
++			reader->caid, (unsigned long long)b2ll(6, reader->hexserial), reader->hexserial[2],
++			reader->hexserial[3], reader->hexserial[4], reader->hexserial[5]);
++
++	return OK;
++}
++
++/*
++Example ecm:
++80 30 79 00 0C 76 66 BC 57 C4 4F 33 0B 7D B2 90
++95 9D 6F 0B 6D 40 4E 9A F1 13 03 40 12 7C B7 9D
++E1 70 71 20 C7 FB 35 B1 EC 32 02 5C 0C 7E 04 CC
++79 3D 84 4A AD DF DA DD 9E 4F E7 54 CF C0 17 2F
++84 A5 4E 75 B1 6D E9 95 BE 8B 17 4A 07 96 03 B6
++0E B7 7D 06 14 3A 2D 23 7F F8 BF 47 C4 70 F7 29
++62 8E 02 CB B0 4C 51 93 FB AD 41 25 52 3A 54 4A
++7B 58 FD 16 72 93 E9 A8 9B DA 23 25
++*/
++static int32_t streamguard_do_ecm(struct s_reader *reader, const ECM_REQUEST *er, struct s_ecm_answer *ea)
++{
++	uint8_t ecm_cmd[256] = {0x80,0x32,0x00,0x00,0x3C};
++	uint8_t data[256];
++	int32_t ecm_len;
++	int32_t i = 0;
++	int32_t write_len = 0;
++	def_resp;
++	int32_t read_size = 0;
++	int32_t data_len = 0;
++	uint16_t status = 0;
++	char *tmp;
++
++        if((ecm_len = check_sct_len(er->ecm, 3)) < 0)
++		{ return ERROR; }
++	if(cs_malloc(&tmp, ecm_len * 3 + 1)){
++		cs_debug_mask(D_IFD, "ECM: %s", cs_hexdump(1, er->ecm, ecm_len, tmp, ecm_len * 3 + 1));
++		//rdr_log_dump(reader, er->ecm, ecm_len,"ECM:");
++		free(tmp);
++	}
++
++	write_len = er->ecm[2] + 3;
++	ecm_cmd[4] = write_len;
++	memcpy(ecm_cmd + 5, er->ecm, write_len);
++	write_cmd(ecm_cmd, ecm_cmd + 5);
++	//rdr_log(reader, "result for send ecm_cmd,cta_lr=%d,status=0x%02X%02X",cta_lr,cta_res[cta_lr-2],cta_res[cta_lr-1]);
++
++	if ((cta_lr - 2) >= 2)
++	{
++		read_size = cta_res[1];
++	}
++	else
++	{
++		if((cta_res[cta_lr - 2] & 0xf0) == 0x60)
++		{
++			read_size = cta_res[cta_lr - 1];
++		}
++		else
++		{
++			rdr_log(reader, "error: write ecm cmd failed.");
++			return ERROR;
++		}
++	}
++
++	data_len = streamguard_read_data(reader, read_size, data, &status);
++
++	if(data_len <= 18){
++		rdr_log(reader, "error: card return cw data failed,request data len must > 18, return data len=%d.", data_len);
++		return ERROR;
++	}
++	uint16_t tag=0;
++	for(i = 0; i < (data_len - 1); i++)
++	{
++		if (reader->cas_version == 3 && data[i] == 0xB4 && data[i + 1] == 0x04)
++			tag = b2i(2, data + i + 4);
++;
++		if (data[i] == 0x83 && data[i + 1] == 0x16)
++		{
++			if(reader->cas_version <= 2 || data[i + 2] != 0 || data[i + 3] != 1)
++				break;
++		}
++	}
++
++	if (i >= data_len || (!is_valid(data + i, 8)) || (!is_valid(data + i + 8, 8))  )
++	{
++		rdr_log(reader, "error: not valid cw data...");
++		return ERROR;
++	}
++
++	if((er->ecm[0] == 0x80))
++	{
++		memcpy(ea->cw +  0, data + i + 6, 4);
++		memcpy(ea->cw +  4, data + i + 6 + 4 + 1, 4);
++		memcpy(ea->cw +  8, data + i + 6 + 8 + 1, 4);
++		memcpy(ea->cw + 12, data + i + 6 + 8 + 4 + 1 + 1, 4);
++	}
++	else
++	{
++		memcpy(ea->cw +  0, data + i + 6 + 8 + 1, 4);
++		memcpy(ea->cw +  4, data + i + 6 + 8 + 4 + 1 + 1, 4);
++		memcpy(ea->cw +  8, data + i + 6, 4);
++		memcpy(ea->cw + 12, data + i + 6 + 4 + 1, 4);
++	}
++
++	if(reader->cas_version == 1)
++		return OK;
++
++	if(((uint16_t)(ea->cw[0]) + (uint16_t)(ea->cw[1]) + (uint16_t)(ea->cw[2])) == (uint16_t)(ea->cw[3])
++	   && ((uint16_t)(ea->cw[4]) + (uint16_t)(ea->cw[5]) + (uint16_t)(ea->cw[6])) == (uint16_t)(ea->cw[7])
++	   && ((uint16_t)(ea->cw[8]) + (uint16_t)(ea->cw[9]) + (uint16_t)(ea->cw[10])) == (uint16_t)(ea->cw[11])
++	   && ((uint16_t)(ea->cw[12]) + (uint16_t)(ea->cw[13]) + (uint16_t)(ea->cw[14])) == (uint16_t)(ea->cw[15]))
++		return OK;
++
++	if((data[i + 5] & 0x10) != 0){
++		//3des decrypt
++		uint8_t key1[8], key2[8];
++		memcpy(key1, reader->des_key, 8);
++		memcpy(key2, reader->des_key + 8, 8);
++		des_ecb_decrypt(ea->cw, key1, sizeof(ea->cw));  //decrypt
++		des_ecb_encrypt(ea->cw, key2, sizeof(ea->cw));  //crypt
++		des_ecb_decrypt(ea->cw, key1, sizeof(ea->cw));  //decrypt
++	}
++
++	if(tag == 0x120 || tag == 0x100 || tag == 0x10A || tag == 0x101 || tag == 0x47 || tag == 0x92 || tag == 0xDE){
++		int32_t a=b2i(2, data);
++		int32_t b=b2i(2, data + i + 2);
++		decrypt_cw_ex(tag, a, b, tag, ea->cw);
++	}
++	return OK;
++}
++
++
++static int32_t streamguard_get_emm_type(EMM_PACKET *ep, struct s_reader *UNUSED(reader))
++{
++	ep->type = UNKNOWN;
++	return 1;
++}
++
++void streamguard_get_emm_filter(struct s_reader *UNUSED(reader), uint8_t *UNUSED(filter))
++{
++}
++
++static int32_t streamguard_do_emm(struct s_reader *reader, EMM_PACKET *ep)
++{
++	uint8_t emm_cmd[200] = {0x80,0x30,0x00,0x00,0x4c};
++	def_resp;
++	int32_t len;
++	uint16_t status;
++	uint8_t data[256];
++
++	if(SCT_LEN(ep->emm) < 8) {
++		rdr_log(reader, "error: emm data too short !");
++		return ERROR;
++	}
++
++	if(reader->cas_version > 2 && ep->emm[0] == 0x83){
++		rdr_log(reader, "Receive refresh cmd");
++		return ERROR;
++	}
++
++	len = SCT_LEN(ep->emm);
++	emm_cmd[4] = len;
++	memcpy(emm_cmd + 5, ep->emm, len);
++
++	write_cmd(emm_cmd, emm_cmd + 5);
++	if((cta_res[cta_lr - 2] & 0xf0) != 0x60){
++		rdr_log(reader,"error: send emm cmd failed!");
++		return ERROR;
++	}
++	len = cta_res[1];
++	if((len != streamguard_read_data(reader, len, data, &status)) ||
++	    (cta_res[cta_lr - 2] != 0x90) || (cta_res[cta_lr - 1] != 0x00)){
++		rdr_log(reader, "error: read data failed for emm cmd returned.");
++		return ERROR;
++	}
++
++	return OK;
++}
++
++static int32_t streamguard_card_info(struct s_reader *reader)
++{
++	uint8_t get_provid_cmd[12] = {0x00,0xb2,0x00,0x06,0x07,0x00,0x05,0xff,0x00,0x02,0xff,0xff};
++	uint8_t get_subscription_cmd[12] = {0x00,0xb2,0x00,0x07,0x07,0x00,0xfa,0xff,0x00,0x02,0x03,0xd4};
++	uint8_t data[256];
++	uint16_t status = 0;
++
++	def_resp;
++
++	write_cmd(get_provid_cmd, get_provid_cmd + 5);
++	if((cta_res[cta_lr - 2] & 0xf0) != 0x60) {
++		rdr_log(reader, "error: get provid  failed.");
++		return ERROR;
++	}
++	int nextReadSize= cta_res[cta_lr - 1];
++	int data_len = streamguard_read_data(reader,nextReadSize, data, &status);
++	if(data_len < 0){
++		rdr_log(reader, "error: read data failed for get provid.");
++		return ERROR;
++	}
++
++	reader->nprov = 0;
++	int count = ((nextReadSize - 3) / 46) < 4 ? (nextReadSize - 3) / 46 : 4;
++	int i;
++	for(i = 0; i < count; i++){
++		if(data[i * 46 + 3] != 0xFF || data[i * 46 + 4] != 0xFF ){
++			int j;
++			int found = 0;
++			for(j = 0; j < reader->nprov; j++){
++				if(reader->nprov > 0 && reader->prid[j][2] == data[i * 46 + 3] && reader->prid[j][3] == data[i * 46 + 4]){
++					found = 1;
++					break;
++				}
++			}
++			if(found == 1) continue;
++
++			memcpy(&reader->prid[reader->nprov][2], data + i * 46 + 3, 2);
++			rdr_log(reader, "Provider:%06X", b2i(2, data + i * 46 + 3));
++			reader->nprov ++;
++			if(data[i * 46 + 3] == 0x09 && data[i * 46 + 4] == 0x88){
++				reader->caid = 0x4AD3;
++				break;
++			}
++		}
++	}
++	int bankid=0;
++	for(i = 0; i < reader->nprov; i++){
++		int j=0;
++		get_subscription_cmd[10] = reader->prid[i][2];
++		get_subscription_cmd[11] = reader->prid[i][3];
++		for(;;){
++			get_subscription_cmd[5] = bankid;
++			write_cmd(get_subscription_cmd, get_subscription_cmd + 5);
++			if((cta_res[cta_lr - 2] & 0xf0) != 0x60) {
++				rdr_log(reader, "error:  get subscription failed.");
++				break;
++			}
++
++			data_len = streamguard_read_data(reader,cta_res[cta_lr - 1], data, &status);
++			if(data_len < 0){
++				rdr_log(reader, "error: read data failed for get subscription.");
++				break;
++			}
++
++			count = data[1];
++			int k;
++			for(k = 0; k < count; j++,k++){
++				//if(data[j * 19 + 2 + 3] == 0 && data[j * 19 + 3 + 3] == 0) continue;
++
++				time_t start_t,end_t,subscription_t;
++				subscription_t = b2i(4, data + 3 + j * 19 + 4);
++				start_t = b2i(4, data + j * 19 + 9 + 3);
++				if((uint32_t)start_t == 0xFFFFFFFFLU)
++					start_t = subscription_t;
++				end_t = b2i(4, data + 3 + j * 19 + 13);
++				uint64_t product_id=b2i(2, data + 3 + j * 19 + 2);
++
++				struct tm  tm_start, tm_end, tm_subscription;
++				char start_day[20], end_day[20], subscription_day[20];
++
++				localtime_r(&start_t, &tm_start);
++				localtime_r(&end_t, &tm_end);
++				localtime_r(&subscription_t, &tm_subscription);
++				if(tm_subscription.tm_year >= 117){
++					tm_end.tm_year += 1;
++					end_t = cs_timegm(&tm_end);
++				}
++
++				strftime(subscription_day, sizeof(subscription_day), "%Y-%m-%d %H:%M:%S", &tm_subscription);
++				strftime(start_day, sizeof(start_day), "%Y-%m-%d %H:%M:%S", &tm_start);
++				strftime(end_day, sizeof(end_day), "%Y-%m-%d %H:%M:%S", &tm_end);
++
++				if(!j)
++					rdr_log(reader, "entitlements for provider: %d (%04X:%06X)", i, reader->caid, b2i(2, &reader->prid[i][2]));
++				rdr_log(reader, "    chid: %04"PRIX64" auth:%s  valid:%s - %s", product_id,  subscription_day, start_day, end_day);
++
++				cs_add_entitlement(reader, reader->caid, b2i(2, &reader->prid[i][2]), product_id, 0, start_t, end_t, 0, 1);
++			}
++			if(data[0] == 0)
++				break;
++			bankid = data[0];
++		}
++	}
++
++	return OK;
++}
++
++const struct s_cardsystem reader_streamguard =
++{
++	.desc         = "streamguard",
++	.caids        = (uint16_t[]){ 0x4AD2, 0x4AD3, 0 },
++	.do_emm       = streamguard_do_emm,
++	.do_ecm       = streamguard_do_ecm,
++	.card_info    = streamguard_card_info,
++	.card_init    = streamguard_card_init,
++	.get_emm_type = streamguard_get_emm_type,
++};
++
++#endif
+diff -Nur oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod/webif/pages_index.txt oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/webif/pages_index.txt
+--- oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod/webif/pages_index.txt	2022-12-31 12:28:54.610657425 +0100
++++ oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/webif/pages_index.txt	2022-12-31 13:55:28.417454505 +0100
+@@ -219,6 +219,8 @@
+ READERCONFIGVIACCESS          readerconfig/readerconfig_hwreader_viaccess.html            READER_VIACCESS
+ READERCONFIGDRE               readerconfig/readerconfig_hwreader_dre.html                 READER_DRE
+ READERCONFIGVIDEOGUARD        readerconfig/readerconfig_hwreader_videoguard.html          READER_VIDEOGUARD
++READERCONFIGTONGFANG          readerconfig/readerconfig_hwreader_tongfang.html            READER_TONGFANG
++READERCONFIGJET               readerconfig/readerconfig_hwreader_jet.html                 READER_JET
+ READERCONFIGLBWEIGHT          readerconfig/readerconfig_lbweight.html                     WITH_LB
+ READERCONFIGNCD525BIT         readerconfig/readerconfig_ncd525bit.html                    MODULE_NEWCAMD
+ READERCONFIGNCD524BIT         readerconfig/readerconfig_ncd524bit.html                    MODULE_NEWCAMD
+diff -Nur oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod/webif/readerconfig/readerconfig_cccambit.html oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/webif/readerconfig/readerconfig_cccambit.html
+--- oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod/webif/readerconfig/readerconfig_cccambit.html	2022-12-31 12:28:54.642656649 +0100
++++ oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/webif/readerconfig/readerconfig_cccambit.html	2022-12-31 13:55:28.489452764 +0100
+@@ -32,4 +32,8 @@
+ 			<TR><TD><A>Mindown:</A></TD><TD><input name="cccmindown" class="short" type="text" maxlength="2" value="##CCCMINDOWN##"></TD></TR>
+ 			<TR><TD><A>Reshare:</A></TD><TD><input name="cccreshare" class="short" type="text" maxlength="2" value="##CCCRESHARE##">				&nbsp;Global CCCam Reshare:<SPAN CLASS="global_conf" TITLE="This value is used if Reshare = -1"><A HREF="config.html?part=cccam">##RESHARE##</A></SPAN></TD></TR>
+ 			<TR><TD><A>Want Emu:</A></TD><TD><input name="cccwantemu" type="hidden" value="0"><input name="cccwantemu" type="checkbox" value="1" ##CCCWANTEMUCHECKED##><label></label></TD></TR>
+-			<TR><TD><A>Keep alive:</A></TD><TD><input name="ccckeepalive" type="hidden" value="0"><input name="ccckeepalive" type="checkbox" value="1" ##KEEPALIVECHECKED##><label></label></TD></TR>
++			<TR><TD><A>Keep alive:</A></TD><TD><input name="ccckeepalive" type="hidden" value="0"><input name="ccckeepalive" type="checkbox" value="1" ##KEEPALIVECHECKED##><label> &nbsp; Ping Interval </label><input name="ccckeepaliveping" class="short" type="text" maxlength="2" value="##CCCKEEPALIVEPING##"> s</TD></TR>
++			<TR>
++				<TD><A>Fix ECM for DVN/JET:</A></TD>
++				<TD><input name="jet_fix_ecm" type="hidden" value="0"><input name="jet_fix_ecm" type="checkbox" value="1" ##JETFIXECM##></TD>
++			</TR>
+diff -Nur oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod/webif/readerconfig/readerconfig_hwreader.html oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/webif/readerconfig/readerconfig_hwreader.html
+--- oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod/webif/readerconfig/readerconfig_hwreader.html	2022-12-31 12:28:54.642656649 +0100
++++ oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/webif/readerconfig/readerconfig_hwreader.html	2022-12-31 13:55:28.489452764 +0100
+@@ -26,6 +26,8 @@
+ ##TPLREADERCONFIGVIACCESS##
+ ##TPLREADERCONFIGDRE##
+ ##TPLREADERCONFIGVIDEOGUARD##
++##TPLREADERCONFIGTONGFANG##
++##TPLREADERCONFIGJET##
+ ##TPLREADERCONFIGSC8IN1##
+ ##TPLREADERCONFIGSMARGO##
+ ##TPLREADERCOOLSTREAMBIT##
+diff -Nur oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod/webif/readerconfig/readerconfig_hwreader_jet.html oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/webif/readerconfig/readerconfig_hwreader_jet.html
+--- oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod/webif/readerconfig/readerconfig_hwreader_jet.html	1970-01-01 01:00:00.000000000 +0100
++++ oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/webif/readerconfig/readerconfig_hwreader_jet.html	2022-12-31 13:55:28.457453538 +0100
+@@ -0,0 +1,6 @@
++				<TR><TH COLSPAN="2">Reader specific settings for DVN JETCAS</TH></TR>
++				<TR>
++					<TD><A>Authorize ID:</A></TD>
++					<TD><input name="jet_authorize_id" class="longer" type="text" maxlength="16" value="##JETAUTHORIZEID##"></TD>
++				</TR>
++
+diff -Nur oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod/webif/readerconfig/readerconfig_hwreader_tongfang.html oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/webif/readerconfig/readerconfig_hwreader_tongfang.html
+--- oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod/webif/readerconfig/readerconfig_hwreader_tongfang.html	1970-01-01 01:00:00.000000000 +0100
++++ oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/webif/readerconfig/readerconfig_hwreader_tongfang.html	2022-12-31 13:55:28.457453538 +0100
+@@ -0,0 +1,6 @@
++				<TR><TH COLSPAN="2">Reader specific settings for TongFang</TH></TR>
++				<TR>
++					<TD><A>CalibSN for TONGFANG v3:</A></TD>
++					<TD><input name="tongfang3_calibsn" class="medium" type="text" maxlength="8" value="##TONGFANGCALIBSN##"></TD>
++				</TR>
++

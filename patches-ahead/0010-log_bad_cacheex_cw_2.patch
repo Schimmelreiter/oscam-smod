@@ -1,0 +1,65 @@
+diff -Nur oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam-cccam/module-cacheex.c oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam-cccam-cex1/module-cacheex.c
+--- oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam-cccam/module-cacheex.c	2022-12-30 18:47:32.977915175 +0100
++++ oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam-cccam-cex1/module-cacheex.c	2022-12-31 14:35:33.515464287 +0100
+@@ -822,6 +822,27 @@
+ 	return 0;
+ }
+ 
++// check if sky_ger 64 bit CW has valid checksum bytes and therefore is probably invalid
++uint8_t check_nds_cwex(ECM_REQUEST *er)
++{
++	uint8_t k, csum;
++	uint8_t hit = 0;
++	uint8_t oe = checkCWpart(er->cw, 0) ? 0 : 8;
++	for(k = 0; k < 8; k += 4)
++	{
++		csum = ((er->cw[k + oe] + er->cw[k + oe + 1] + er->cw[k + oe + 2]) & 0xff);
++		if(er->cw[k + oe + 3] == csum)
++		{
++			hit++;
++		}
++	}
++	if(hit > 1)
++	{
++		return 1;
++	}
++	return 0;
++}
++
+ static int32_t cacheex_add_to_cache_int(struct s_client *cl, ECM_REQUEST *er, int8_t csp)
+ {
+ 	if(er->rc >= E_NOTFOUND) { return 0; }
+@@ -921,6 +942,33 @@
+ 	}
+ #endif
+ 
++	if(caid_is_videoguard(er->caid))
++	{
++		if(cl->typ == 'p' && chk_if_ignore_checksum(er, &cl->reader->disablecrccws_only_for))
++		{
++			if(check_nds_cwex(er))
++			{
++				if(cl->reader->dropbadcws)
++				{
++					cs_log_dbg(D_CACHEEX, "Probably got pushed bad CW to cacheex reader: %s, caid %04X, srvid %04X - dropping CW", cl->reader->label, er->caid, er->srvid);
++					return 0;
++				}
++				else
++				{
++					cs_log_dbg(D_CACHEEX, "Probably got pushed bad CW to cacheex reader: %s, caid %04X, srvid %04X", cl->reader->label, er->caid, er->srvid);				
++				}
++			}
++		}
++
++		if(cl->typ == 'c' && chk_if_ignore_checksum(er, &cl->account->disablecrccacheex_only_for))
++		{
++			if(check_nds_cwex(er))
++			{
++				cs_log_dbg(D_CACHEEX, "Probably got bad CW from cacheex user: %s, caid %04X, srvid %04X", username(cl), er->caid, er->srvid);
++			}
++		}
++	}
++
+ 	// Skip check for BISS1 - cw could be indeed zero
+ 	// Skip check for BISS2 - we use the extended cw, so the "simple" cw is always zero
+ 	if(chk_is_null_CW(er->cw) && !caid_is_biss(er->caid))

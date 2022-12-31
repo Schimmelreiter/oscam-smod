@@ -1,0 +1,637 @@
+diff -Nur oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/globals.h oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam-cccam/globals.h
+--- oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/globals.h	2022-12-31 14:39:50.661244374 +0100
++++ oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam-cccam/globals.h	2022-12-31 14:44:36.754411133 +0100
+@@ -1763,10 +1763,12 @@
+ 	int8_t			cc_want_emu;					// Schlocke: Client want to have EMUs, 0 - NO; 1 - YES
+ 	uint32_t		cc_id;
+ 	int8_t			cc_keepalive;
++	int8_t			cc_keepaliveping;				// Keep Alive Ping - interval to send keepalives if idle.
+ 	int8_t			cc_hop;							// For non-cccam reader: hop for virtual cards
+ 	int8_t			cc_reshare;
+ 	int32_t			cc_reconnect;					// reconnect on ecm-request timeout
+ #endif
++	int8_t			from_cccam_cfg;					// created from cccam.cfg
+ 	int8_t			tcp_connected;
+ 	int32_t			tcp_ito;						// inactivity timeout
+ 	int32_t			tcp_rto;						// reconnect timeout
+@@ -2307,6 +2309,7 @@
+ 	uint8_t			cc_fixed_nodeid[8];
+ 	uint32_t		cc_recv_timeout;				// The poll() timeout parameter in ms. Default: DEFAULT_CC_RECV_TIMEOUT (2000 ms).
+ #endif
++	char			*cc_cfgfile;					// CCcam.cfg file path
+ #ifdef MODULE_GBOX
+ 	#define			GBOX_MY_VERS_DEF		0x2A
+ 	#define			GBOX_MY_CPU_API_DEF	0x61
+diff -Nur oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/module-cccam.c oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam-cccam/module-cccam.c
+--- oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/module-cccam.c	2022-12-31 14:39:50.661244374 +0100
++++ oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam-cccam/module-cccam.c	2022-12-31 14:40:07.536839630 +0100
+@@ -31,6 +31,31 @@
+ // Mode names for CMD_0C command
+ static const char *cmd0c_mode_name[] = { "NONE", "RC6", "RC4", "CC_CRYPT", "AES", "IDEA" };
+ 
++const char *cc_msg_name[]={"MSG_CLI_DATA","MSG_CW_ECM","MSG_EMM_ACK","MSG_VALUE_03",
++			    "MSG_CARD_REMOVED","MSG_CMD_05","MSG_KEEPALIVE","MSG_NEW_CARD",
++			    "MSG_SRV_DATA","MSG_VALUE_09","MSG_NEW_CARD_SIDINFO","MSG_CW_NOK1",
++			    "MSG_CW_NOK2","MSG_NO_HEADER"};
++
++char * cc_get_msgname(uint32_t msg,char *result,uint32_t len){
++	if(msg <= 0x09)
++		return (char*)cc_msg_name[msg];
++	else if(msg == 0x0f)
++		return (char*)cc_msg_name[10];
++	else if(msg == 0xfe)
++		return (char*)cc_msg_name[11];
++	else if(msg == 0xff)
++		return (char*)cc_msg_name[12];
++	else if(msg == 0xffff)
++		return (char*)cc_msg_name[13];
++	else if(msg>=0x0a && msg<=0x0e){
++		snprintf(result,len,"MSG_CMD_%02x",msg);
++		return result;
++	}else{
++		snprintf(result,len,"MSG_VALUE_%02x",msg);
++		return result;
++	}
++}
++
+ uint8_t cc_node_id[8];
+ 
+ int32_t cc_cli_connect(struct s_client *cl);
+@@ -378,6 +403,10 @@
+ 		{
+ 			break;
+ 		}
++		else if(srvid->ecmlen && ((struct cc_srvid_block *)srvid)->blocked_till > time(NULL))
++		{
++			ll_iter_remove_data(&it);
++		}
+ 	}
+ 	return srvid;
+ }
+@@ -412,7 +441,7 @@
+ 	return srvid;
+ }
+ 
+-#define BLOCKING_SECONDS 10
++#define BLOCKING_SECONDS 6
+ 
+ void add_sid_block(struct cc_card *card, struct cc_srvid *srvid_blocked, bool temporary)
+ {
+@@ -2749,8 +2778,8 @@
+ 		return -1;
+ 	}
+ 
+-	cs_log_dbg(cl->typ == 'c' ? D_CLIENT : D_READER, "%s parse_msg=%d", getprefix(), buf[1]);
+-
++	char msgname[250];
++	cs_log_dbg(cl->typ == 'c' ? D_CLIENT : D_READER, "%s parse_msg=%s", getprefix(), cc_get_msgname(buf[1],msgname,sizeof(msgname)));
+ 	uint8_t *data = buf + 4;
+ 
+ 	if(l < 4)
+diff -Nur oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/module-webif.c oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam-cccam/module-webif.c
+--- oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/module-webif.c	2022-12-31 14:39:50.665244277 +0100
++++ oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam-cccam/module-webif.c	2022-12-31 14:44:36.802409985 +0100
+@@ -138,9 +138,10 @@
+ #define MNU_GBX_FSTAINF     27
+ #define MNU_GBX_FEXPINF     28
+ #define MNU_GBX_INFOLOG     29
+-#define MNU_CFG_FSOFTCAMKEY 30
++#define MNU_CFG_CCCAMCFG    30
++#define MNU_CFG_FSOFTCAMKEY 31
+ 
+-#define MNU_CFG_TOTAL_ITEMS 31 // sum of items above. Use it for "All inactive" in function calls too.
++#define MNU_CFG_TOTAL_ITEMS 32 // sum of items above. Use it for "All inactive" in function calls too.
+ 
+ static void set_status_info_var(struct templatevars *vars, char *varname, int no_data, char *fmt, double value)
+ {
+@@ -1406,6 +1407,9 @@
+ 
+ 	tpl_addVar(vars, TPLADD, "STEALTH", (cfg.cc_stealth == 1) ? "checked" : "");
+ 
++	if (cfg.cc_cfgfile)
++		tpl_printf(vars, TPLADD, "CCCFGFILE", "%s", cfg.cc_cfgfile);
++
+ 	tpl_printf(vars, TPLADD, "NODEID", "%02X%02X%02X%02X%02X%02X%02X%02X",
+ 			   cfg.cc_fixed_nodeid[0], cfg.cc_fixed_nodeid[1], cfg.cc_fixed_nodeid[2], cfg.cc_fixed_nodeid[3],
+ 			   cfg.cc_fixed_nodeid[4], cfg.cc_fixed_nodeid[5], cfg.cc_fixed_nodeid[6], cfg.cc_fixed_nodeid[7]);
+@@ -3235,6 +3239,7 @@
+ 	tpl_printf(vars, TPLADD, "CCCRESHARE",   "%d", rdr->cc_reshare);
+ 	tpl_printf(vars, TPLADD, "RESHARE",      "%d", cfg.cc_reshare);
+ 	tpl_printf(vars, TPLADD, "CCCRECONNECT", "%d", rdr->cc_reconnect);
++	tpl_printf(vars, TPLADD, "CCCKEEPALIVEPING",   "%d", rdr->cc_keepaliveping);
+ 
+ 	if(rdr->cc_want_emu)
+ 		{ tpl_addVar(vars, TPLADD, "CCCWANTEMUCHECKED", "checked"); }
+@@ -4201,11 +4206,17 @@
+ 		struct cc_data *cc = cl->cc;
+ 		if(cc && *cc->remote_version && *cc->remote_build)
+ 		{
+-			tpl_printf(vars, TPLADD, "CLIENTPROTO", "%s (%s-%s)", proto, cc->remote_version, cc->remote_build);
+-			tpl_printf(vars, TPLADD, "CLIENTPROTOSORT", "%s (%s-%s)", proto, cc->remote_version, cc->remote_build);
++			uint8_t mcs_ver = 0;
++			if (cc->multics_version[0] | (cc->multics_version[1] << 8))
++			{
++				mcs_ver = cc->multics_version[0] | (cc->multics_version[1] << 8);
++			}
++
++			tpl_printf(vars, TPLADD, "CLIENTPROTO", "%s (%s-%s)", (char *)proto, cc->remote_version, cc->remote_build);
++			tpl_printf(vars, TPLADD, "CLIENTPROTOSORT", "%s (%s-%s)", (char *)proto, cc->remote_version, cc->remote_build);
+ 			if(cccam_client_multics_mode(cl))
+ 			{
+-				tpl_printf(vars, TPLADD, "CLIENTPROTOTITLE", "Multics, revision r%d", cc->multics_version[0] | (cc->multics_version[1] << 8));
++				tpl_printf(vars, TPLADD, "CLIENTPROTOTITLE", "Multics, revision r%d", mcs_ver);
+ 			}
+ 			else
+ 			{
+@@ -4259,31 +4270,31 @@
+ 				switch(is_other_proto)
+ 				{
+ 					case 1:
+-						snprintf(picon_name, sizeof(picon_name) / sizeof(char) - 1, "%s_r_%d", proto, cc->multics_version[0] | (cc->multics_version[1] << 8));
++						snprintf(picon_name, sizeof(picon_name) / sizeof(char) - 1, "%s_r_%d", (char *)proto, mcs_ver);
+ 						if(picon_exists(picon_name))
+ 						{
+ 							if (!apicall)
+ 							{
+ 								tpl_addVar(vars, TPLADD, "CCA", (char *)proto);
+ 								tpl_addVar(vars, TPLADD, "CCB", "r");
+-								tpl_printf(vars, TPLADD, "CCC", "%d", cc->multics_version[0] | (cc->multics_version[1] << 8));
++								tpl_printf(vars, TPLADD, "CCC", "%d", mcs_ver);
+ 								tpl_addVar(vars, TPLADD, "CCD", "");
+ 								tpl_addVar(vars, TPLADD, "CLIENTPROTO", tpl_getTpl(vars, "PROTOCCCAMPIC"));
+ 							}
+ 							else
+ 							{
+-								tpl_printf(vars, TPLADDONCE, "PROTOICON", "%s_r_%d",(char *)proto, cc->multics_version[0] | (cc->multics_version[1] << 8));
++								tpl_printf(vars, TPLADDONCE, "PROTOICON", "%s_r_%d",(char *)proto, mcs_ver);
+ 							}
+ 						}
+ 						else
+ 						{
+ 							tpl_printf(vars, TPLADD, "CLIENTPROTOTITLE", "Multics, revision r%d missing icon: IC_%s_r_%d.tpl",
+-								cc->multics_version[0] | (cc->multics_version[1] << 8), proto, cc->multics_version[0] | (cc->multics_version[1] << 8));
++								 mcs_ver, (char *)proto, mcs_ver);
+ 						}
+ 						break;
+ 
+ 					default:
+-						snprintf(picon_name, sizeof(picon_name) / sizeof(char) - 1, "%s_%s_%s", proto, cc->remote_version, cc->remote_build);
++						snprintf(picon_name, sizeof(picon_name) / sizeof(char) - 1, "%s_%s_%s", (char *)proto, cc->remote_version, cc->remote_build);
+ 						if(picon_exists(picon_name))
+ 						{
+ 							if (!apicall)
+@@ -7428,8 +7439,9 @@
+ 		{ "expired.info",    MNU_GBX_FEXPINF,   FTYPE_GBOX },     // id 28
+ 		{ "info.log",        MNU_GBX_INFOLOG,   FTYPE_GBOX },     // id 29
+ #endif
++		{ "CCcam.cfg",       MNU_CFG_CCCAMCFG,  FTYPE_CONFIG },   // id 30
+ #ifdef WITH_EMU
+-		{ "SoftCam.Key",     MNU_CFG_FSOFTCAMKEY,FTYPE_CONFIG },  // id 30
++		{ "SoftCam.Key",     MNU_CFG_FSOFTCAMKEY,FTYPE_CONFIG },  // id 31
+ #endif
+ 		{ NULL, 0, 0 },
+ 	};
+diff -Nur oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/oscam-conf.h oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam-cccam/oscam-conf.h
+--- oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/oscam-conf.h	2022-12-30 18:32:40.495254089 +0100
++++ oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam-cccam/oscam-conf.h	2022-12-31 14:40:07.600838103 +0100
+@@ -3,6 +3,9 @@
+ 
+ #define MAXLINESIZE 16384
+ 
++#define CCCAMCFGREADER 1
++#define CCCAMCFGUSER 2
++
+ enum opt_types
+ {
+ 	OPT_UNKNOWN = 0,
+diff -Nur oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/oscam-config.c oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam-cccam/oscam-config.c
+--- oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/oscam-config.c	2022-12-30 18:47:33.093912386 +0100
++++ oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam-cccam/oscam-config.c	2022-12-31 14:40:07.624837530 +0100
+@@ -32,8 +32,19 @@
+ 
+ char *get_config_filename(char *dest, size_t destlen, const char *filename)
+ {
+-	// cs_confdir is always terminated with /
+-	snprintf(dest, destlen, "%s%s", cs_confdir, filename);
++	if (filename == (char*)"CCcam.cfg") {
++		if (cfg.cc_cfgfile) {
++			// Path to CCcam.cfg already configured
++			snprintf(dest, destlen, "%s", cfg.cc_cfgfile);
++		} else {
++			// Path to CCcam.cfg not configured, use CCcam.cfg in oscam config dir
++			snprintf(dest, destlen, "%s%s", cs_confdir, "CCcam.cfg");
++			// TODO: Set cfg.cc_cfgfile = cs_confdir+CCcam.cfg
++		}
++	} else {
++		// cs_confdir is always terminated with /
++		snprintf(dest, destlen, "%s%s", cs_confdir, filename);
++	}
+ 	return dest;
+ }
+ 
+@@ -1557,3 +1568,282 @@
+ 	return (tmp);
+ }
+ #endif
++
++int32_t chk_cccam_cfg_F_more(char *line,struct s_auth * account)
++{
++	int32_t p1=0,off=0,no=0,cno=0,dno=0,reshare=0;
++	char *p=NULL,*sline=NULL,*p2=NULL,*p3=NULL;
++	char *optr=NULL,*iptr=NULL;
++	for(p=line;*p;p++){
++		if(*p=='{'){
++			p1=1;
++			sline=p+1;
++			off=0;
++			continue;
++		}
++
++		if(*p=='}' && p1==1){
++			sline[off]='\0';
++//			cs_debug_mask(D_TRACE,"parase CCcam.cfg F line:part{%s}",sline);
++			p1=0;
++			no++;
++			cno=0;
++			while((p2=strtok_r(sline,",",&optr))){
++				dno=0;
++				uint16_t caid=0,srvid=0;
++				uint32_t provid=0;
++//				cs_debug_mask(D_TRACE,"CHILD:%s",p2);
++				while((p3=strtok_r(p2,":",&iptr))){
++					if(!dno){
++						caid=(uint16_t)a2i(p3,4);
++						account->ftab.filts[dno].caid=caid;
++					}
++					if(dno==1){
++						provid=(uint32_t)a2i(p3,6);
++						account->ftab.filts[dno].prids[account->ftab.filts[dno].nprids]=provid;
++						account->ftab.filts[dno].nprids++;
++					}
++					if(dno==2){
++#ifdef MODULE_CCCSHARE
++						if(!cno && !(account->cccreshare)){
++							sscanf(p3,"%d",&reshare);
++							account->cccreshare=(int32_t)reshare;
++						}
++#endif
++						if(cno==1){
++							srvid=(uint16_t)a2i(p3,4);
++
++							struct s_sidtab *sp,*sidtab=cfg.sidtab;
++							uint32_t sppos=0;
++							for(sp=cfg.sidtab;sp;sp=sp->next,sppos++){
++								uint32_t j,found;
++
++								sidtab=sp;
++								for(j=0,found=0;!found && j<sp->num_caid;j++)
++									if(sp->caid[j]==caid)
++										found=1;
++								if(!found)continue;
++
++								for(j=0,found=0;!found && j<sp->num_provid;j++)
++									if(sp->provid[j]==provid)
++										found=1;
++								if(!found)continue;
++
++								for(j=0,found=0;!found && j<sp->num_srvid;j++)
++									if(sp->srvid[j]==srvid)
++										found=1;
++								if(!found)continue;
++
++							}
++							if(sp){
++								account->sidtabs.ok |= (1<<sppos);
++								continue;
++							}
++
++							if (!cs_malloc(&sp, sizeof(struct s_sidtab)) || !sp)continue;
++							if (sidtab)
++								sidtab->next=sp;
++							else
++								cfg.sidtab=sp;
++							sppos++;
++							memset(sp, 0, sizeof(struct s_sidtab));
++							snprintf(sp->label, sizeof(sp->label),"%04x_%06X_%04X",caid,provid,srvid);
++							char scaid[5],sprovid[7],ssrvid[5];
++							snprintf(scaid,sizeof(scaid),"%04X",caid);
++							snprintf(sprovid,sizeof(sprovid),"%04X",provid);
++							snprintf(scaid,sizeof(scaid),"%04X",provid);
++
++							chk_sidtab("caid",scaid, sp);
++							chk_sidtab("provid",sprovid,sp);
++							chk_sidtab("caid",ssrvid, sp);
++							account->sidtabs.ok |= (1<<sppos);
++						}
++					}
++					dno++;
++					p2=NULL;
++				}
++				cno++;
++				sline=NULL;
++			}
++			continue;
++		}
++		off++;
++	}
++	return 0;
++}
++
++void * read_cccamcfg(int32_t mode)
++{
++	struct s_auth *authptr = NULL;
++	FILE *fp;
++	char token[MAXLINESIZE];
++	char line[MAXLINESIZE];
++	char host[256],uname[128],upass[128],uhops[128],uemu[128],uemm[128];
++	char typ;
++	static int32_t readed_cccamcfg=0;
++	int32_t port,ret;
++	int32_t caid,prid;
++
++	if(!readed_cccamcfg)
++		cs_log("load CCcam config file: %s", cfg.cc_cfgfile);
++
++	if(!cfg.cc_cfgfile || (mode != CCCAMCFGREADER && mode != CCCAMCFGUSER))
++		return NULL;
++
++	readed_cccamcfg=1;
++
++	if(!(fp=fopen(cfg.cc_cfgfile,"r"))){
++		cs_log("can't open file \"%s\" (errno=%d)\n", cfg.cc_cfgfile, errno);
++		return NULL;
++	}
++
++	struct s_auth *account=NULL;
++	struct s_reader *rdr;
++
++	while (fgets(token,sizeof(token),fp)) {
++		void *ptr;
++		char *p=strchr(token,'#');
++		if(p)
++			*p='\0';
++		strncpy(line,trim(token),MAXLINESIZE-1);
++		if(!line[0])continue;
++		if((line[0] == 'N' || line[0] == 'C' || line[0] == 'L' || line[0] == 'R' ) && line[1] == ':' && (mode == CCCAMCFGREADER)){
++
++			int32_t paracount=0;
++			char * proto=0;
++			ret=0;
++			unsigned int ncd_key[14];
++			memset(ncd_key, 0, sizeof(ncd_key));
++#if defined(MODULE_NEWCAMD) || defined(MODULE_CAMD35) || defined(MODULE_RADEGAST)
++			int32_t reshare=-1;
++#endif
++			switch(line[0]){
++				case 'N':
++#ifdef MODULE_NEWCAMD
++					//proto = "newcamd|newcamd524|newcamd525|mgcamd|cccam";
++					proto = "newcamd";
++					ret=sscanf(line,"%c:%s%d%s%s%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%d",&typ,host,&port,uname,upass,
++						&ncd_key[0], &ncd_key[1], &ncd_key[2], &ncd_key[3],&ncd_key[4],
++						&ncd_key[5], &ncd_key[6], &ncd_key[7], &ncd_key[8],&ncd_key[9],
++						&ncd_key[10],&ncd_key[11],&ncd_key[12],&ncd_key[13],&reshare);
++					paracount=5;
++#endif
++					break;
++				case 'C':
++#ifdef MODULE_CCCAM
++					proto = "cccam";
++					ret=sscanf(line,"%c:%s%d%s%s",&typ,host,&port,uname,upass);
++					paracount=5;
++#endif
++					break;
++				case 'L':
++#ifdef MODULE_CAMD35
++					proto = "camd35";
++					ret=sscanf(line,"%c:%s%d%s%s%x%x%d",&typ,host,&port,uname,upass,&caid,&prid,&reshare);
++					paracount=5;
++#endif
++					break;
++				case 'R':
++#ifdef MODULE_RADEGAST
++					proto = "radegast";
++					ret=sscanf(line,"%c:%s%d%x%x%d",&typ,host,&port,&caid,&prid,&reshare);
++					paracount=3;
++#endif
++					break;
++			}
++
++			if(!proto || ret < paracount)continue;
++
++			int32_t found=0;
++			LL_ITER itr = ll_iter_create(configured_readers);
++			struct s_reader *prdr=NULL;
++			while((prdr = ll_iter_next(&itr))){
++				if( strcasecmp(prdr->device,host) == 0 && prdr->r_port == port &&
++				    strcmp(prdr->r_usr,uname) == 0  && strcmp(prdr->r_pwd,upass) == 0 &&
++				    host[0] && port && uname[0] && upass[0] ){
++					found=1;
++					break;
++				}
++			}
++			if(found)
++				continue;
++
++			if(!cs_malloc(&rdr,sizeof(struct s_reader)))
++				continue;
++
++			memset(rdr, 0, sizeof(struct s_reader));
++
++			reader_set_defaults(rdr);
++
++			chk_reader("protocol", proto, rdr);
++			cs_strncpy(rdr->device,host,sizeof(rdr->device));
++			rdr->r_port = port;
++			cs_strncpy(rdr->r_usr,uname,sizeof(rdr->r_usr));
++			cs_strncpy(rdr->r_pwd,upass,sizeof(rdr->r_pwd));
++			snprintf(token,sizeof(token),"%s_%d",host,port);
++			cs_strncpy(rdr->label,token,sizeof(rdr->label));
++			rdr->grp = 1;
++			rdr->from_cccam_cfg = 1;
++
++			// for newcamd.
++			if(line[0] == 'N'){
++				if(ret >= 19){
++					int i;
++					char sncd_key[(sizeof(ncd_key)/sizeof(unsigned int)) * 2 + 1];
++					memset(sncd_key, 0, sizeof(sncd_key));
++					for(i = 0; i < (int)(sizeof(ncd_key)/sizeof(unsigned int)); i++)
++						snprintf(sncd_key + 2 * i, sizeof(sncd_key) - 2 * i, "%02x", ncd_key[i]);
++					chk_reader("key", sncd_key, rdr);
++				}
++				char connectoninit[2] = "1";
++				chk_reader("connectoninit", connectoninit, rdr);
++			}
++
++			ll_append(configured_readers, rdr);
++			cs_debug_mask(D_READER,"Add reader device=%s,%d (typ:0x%X, protocol=%s) from CCcam.cfg",rdr->device, rdr->r_port, rdr->typ, proto);
++		}
++		else if (line[0]=='F' && line[1]==':' && mode==CCCAMCFGUSER){
++			ret=sscanf(line,"F:%126s%126s%126s%126s%126s",uname,upass,uhops,uemu,uemm);
++			if(ret<2)continue;
++			if(ret<5)cs_strncpy(uemm,"1",sizeof(uemm));
++			if(ret<4)cs_strncpy(uemu,"1",sizeof(uemu));
++			if(ret<3)cs_strncpy(uhops,"10",sizeof(uhops));
++
++			//cs_log("Read Line:%s",line);
++			int32_t found=0;
++			struct s_auth *pusr=NULL;
++			for(pusr=authptr;pusr;pusr=pusr->next){
++				if(!strcmp(pusr->usr,uname)){
++					found=1;
++					break;
++				}
++			}
++			if(found)
++				continue;
++
++			if(!cs_malloc(&ptr, sizeof(struct s_auth))) return (void *)authptr;
++			if (account)
++				account->next = ptr;
++			else
++				authptr = ptr;
++
++			account = ptr;
++			account_set_defaults(account);
++
++			chk_account("user",uname,account);
++			chk_account("pwd",upass,account);
++			chk_account("cccmaxhops",uhops,account);
++			chk_account("au",uemu,account);
++			chk_cccam_cfg_F_more(line,account);
++			cs_debug_mask(D_TRACE,"Add usr: %s from CCcam.cfg",account->usr);
++
++		}
++	}
++	fclose(fp);
++	if(mode == CCCAMCFGREADER)
++		return (void *)configured_readers;
++	else if(mode == CCCAMCFGUSER)
++		return (void *)authptr;
++
++	return NULL;
++}
+diff -Nur oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/oscam-config-global.c oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam-cccam/oscam-config-global.c
+--- oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/oscam-config-global.c	2022-12-31 13:44:02.278047271 +0100
++++ oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam-cccam/oscam-config-global.c	2022-12-31 14:40:07.624837530 +0100
+@@ -865,10 +865,14 @@
+ 	DEF_OPT_INT8("minimizecards"      , OFS(cc_minimize_cards)     , 0),
+ 	DEF_OPT_INT8("keepconnected"      , OFS(cc_keep_connected)     , 1),
+ 	DEF_OPT_UINT32("recv_timeout"     , OFS(cc_recv_timeout)       , DEFAULT_CC_RECV_TIMEOUT),
++	DEF_OPT_STR("cccfgfile"           , OFS(cc_cfgfile)            , NULL),
+ 	DEF_LAST_OPT
+ };
+ #else
+-static const struct config_list cccam_opts[] = { DEF_LAST_OPT };
++static const struct config_list cccam_opts[] = {
++	DEF_OPT_STR("cccfgfile"           , OFS(cc_cfgfile)            , NULL),
++	DEF_LAST_OPT
++};
+ #endif
+ 
+ #ifdef MODULE_PANDORA
+diff -Nur oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/oscam-config.h oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam-cccam/oscam-config.h
+--- oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/oscam-config.h	2022-12-30 18:47:04.150608219 +0100
++++ oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam-cccam/oscam-config.h	2022-12-31 14:40:07.624837530 +0100
+@@ -70,5 +70,6 @@
+ };
+ 
+ void ftab_fn(const char *token, char *value, void *setting, long ftab_type, FILE *f);
++void * read_cccamcfg(int32_t mode);
+ 
+ #endif
+diff -Nur oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/oscam-config-reader.c oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam-cccam/oscam-config-reader.c
+--- oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/oscam-config-reader.c	2022-12-31 14:39:50.709243212 +0100
++++ oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam-cccam/oscam-config-reader.c	2022-12-31 14:40:07.624837530 +0100
+@@ -1903,6 +1903,7 @@
+ 	DEF_OPT_INT8("cccreshare"                     , OFS(cc_reshare),                      DEFAULT_CC_RESHARE),
+ 	DEF_OPT_INT32("cccreconnect"                  , OFS(cc_reconnect),                    DEFAULT_CC_RECONNECT),
+ 	DEF_OPT_INT8("ccchop"                         , OFS(cc_hop),                          0),
++	DEF_OPT_INT8("ccckeepaliveping"               , OFS(cc_keepaliveping),                30),
+ #endif
+ #ifdef MODULE_GHTTP
+ 	DEF_OPT_UINT8("use_ssl"                       , OFS(ghttp_use_ssl),                   0),
+@@ -2008,7 +2009,7 @@
+ 	static const char *cccam_settings[] =
+ 	{
+ 		"cccversion", "cccmaxhops", "cccmindown", "cccwantemu", "ccckeepalive",
+-		"cccreconnect",
++		"cccreconnect", "ccckeepaliveping",
+ 		0
+ 	};
+ 	// Special settings for CCCAM
+@@ -2078,6 +2079,12 @@
+ 	if(!cs_malloc(&token, MAXLINESIZE))
+ 		{ return 1; }
+ 
++	if(!configured_readers)
++		configured_readers = ll_create("configured_readers");
++
++	if(cfg.cc_cfgfile)
++		read_cccamcfg(CCCAMCFGREADER);
++
+ 	struct s_reader *rdr;
+ 	if(!cs_malloc(&rdr, sizeof(struct s_reader)))
+ 	{
+@@ -2117,16 +2124,28 @@
+ 	}
+ 	NULLFREE(token);
+ 	LL_ITER itr = ll_iter_create(configured_readers);
+-	while((rdr = ll_iter_next(&itr))) // build active readers list
++	while((rdr = ll_iter_next(&itr)) && rdr->from_cccam_cfg)   //free duplicate reader
++	{
++		struct s_reader *rdr2;
++		LL_ITER iter = ll_iter_create(configured_readers);
++		while((rdr2 = ll_iter_next(&iter))){
++			if(rdr != rdr2 && !strcmp(rdr->device, rdr2->device)
++			   && rdr->r_port == rdr2->r_port && !strcmp(rdr->r_usr,rdr2->r_usr)
++			   && !strcmp(rdr->r_pwd, rdr2->r_pwd)){
++				rdr = ll_iter_remove(&itr);
++				free_reader(rdr);
++				break;
++			}
++		}
++	}
++
++	itr = ll_iter_create(configured_readers);
++	while((rdr = ll_iter_next(&itr)))   //build active readers list
+ 	{
+ 		reader_fixups_fn(rdr);
+ 		module_reader_set(rdr);
+ 	}
+-	if ( tmp_conf == 1 ){
+-		fclose(fp);
+-	} else {
+ 	fclose(fp);
+-	}
+ 	return (0);
+ }
+ 
+diff -Nur oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/webif/config/cccam.html oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam-cccam/webif/config/cccam.html
+--- oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/webif/config/cccam.html	2022-12-30 18:22:31.953721096 +0100
++++ oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam-cccam/webif/config/cccam.html	2022-12-31 14:40:07.624837530 +0100
+@@ -66,3 +66,4 @@
+ 					</select>
+ 				</TD>
+ 			</TR>
++			<TR><TD><A>CCcam.cfg:</A></TD><TD><input name="cccfgfile" type="text" size="80" maxlength="80" value="##CCCFGFILE##"></TD></TR>
+diff -Nur oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/webif/files/menu.html oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam-cccam/webif/files/menu.html
+--- oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/webif/files/menu.html	2022-12-30 18:34:30.884626995 +0100
++++ oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam-cccam/webif/files/menu.html	2022-12-31 14:40:07.664836575 +0100
+@@ -22,7 +22,8 @@
+ ##VIEW_FILEMENUCSS##		<!-- CMENUACTIVE16 -->
+ ##TPLFILEMENUTWIN##		<!-- CMENUACTIVE17 -->
+ ##TPLFILEMENUCONSTCW##  	<!-- CMENUACTIVE18 -->
+-##TPLFILEMENUSOFTCAMKEY##		<!-- CMENUACTIVE30 -->
++				<LI CLASS="##CMENUACTIVE30##"><A HREF="files.html?file=CCcam.cfg">CCcam.cfg</A></LI>
++##TPLFILEMENUSOFTCAMKEY##		<!-- CMENUACTIVE31 -->
+ 			</UL>
+ 		</LI>
+ 	</UL>
+diff -Nur oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/webif/files/menu_softcamkey.html oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam-cccam/webif/files/menu_softcamkey.html
+--- oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam/webif/files/menu_softcamkey.html	2022-12-30 18:34:30.984624615 +0100
++++ oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam-cccam/webif/files/menu_softcamkey.html	2022-12-31 14:40:07.664836575 +0100
+@@ -1 +1 @@
+-			<LI CLASS="##CMENUACTIVE30##"><A HREF="files.html?file=SoftCam.Key">SoftCam.Key</A></LI>
++			<LI CLASS="##CMENUACTIVE31##"><A HREF="files.html?file=SoftCam.Key">SoftCam.Key</A></LI>

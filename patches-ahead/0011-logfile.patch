@@ -1,0 +1,37 @@
+diff -Nur oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam-cccam-cex1/webif/logpage/logpage.html oscam-smod/webif/logpage/logpage.html
+--- oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam-cccam-cex1/webif/logpage/logpage.html	2022-12-30 18:19:50.069583999 +0100
++++ oscam-smod/webif/logpage/logpage.html	2022-10-03 13:51:28.466974767 +0200
+@@ -18,26 +18,20 @@
+ ##TPLBODY##
+ ##TPLMENU##
+ <DIV ID="subnav">
+-	<UL ID="nav">
+-		<LI>
+-			<a href="#" download="log.txt" id="savelog"><input type="submit" value="Save Log" title="Save Log"></a>
+-			<input ID="showhidesettings" type="submit" value="Show Settings" title="Show/Hide Settings">
+-			<input ID="stoplog" type="submit" value="Stop Log" title="Stop/Start Log">
+-		</LI>
+-	</UL>
++	<UL ID="nav"><LI></LI></UL>
+ </DIV>
++##TPLMESSAGE##
++	<DIV ID="livelog">
++		<UL ID="livelogdata" title="Scroll stopped, because mouse stands over log-window !!!"></UL>
++	</DIV>
+ 	<DIV ID="regex">
+-		<P class="regexdata_nav"></P>
++		<P class="regexdata_nav" id="save"><a href="#" download="log.txt" id="savelog"><input type="submit" value="Save Log" title="Save Log"></a><input ID="showhidesettings" type="submit" value="Show Settings" title="Show/Hide Settings"><input ID="stoplog" type="submit" value="Stop Log" title="Stop/Start Log"></P>
+ 		<DIV ID="regexdata" style="display:none;">
+ ##LOG_DEBUGMENU##
++##LOG_SIZEMENU##
+ 			<UL ID="regexdatainput">
+ 				<LI class="regexdata_save"><input ID="regexreset" type="submit" value="Reset all" title="Reset all"><input ID="regexok" type="submit" value="Save" title="Save">&nbsp<button class="regexbutton" id="del1regex" title="Delete one row">&minus;</button><button class="regexbutton" id="add1regex" title="Add one row">+</button></LI>
+ 			</UL>
+ 		</DIV>
+ 	</DIV>
+-##LOG_SIZEMENU##
+-##TPLMESSAGE##
+-	<DIV ID="livelog">
+-		<UL ID="livelogdata" title="Scroll stopped, because mouse stands over log-window !!!"></UL>
+-	</DIV>
+ ##TPLFOOTER##

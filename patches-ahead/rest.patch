@@ -1,0 +1,48 @@
+diff -Nur oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam-cccam-cex1/module-cacheex.c oscam-smod/module-cacheex.c
+--- oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam-cccam-cex1/module-cacheex.c	2022-12-31 15:15:37.369845728 +0100
++++ oscam-smod/module-cacheex.c	2022-12-30 13:15:32.492869509 +0100
+@@ -921,33 +921,6 @@
+ 	}
+ #endif
+ 
+-	if(caid_is_videoguard(er->caid))
+-	{
+-		if(cl->typ == 'p' && chk_if_ignore_checksum(er, &cl->reader->disablecrccws_only_for))
+-		{
+-			if(check_nds_cwex(er))
+-			{
+-				if(cl->reader->dropbadcws)
+-				{
+-					cs_log_dbg(D_CACHEEX, "Probably got pushed bad CW to cacheex reader: %s, caid %04X, srvid %04X - dropping CW", cl->reader->label, er->caid, er->srvid);
+-					return 0;
+-				}
+-				else
+-				{
+-					cs_log_dbg(D_CACHEEX, "Probably got pushed bad CW to cacheex reader: %s, caid %04X, srvid %04X", cl->reader->label, er->caid, er->srvid);				
+-				}
+-			}
+-		}
+-
+-		if(cl->typ == 'c' && chk_if_ignore_checksum(er, &cl->account->disablecrccacheex_only_for))
+-		{
+-			if(check_nds_cwex(er))
+-			{
+-				cs_log_dbg(D_CACHEEX, "Probably got bad CW from cacheex user: %s, caid %04X, srvid %04X", username(cl), er->caid, er->srvid);
+-			}
+-		}
+-	}
+-
+ 	// Skip check for BISS1 - cw could be indeed zero
+ 	// Skip check for BISS2 - we use the extended cw, so the "simple" cw is always zero
+ 	if(chk_is_null_CW(er->cw) && !caid_is_biss(er->caid))
+diff -Nur oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam-cccam-cex1/reader-videoguard2.c oscam-smod/reader-videoguard2.c
+--- oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam-cccam-cex1/reader-videoguard2.c	2022-12-30 18:47:57.017337276 +0100
++++ oscam-smod/reader-videoguard2.c	2022-12-30 13:24:22.152091142 +0100
+@@ -1188,6 +1188,7 @@
+ static int32_t videoguard2_do_ecm(struct s_reader *reader, const ECM_REQUEST *er, struct s_ecm_answer *ea)
+ {
+ 	uint8_t cta_res[CTA_RES_LEN];
++	static const char valid_ecm[] = { 0x00, 0x00, 0x01 };
+ 	uint8_t ins40[5] = { 0xD1, 0x40, 0x60, 0x80, 0xFF };
+ 	static const uint8_t ins54[5] = { 0xD3, 0x54, 0x00, 0x00, 0x00};
+ 	int32_t posECMpart2 = er->ecm[6] + 7;

@@ -1,0 +1,55 @@
+diff -Nur oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam-cccam-cex1/oscam-ecm.c oscam-smod/oscam-ecm.c
+--- oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam-cccam-cex1/oscam-ecm.c	2022-12-30 18:47:33.093912386 +0100
++++ oscam-smod/oscam-ecm.c	2022-12-30 13:43:22.692637554 +0100
+@@ -1892,6 +1892,51 @@
+ 			{
+ 				cs_log_dbg(D_TRACE, "notice: CW checksum check disabled for %04X:%06X", er->caid, er->prid);
+ 			}
++
++		if(chk_if_ignore_checksum(er, &reader->disablecrccws_only_for) && caid_is_videoguard(er->caid)
++#ifdef CS_CACHEEX_AIO
++		 && !chk_srvid_disablecrccws_only_for_exception(er)
++#endif
++		)
++		{
++			uint8_t k, csum;
++			uint8_t hit = 0;
++			uint8_t oe = checkCWpart(cw, 0) ? 0 : 8;
++			for(k = 0; k < 8; k += 4)
++			{
++				csum = ((cw[k + oe] + cw[k + oe + 1] + cw[k + oe + 2]) & 0xff);
++				if(cw[k + oe + 3] == csum)
++				{
++					hit++;
++				}
++			}
++			if(hit > 1)
++			{
++				char ecmd5s[17 * 3];
++				cs_hexdump(0, er->ecmd5, 16, ecmd5s, sizeof(ecmd5s));
++				if(reader->dropbadcws)
++				{
++					rc = E_NOTFOUND;
++					rcEx = E2_WRONG_CHKSUM;
++					cs_log("Probably got bad CW from reader: %s, caid %04X, srvid %04X (%s) - dropping CW, lg: %i", reader->label, er->caid, er->srvid, ecmd5s
++#ifdef CS_CACHEEX_AIO
++						, er->localgenerated);
++#else
++						, 0);
++#endif
++				}
++				else
++				{
++					cs_log("Probably got bad CW from reader: %s, caid %04X, srvid %04X (%s), lg: %i", reader->label, er->caid, er->srvid, ecmd5s
++#ifdef CS_CACHEEX_AIO
++						, er->localgenerated);
++#else
++						, 0);
++#endif
++				}
++			}
++		}
++
+ 		}
+ 		else
+ 		{

@@ -1,0 +1,2323 @@
+diff -Nur oscam-svn.diff/webif/include/css.css oscam-svn-pull/webif/include/css.css
+--- oscam-svn.diff/webif/include/css.css	2022-12-30 18:49:11.491546893 +0100
++++ oscam-svn-pull/webif/include/css.css	2022-12-30 18:47:59.557276215 +0100
+@@ -1,50 +1,20 @@
+-/* Table of Content
+-=====================================
+-	# 1. RESET
+-	# 2. BASIC DIVISION PAGES
+-	# 3. BASIC SETTINGS
+-	# 4. LINKS
+-	# 5. MAIN MENU
+-	# 6. SUBNAV
+-	# 7. TABLE
+-		- STATUS
+-		- CONFIG
+-		- READERS
+-		- USERS
+-		- SERVICES
+-		- FAILBAN
+-		- CACHEEX
+-		- OTHER TABLES
+-	# 8. TABLE TR
+-	# 9. TABLE TH
+-	# 10. TABLE TD
+-	# 11. DIV
+-	# 12. TEXTAREA,SELECT,INPUT
+-	# 13. IMAGE
+-	# 14. SPAN
+-	# 15. GRAPH
+-	# 16. SORTING IN TABLE
+-	# 17. POLLING
+-	# 18. ECM BAR HISTORY
+-	# 19. FILE MENU
+-	# 20. OTHER SETTINGS
+-===================================== */
+-
++/* ################################# GENERAL SETTINGS FOR DESKTOPS AND MOBILE ################################# */
+ /* **************** 1. RESET  */
+ * {margin:0;padding:0}
+ 
+ /* **************** 2. BASIC DIVISION PAGES */
+ html,body,* html #wrapper {height:100%}
+ #wrapper {position:relative;min-height:100%}
+-#content {margin-bottom:0;padding:0 8px 115px}
++#content {margin-bottom:0;padding:105px 8px 150px}
+ #footer {position:absolute;bottom:0;width:100%}
+ 
+-/* **************** 3. BASIC SETTINGS - BODY,P,H4,LI,B */
++/* **************** 3. BASIC SETTINGS - BODY,P,H4 */
+ body {
+ 	font-family:Arial;
+ 	font-size:11px;
+ 	text-align:center;
+ 	background-color:#FFF;
++	background-image: url(data:image/png;base64,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);
+ 	color:#000;
+ 	text-decoration:none
+ }
+@@ -52,64 +22,71 @@
+ h4 {
+ 	font-size:18px;
+ 	line-height:9px;
+-	margin:20px 0;
+-	color:#F00
++	margin-top:20px;
++	margin-bottom:20px;
++	color:#AAA
+ }
+ /* shutdown.html, autoconf.html */
+ p.text-large-red {
+ 	font-weight:700;
+ 	font-size:large;
+-	color:#F00
++	color:red
+ }
+ /* file.html, script.html */
+ #filename,#filesubmit {
+ 	font-weight:700;
+-	font-size:14px
++	font-size:14px;
++	margin: 10px 0
++}
++/* readerstats.html for P */
++#text_totalecm {margin-top:10px}
++/* footer.html */
++li.styleauthor:after {content:" Gorgone | Last update 2014-11-23"}
++/* other settings for seubheadline */
++td.subheadline p {
++	float: left;
++	text-align:left;
++	font-weight:bold;
++	margin-left:5px
+ }
+ #filesubmit {
+ 	height:20px
+-}
++ }
+ li {
+ 	list-style:none
+ }
+ /* readerstats.html for P */
+-#text_totalecm {
+-	font-weight:bold;
+-	margin-top:5px
+-}
++#text_totalecm {}
++
+ /* footer.html */
+-li.styleauthor:after {
+-	content:"Streamboard Team"
+-}
+-/* Solution for vertical align in tbody.statusecminfo */
+-tbody.statusecminfo tr:nth-child(5) td:last-child b {
+-	position:relative;
+-	top:1px
++div.footer p {
++	margin:5px
+ }
+ 
+ /* **************** 4. LINKS */
+ a {
+ 	text-decoration:none;
++	color:#005BB2
+ }
+ a:link, a:visited, a:active {
+-	color:#050840
++	color:#005BB2
+ }
+ a:hover {
+ 	color:#FF9E5F
+ }
+ /* logpage_debugmenu.html */
+-a.debugl:link, a.sizeml:link {
++a.debugl:link {
+ 	margin:0 1px
+ }
+-a.debugl:hover, a.debugs:hover, a.sizeml:hover, a.sizems:hover {
++a.debugl:hover, a.debugs:hover{
+ 	background-color:#A00;
+ 	color:#FFF
+ }
+ /* module-webif.c  */
+-a.debugls:link, a.sizemls:link {
++a.debugls:link {
+ 	padding:1px 2px 2px
+ }
+-a.debugls:link, a.debugls:visited, a.sizemls:link, a.sizemls:visited {
++a.debugls:link, a.debugls:visited {
+ 	background-color:#A00;
+ 	color:#FFF
+ }
+@@ -123,10 +100,10 @@
+ a.tooltip1 span {
+ 	display:none;
+ 	z-index:99;
+-	white-space:nowrap
++	color: #000
+ }
+ a.tooltip1 {
+-	color:#F00
++    color: red
+ }
+ a:hover span {
+ 	display:block;
+@@ -140,11 +117,19 @@
+ 	border:1px solid #000;
+ 	color:#000
+ }
+-a img.icon {
+-	background-color:#A00
+-}
+ a:hover img.icon {
+-	background-color:#F00
++	background-color:red
++}
++/* logpage.html */
++#savelog {
++	text-decoration:none
++}
++/* ??? */
++td.statuscol14 a, td.statuscol16 a, td.subheadline a {
++	text-decoration:none
++}
++td.subheadline a {
++	text-decoration:none
+ }
+ span a {
+ 	text-align:center
+@@ -152,71 +137,150 @@
+ td.statuscol4 a,
+ td.statuscol9 a,
+ td.statuscol13 a {
+-	text-align:center
++	text-align:center;
+ }
+ /* module-webif.c class for services.html */
+ div.sidlistclose a {
+ 	padding:0 3px;
+ 	color:#FFF
+ }
+-/* help link readers/servicesedit/useredit/config.html */
+-form table a {
+-	cursor:pointer
+-}
+-
+ /* **************** 5. MAIN MENU */
+-#main {}
++/* checkbox for show/hide main menu 
++ * (it is used only for showing main menu on mobile device) 
++ * for desktops browser is not used */
++#toggle, #subtoggle, .toggle, .subtoggle {display:none}
++/* ID are for creating main menu in menu.html */
++#main {
++	width:100%;
++	height:60px;
++	position:fixed;
++	right:0;
++	left:0;
++	top:0;
++	z-index:1050;
++
++	/* GRADIENT */
++	/* Old browsers */
++	background: #EEEEEE;
++	/* Webkit (Chrome/Safari4+) */
++	background-image: -webkit-gradient(linear,left top,right top,color-stop(0, #45484D),color-stop(1, #000000));
++	/* Opera */
++	background-image: -o-linear-gradient(right, #45484D 0%, #000000 100%);
++	/* Firefox */
++	background-image: -moz-linear-gradient(right, #45484D 0%, #000000 100%);
++	/* Webkit (Chrome10+/Safari5.1+) */
++	background-image: -webkit-linear-gradient(right, #45484D 0%, #000000 100%);
++	/* IE10+ */
++	background-image: -ms-linear-gradient(right, #45484D 0%, #000000 100%);
++	/* W3C Markup, IE10 Release Preview */
++	background-image: linear-gradient(to right, #45484D 0%, #000000 100%);
++
++	/* BOX SHADOW */
++	box-shadow:0px 1px 4px #5e5e5e
++}
+ #mainmenu {
+-	height:27px;
+-	padding-top:6px;
+-	white-space:nowrap;
++	height:30px;
++	padding-top:10px;
+ 	display:inline-block;
+ 	position:relative;
+-	background-color:#FFF
++	margin-top:10px;
++	text-shadow:2px 3px 2px #000
+ }
+ #mainmenu li {
+ 	display:inline;
+-	margin:0 2px;
+-	padding:4px 3px 3px;
+-	font-size:18px;
+-	font-weight:700
++	margin-left:3px;
++	margin-right:3px;
++	padding:5px 3px 3px;
++	font-size:16px;
++	font-weight:400;
++	text-transform:uppercase;
++	font-family:Calibri,Arial,Verdana
+ }
+ li.menu a,li.menu a:hover,
+-li.menu_selected a,li.menu_selected a:hover {
+-	color:#050840
++li.menu_selected a,li.menu_selected a:hover {}
++
++li.menu a {
++	color:#B3B3B3
+ }
+-li.menu:hover, li.menu_selected, 
+-li.configmenu:hover, li.configmenu_selected {
+-	background-color:#DDD
++li.menu:hover a {
++	color:#F00423;
++	transition:all 0.5s ease 0s
++}
++li.menu_selected a {
++	color: #F00423
+ }
+-
+ /* **************** 6. SUBNAV */
+-#subnav {}
++#subnav {
++	position: fixed;
++	top: 58px;
++	left: 0;
++	right: 0;
++	padding:6px 0px 4px 0px;
++	z-index:1040;
++	border: 1px solid #e5e5e5;
++
++	/* GRADIENT */
++	/* Old browsers */
++	background: #EEEEEE;
++	/* Webkit (Chrome/Safari4+) */
++	background-image: -webkit-gradient(linear,left bottom,left top,color-stop(0, #F5F5F5),color-stop(1, #EEEEEE));
++	/* Opera */
++	background-image: -o-linear-gradient(top, #F5F5F5 0%, #EEEEEE 100%);
++	/* Firefox */
++	background-image: -moz-linear-gradient(top, #F5F5F5 0%, #EEEEEE 100%);
++	/* Webkit (Chrome10+/Safari5.1+) */
++	background-image: -webkit-linear-gradient(top, #F5F5F5 0%, #EEEEEE 100%);
++	/* IE10+ */
++	background-image: -ms-linear-gradient(top, #F5F5F5 0%, #EEEEEE 100%);
++	/* W3C Markup, IE10 Release Preview */
++	background-image: linear-gradient(to top, #F5F5F5 0%, #EEEEEE 100%);
++
++	/* BOX SHADOW */
++	-webkit-box-shadow: inset 0 1px 0 #fff, 0 1px 5px rgba(0,0,0,.1); 
++	-moz-box-shadow: 	inset 0 1px 0 #fff, 0 1px 5px rgba(0,0,0,.1); 
++	box-shadow: 		inset 0 1px 0 #fff, 0 1px 5px rgba(0,0,0,.1)
++}
+ #nav {
+-	height:22px;
+-	white-space:nowrap
++	height:20px
+ }
+ #nav li {
+-	display:inline-block;
+-	position:relative;
+-	margin:0 2px;
+-	padding:0 3px;
++	display:inline;
++	margin-left:2px;
++	margin-right:2px;
++	padding:5px 3px 3px;
++	padding-top:0;
++	padding-bottom:0;
+ 	font-size:14px
+ }
++#nav a {
++	padding:8px 5px;
++	margin:-5px;
++	color: #2e2e2e;
++	font-size:12px
++}
+ li.configmenu a, li.configmenu a:hover,
+ li.configmenu_selected a, li.configmenu_selected a:hover {
++	text-decoration:none;
++	font-weight: 600;
+ 	color:#050840
+ }
+-/* entitlements.html, readerconfig.html and user_edit.html */
+-li.text_entitle {
+-	font-weight:700
++#nav li.configmenu_selected > a:link,
++#nav li.configmenu_selected > a:visited,
++#nav li.configmenu_selected > a:active,
++#nav li.configmenu > a:hover {
++	color: #ff0000;
++	font-weight: 600;
++	text-shadow: 2px 2px 3px #000000;
++}
++#nav li{
++	position:relative
+ }
+ 
+ /* **************** 7. TABLE */
+ table {
+ 	border-spacing:1px;
+-	border:0;
+-	margin:0 auto
++	margin-left:auto;
++	margin-right:auto
+ }
+ 
+ /* ------- STATUS ------- */
+@@ -230,19 +294,24 @@
+  * Table statususerinfo	- in status_userinfo.html
+  * Table statuscacheexinfo	- in status_cacheexinfo.html
+  */
+-table.infotable {
++table.statusmeminfo, table.statususerinfo, 
++table.statuscacheexinfo {
+ 	width:60%;
+-	white-space:nowrap
++	white-space:nowrap;
++	margin-top:0px;
++	margin-bottom:0px
+ }
+ 
+ /* ------- CONFIG ------- */
+ /* for all part in CONFIGURATION item */
+ /* include readerconfig.html & user_edit.html */
+-table.config, table.configreader,table.configuser {
+-	width:80%;
+-	margin-bottom:-1px;
+-	max-width:610px;
+-	white-space:nowrap
++table.config {
++	width:85%;
++	max-width:820px;
++	margin-bottom:20px
++}
++table.config:nth-child(2) td:first-child{
++	width:auto;
+ }
+ 
+ /* ------- READERS ------- */
+@@ -250,39 +319,39 @@
+ table.readers {
+ 	width:100%
+ }
+-#newinsert table.readers, #searchTable table.readers {
+-	border-spacing:1px 0px;
+-	margin-top:1px
++/* readerconfig.html */
++table.configreader {
++	width:80%;
++	max-width:850px
+ }
+ /* entitlements_bit.html, entitlements_cccambit.html */
+ table.stats {}
+ /* emm.html */
+-table.writeemm {
+-	width:750px
+-}
++table.writeemm {width: 98%;}
+ /* emm_running.html */
+-table.emmrunning {
+-	width:750px
+-}
++table.emmrunning {}
+ /* readerstats.html */
+ table.statsbalance td:last-child {
+ 	line-height:20px;
+ 	width:125px
+ }
+-table.statsbalance td:last-child a {
++table.statsbalance td:last-child img.icon {
+ 	float:right;
+ 	margin-left:10px
+ }
+-/* scanusb.html */
+-table.scanusb {}
+-/* On/Off button for readers and users in readers.html and userconfig.html*/
+-td.readercol0 a img.icon,
+-td.usercol0 a img.icon {
+-	background-color:#0A0
+-}
+-td.readercol0 a:hover img.icon,
+-td.usercol0 a:hover img.icon {
+-	background-color:#00D814
++table.statsbalance td.subheadline {
++	background-color:#2F3133;
++	color:#FFF;
++	font-weight:bold;
++}
++table.statsbalance td.subheadline a {
++	color:#FF9700;
++}
++table.statsbalance td.subheadline a:hover {
++	color:#FFCB80;
++}
++table.statsbalance tr:hover td.subheadline {
++	background-color:#2F3133
+ }
+ 
+ /* ------- USERS ------- */
+@@ -290,27 +359,30 @@
+ table.users {
+ 	width:100%
+ }
+-#newinsert table.users, #searchTable table.users {
+-	border-spacing:1px 0px;
+-	margin-top:1px
++table.ECM_totals {
++	margin-bottom:20px
++}
++table.ECM_totals,
++tr.r_undefined td {background-color:#FFA}
++tr.r_connected td {background-color:#BCFFAD}
++table.user_totals {
++	width:50%
++}
++/* user_edit.html */
++table.configuser {
++	width:80%;
++	max-width:850px;
++	margin-bottom:20px
+ }
+ 
+ /* ------- SERVICES ------- */
+ /* services.html */
+-#addnewservice,#servicesedit,table.configservices {
+-	width:40%;
+-	max-width:510px;
++#addnewservice,#servicesedit {
++	width:35%;
+ 	text-align:center
+ }
+-#addnewservice {
+-	border-spacing:1px 0px;
+-	margin-top:1px
+-}
+ /* services_edit.html */
+-table.configservices {
+-	margin-bottom:-1px;
+-	text-align:left
+-}
++table.configservices {}
+ 
+ /* ------- FAILBAN ------- */
+ /* failban.html */
+@@ -322,55 +394,71 @@
+ 	width:80%
+ }
+ table#cachexstats {
+-	width:50%;
+-	max-width:1300px;
++	width:60%;
+ 	white-space:nowrap;
+-	margin:20px auto 0
++	margin-bottom:0px
+ }
+ 
+ /* ------- OTHER TABLES ------- */
+ /* for settings in configuration of readers and users */
+-/* inline table in config, readerconfig.html & user_edit.html */
++table.invisible {
++	margin-left:0
++}
+ .invisible table {
+ 	border-spacing:0; 
+-	margin-left:0
++	margin-left:0;
++}
++table.invisible tr:hover td {
++	background-color: #373F46 !important; 
++	color: white !important
+ }
+ /* user_edit.html, readerconfig.html */
+-td.subservice {}
+ table.subservicetable {
+ 	width:100%;
+ 	background-color:#FFF
+ }
++/* help link readers/useredit/config.html */ 
++table.config a,
++table.configuser a,
++table.configreader a {
++	cursor:pointer
++}
+ 
+ /* **************** 8. TABLE TR */
+ /* for entitlement of readers */
+ tr.e_valid td, tr.e_expired td, tr.e_header td {
+ 	font-family:"Courier New", monospace
+ }
+-/* hiding formatline for width of firstrow in config, readers and users / width in info */
+-tr.configfirstrow, tr.configfirstrow td,
+-tr.infocolswidth, tr.infocolswidth td, tr.infocolswidth th {
+-	border:0;
+-	height:0;
+-	padding:0
+-}
+ /* rowcolors for cacheex rows in cachex depend on status */
+ tr.e_valid td {background-color:#E6FEBF}
+ tr.e_expired td {background-color:#FFF3E7}
+ /* rowcolors for users rows in unserconfig.html depend on status */
+-tr.online td.usercol6 {background-color:#DDD}
+ tr.online td {background-color:#BFA}
+ tr.offline td {}
+ tr.expired td {background-color:#FBA}
+ tr.connected td {background-color:#FFA}
+-tr.r_undefined td {background-color:#FFA}
+-tr.r_connected td {background-color:#BCFFAD}
+-/* color of button for readers and user row in readers.html and userconfig.html*/
+ tr.disabled td {}
+ tr.disabled td:first-child img.icon,
+-tr.disabledreader td:first-child img.icon {background-color:#B0B0B0}
+-tr.disabled td:first-child a:hover img.icon,
+-tr.disabledreader td:first-child a:hover img.icon {background-color:#CECECE}
++tr.disabledreader td:first-child img.icon {
++	border:1px solid #002600;
++
++	/* GRADIENT */
++	/* Old browsers */
++	background: #004D00;
++	/* Webkit (Chrome/Safari4+) */
++	background-image: -webkit-gradient(linear,left top,left bottom,color-stop(0, #009D00),color-stop(1, #004D00));
++	/* Opera */
++	background-image: -o-linear-gradient(bottom, #009D00 0%, #004D00 100%);
++	/* Firefox */
++	background-image: -moz-linear-gradient(bottom, #009D00 0%, #004D00 100%);
++	/* Webkit (Chrome10+/Safari5.1+) */
++	background-image: -webkit-linear-gradient(bottom, #009D00 0%, #004D00 100%);
++	/* IE10+ */
++	background-image: -ms-linear-gradient(bottom, #009D00 0%, #004D00 100%);
++	/* W3C Markup, IE10 Release Preview */
++	background-image: linear-gradient(to bottom, #009D00 0%, #004D00 100%);
++}
++
+ /* colors for status rows in status.html depend on status */
+ tr.a td {background-color:#3F0}
+ tr.c td {background-color:#F1F5E6}
+@@ -378,17 +466,42 @@
+ tr.n td,tr.h td {background-color:#E1E1EF}
+ tr.r td {background-color:#FFF3E7}
+ tr.p td, tr.scanusbsubhead td {background-color:#FDFBE1}
+-/* scanusb.html */
+-tr.scanusbsubhead {}
++tr.m td {background-color:#DBB}
++
++tr.s:hover td,
++tr.h:hover td,
++tr.r:hover td,
++tr.p:hover td,
++tr.c:hover td,
++tr.m:hover td {
++	background-color:#373F46;
++	color:white
++}
++
++/* Solution for hover in table subservicetable in readerconfig.html and user_edit.html */
++table.configreader tr:nth-child(30):hover td,
++table.configuser tr:nth-child(25):hover td {
++	background-color: #D0D0D0;
++	color: #333;
++}
++table.subservicetable tr:hover td {
++	background-color: #373F46 !important;
++	color: #FFF !important;
++}
++/* ??? */
++tr.disabled td:first-child a:hover img.icon,
++tr.disabledreader td:first-child a:hover img.icon {
++	background:#009D00
++
++}
+ 
+ /* **************** 9. TABLE TH */
+ th {
+ 	height:10px;
+ 	padding:5px;
+-	background-color:#CCC
+-}
+-th.right {
+-	text-align:right
++	background-color:#2F3133;
++	color:#FFF;
++	text-shadow: 2px 3px 2px #000000;
+ }
+ /* status_cacheexinfo.html, status_systeminfo.html, status_userinfo.html */
+ th.nameinfo {
+@@ -396,60 +509,48 @@
+ 	text-align:left;
+ 	background-color:#999
+ }
+-th .nameinfo_second {
+-	text-transform:none;
+-	font-weight:normal
+-}
+-table.infotable th:first-child {
+-	width:100px
+-}
+-/* status.html */
+ th.statuscol0 {
++	text-align:center;
+ 	width:0
+ }
++th.statuscol15 {
++	cursor:pointer
++}
+ /* readerconfig.html */
+ th.withservices, th.notservices, th.lbservices {}
+ 
++/* in readerconfig.html */
++th.withservices, th.notservices, th.lbservices {}
++th.withservices a, th.notservices a, th.lbservices a {color:#FFCB80 !important}
++th.withservices a:hover, th.notservices a:hover, th.lbservices a:hover {color:#FFF !important}
++
+ /* **************** 10. TABLE TD */
+ td {
+ 	height:10px;
+ 	text-align:left;
+-	padding:5px;
+-	background-color:#EEE
+-}
+-/* width of firstrow in config, readers and users */
+-.configfirstrow td:first-child {
+-	width:140px
+-}
+-/* height config, readers and users */
+-.config td, .configreader td, .configuser td {
+-	height:22px
+-}
+-/* for inline table in config, user_edit.html, readerconfig.html */
+-td.subservice, td.invisible {
+-	padding:0px
++	padding:3px;
++	background-color:#D0D0D0;
++	color:#333
+ }
+ /* services.html */
+ #servicesedit td {
+ 	text-align:center
+ }
+ /* readerstatsnotfound.html, readerstatstimeoutbit.html
+- * status_*headline.html */
++ * status_clientheadlinebit.html, status_clientheadlinewith.html
++ * status_pheadline.html, status_rheadline.html
++ */ 
+ td.subheadline {
+ 	height:10px;
++	border:0;
+ 	padding:5px;
+ 	background-color:#CCC;
+-	text-align:center
+-}
+-td.subheadline p {
+-	float:left;
+-	text-align:left;
+-	font-weight:bold;
+-	margin-top:4px
++	text-align:center;
++	text-shadow: 1px 3px 2px #000000;
+ }
+ /* default alignment for all rows status.html/userconfig.html/readers.html */
+ td.centered,
+-td[class*='statuscol'],		/* shorthand notation td[class*='statuscol'] for  td.statuscol0 -  td.statuscol16 */
++td[class*='statuscol'],    /* shorthand notation td[class*='statuscol'] for  td.statuscol0 -  td.statuscol16. */
+ td[class*='usercol'],		/* shorthand notation td[class*='usercol'] for  td.usercol0 -  td.usercol25 */
+ td[class*='readercol'] {	/* shorthand notation td[class*='readercol'] for  td.readercol0 -  td.readercol18 */
+ 	text-align:center
+@@ -460,46 +561,84 @@
+ td.statuscol1 {
+ 	width:0
+ }
+-.usercol1 img{
+-	vertical-align:middle
+-}
+ /* readerconfig_sidokbit.html */
+ td.servicescol1, td.servicescol2, td.servicescol3 {
+-	width:30%
++	width:30%;
++	border:0;
++	border-spacing:1px
+ }
+ /* Actionbutton readers.html */
+ td.readercol14,td.readercol15,
+ td.readercol16 {
+ 	min-width:22px
+ }
+-/* cols width info status and users.html */
+-.infocolswidth td {
+-	width:7.5%
++/* width of firstrow in config, readers and users */
++.configfirstrow td:first-child {
++	width:200px
+ }
+-
++.config tr:last-child:hover td,
++.configuser tr:last-child:hover td,
++.configreader tr:last-child:hover td,
++.writeemm tr:last-child:hover td {
++/*	background-color:#D0D0D0 */
++}
++.config tr:hover td,
++.readers tr:hover td,
++.users tr:hover td,
++.configuser tr:hover td,
++#servicesedit tr:hover td,
++.stats tr:hover td,
++.configreader tr:hover td,
++.statsbalance tr:hover td,
++.writeemm tr:hover td,
++.emmrunning tr:hover td,
++.failban tr:hover td {
++	background-color:#373F46;
++	color:white
++}
++/* for settings in configuration of readers and users */
++table.invisible td { 
++	font-size:12px
++}
++table.invisible td:first-child {
++	padding-left:0;
++	width:auto
++}
++/* ??? */
++tr:hover td a {
++	color:#FFE180
++}
++tr:hover td a:hover {
++	color:#FFF
++}
++/*table.status #tbodyc tr:last-child td {
++	border-bottom:1px;
++	border-color: #000;
++}
++*/
+ /* **************** 11. DIV */
+-/* Log status.html, livelog.html, file.html */
+-div.log, div#livelog, textarea.editor, div.sidlist {
++/* status.html, entitlements_genericbit.html */
++div.log {
+ 	font-family:"Courier New", monospace;
+ 	text-align:left;
++	margin:20px 0;
++	padding:10px;
+ 	border:1px dotted #AAA;
+ 	background-color:#FAFAFA;
+ 	color:#666
+ }
+-div.log {
+-	margin:20px 0 0;
+-	padding:4px;
+-	max-height:300px;
+-	overflow:scroll;
+-}
+ /* module-webif.c class for services.html */
+ div.sidlist {
++	font-family:"Courier New", monospace;
++	text-align:left;
+ 	padding:2px;
+-	background-color:#FFFDF5
++	border:1px dotted #AAA;
++	background-color:#FFFDF5;
++	color:#666
+ }
+ div.sidlistclose {
+ 	float:right;
+-	background-color:#F00;
++	background-color:red;
+ 	color:#FFF
+ }
+ /* message.html */
+@@ -510,18 +649,38 @@
+ }
+ /* file.html */
+ div.filterform {
+-	margin:5px 0
++	margin:10px
+ }
+ /* pre_autoconf.html, pre_shutdown.html */
+ div.warning {
+ 	margin:42px 0 14px
+ }
+-/* logobit.html - Logo for Oscam */
+-div.logo {
+-	position:absolute;
+-	top:6px;
+-	left:9px;
+-	z-index:0
++/* logobit.html - Log for Oscam */
++svg#OSCam.OSCam_logo{
++	position:fixed;
++	top:10px;
++	left:10px;
++	z-index:1060;
++-moz-transform:rotate(-20deg);
++-webkit-transform:rotate(-20deg);
++-o-transform:rotate(-20deg);
++-ms-transform:rotate(-20deg);
++transform:rotate(-20deg);
++	fill:#FFFFFF
++}
++svg#OSCam.OSCam_logo:hover{
++	position:fixed;
++	top:10px;
++	left:10px;
++	z-index:1060;
++-moz-transform:rotate(0deg);
++-webkit-transform:rotate(0deg);
++-o-transform:rotate(0deg);
++-ms-transform:rotate(0deg);
++transform:rotate(0deg);
++}
++
++
+ }
+ /* READERS and USERS items */
+ div.groups {
+@@ -529,60 +688,69 @@
+ 	overflow:hidden;
+ 	margin:0 auto;
+ 	text-align:center;
+-	word-wrap:normal;
++	word-wrap:none;
++	position:relative;
+ 	width:40px
+ }
+ /* footer.html */
+ div.footer {
+-	background-color:#EEE;
+-	border-top:3px solid #CCC
+-}
+-div.footer .top_link {
+-	padding-left:12px;
+-	position:absolute;
+-	font-weight:bold;
+-	bottom:5px;
+-	left:7px;
+-	z-index:0
++	padding-bottom:5px;
++	padding-top:5px;
++	margin-bottom:0;
++	margin-top:40px;
++	background-color:#17191B;
++	border-top:1px solid #000
+ }
+-div.footer .top_link a:before {
+-	content:"\25b2";
+-	font-weight:normal;
+-	position:absolute;
+-	left:1px
++div.footer ul {
++	margin:5px
+ }
+ div.footer li {
+-	margin:5px
++    color: #aaaaaa;
++    text-shadow: 1px 1px 1px #000000;
++}
++div.footer b {
++	color:#999
+ }
++div.footer li.styleauthor b {
++	color:#BD0000;
++	text-shadow:1px 1px 1px #000
++}
++ul.textfooter {
++	margin:5px 0
++}
++ul.textfooter,  ul.textfooter ul {
++	list-style-type:none
++}
++/*ul.textfooter li {
++	display:inline
++}*/
++
+ /* status.html, main DIV for statistics info */
+ div.info {
+ 	max-width:1300px;
+-	white-space:nowrap;
+-	margin:14px auto 0
++	margin:20px auto
+ }
+ /* debugmenu	- status_sdebug.html
+  * logmenu		- file.html
+ */
+-div.debugmenu, div.logmenu, div.logsizemenu {
++div.debugmenu, div.logmenu {
+ 	font-size:12px;
+ 	line-height:16px;
+-	margin-top:10px
+-}
+-#regexdatainput {
+-	margin-top:10px
++	margin-bottom:8px
+ }
+ /* entitlements_cccambit.html */
+ div.cccamentitlementtotals,
+ div.cccamentitlementcontrols {
+-	font-weight:bold;
+-	margin-top:5px
++	margin-top:14px
+ }
+ /* definition only for show or hide columns or DIV
+- * #newinsert		- in userconfig.html, readers.html
++ * #newuser		- in userconfig.html
++ * #newreader	- in readers.html
+  * #exp, #cwc, #acasc - only in module-webif.c for show/hide columns in userconfig.html
+  */
+-#newinsert,
+-.exp, .cwc, .acas, .grp, .hidden {
++#newuser, #newreader, #newinsert,
++.exp, .cwc, .acas, .grp,
++.hidden {
+ 	display:none
+ }
+ 
+@@ -590,66 +758,75 @@
+ /* texteditor in file.html */
+ textarea.editor {
+ 	font-size:11px;
+-	width:100%;
+-	max-width:1500px;
+-	height:556px;
+-	margin:0 auto 10px;
+-	padding:4px
++	width:98%;
++	height:508px;
++	font-family:"Courier New", monospace;
++	text-align:left;
++	padding:8px 10px;
++	border:1px dotted #AAA;
++	background-color:#FAFAFA;
++	color:#000
+ }
+-/* textarea for config */
++/* class for textarea */
+ textarea.bt {
+-	width:380px; 
+ 	font-size:12px
+ }
+-/* textarea for emm.html */
+-table.writeemm textarea {
+-	width:597px
+-}
+ /* generaly settings for all select */
+ select {
+-	padding:2px
++	padding:2px;
++	border: 1px solid #CCC;
++	background-color: white; /* For Firefox in Linux */
+ }
+-/* settings for select in script.html */
+-#scriptselect {
+-	height: 22px
++select:hover {
++	border:1px solid #000
+ }
+ /* generaly settings for all input */
+-input,textarea {
+-	-moz-box-sizing:border-box;
+-	box-sizing:border-box
+-}
+-/* generaly settings for all checkbox input */
+-input[type=checkbox] {
+-	cursor:pointer
+-}
+-/* generaly settings for all text input */
+-input[type=text] {
++input[type="text"] {
+ 	padding:2px;
+-	width:380px
++	border:1px solid #CCC
+ }
+-input.short[type=text] {
+-	width:52px
++input[type="text"]:hover{
++	border:1px solid #000
+ }
+-input.colorinput[type=text] {
+-	width:60px
+-}
+-input.medium[type=text] {
+-	width:125px
++input[type="button"], input[type="submit"]{
++	padding:0 3px;
++	margin:0 3px;
+ }
+-input.longer[type=text] {
+-	width:250px
++input[type="submit"] {
++	cursor:pointer;
++	color: #FFF;
++	border:0;
++	border-radius:3px;
++	
++	/* GRADIENT */
++	/* Old browsers */
++	background:#FF4B45;
++	/* Webkit (Chrome/Safari4+) */
++	background-image: -webkit-gradient(linear,left top,left bottom,color-stop(0, #FF4B45),color-stop(1, #BD0000));
++	/* Opera */
++	background-image: -o-linear-gradient(bottom, #FF4B45 0%, #BD0000 100%);
++	/* Firefox */
++	background-image: -moz-linear-gradient(bottom, #FF4B45 0%, #BD0000 100%);
++	/* Webkit (Chrome10+/Safari5.1+) */
++	background-image: -webkit-linear-gradient(bottom, #FF4B45 0%, #BD0000 100%);
++	/* IE10+ */
++	background-image: -ms-linear-gradient(bottom, #FF4B45 0%, #BD0000 100%);
++	/* W3C Markup, IE10 Release Preview */
++	background-image: linear-gradient(to bottom, #FF4B45 0%, #BD0000 100%);
++
++	/* TEXT SHADOW */
++	text-shadow: 0 -1px 0 #000000;
+ }
+-.readers input[type=text],
+-#addnewservice input[type=text],
+-.users input[type=text],
+-.cacheex input[type=text] {
+-	text-align:center;
+-	background-color:#F8F8F8;
+-	width:180px
++input[type="submit"]:hover {
++	background:#C00;
++	color:#FFF;
++	-webkit-transition: all .01s ease-out; 
++	-moz-transition: all .01s linear; 
++	transition: all .01s linear
+ }
+ /* all config input they are with units e.g. sec or min in config.html */
+-input.withunit {
+-	text-align:left
++input.withunit{
++	text-align:left;
+ }
+ /* solution for align vertical checkbox with text */
+ input[type=checkbox] {
+@@ -657,46 +834,44 @@
+ 	_vertical-align:middle;
+ 	margin-right:5px
+ }
+-/* generaly settings for all buttons/submits */
+-input[type=button], input[type=submit] {
+-	-webkit-appearance:none;
+-	border-radius:3px;
+-	border:1px solid #AAA;
+-	cursor:pointer;
+-	text-align:center;
+-	padding:0 2px;
+-	margin:0 3px;
+-	display:inline-block;
+-	width:70px;
+-	height:20px;
+-	color:#333;
+-	background-color:#F8F8F8
+-}
+-
+-/* generaly hover settings for all buttons/submits */
+-input[type=button]:hover, input[type=submit]:hover {
+-	background-color:#F2F2F2;
+-	box-shadow:inset 1px 1px #555;
+-	padding:0px 1px 0px 3px
+-}
+-/* only for statusheadline button in status.html */
+-td.subheadline input[type=button] {
+-	float:right;
+-	margin:0 0 0 2px;
+-	width:95px;
+-	font-weight:normal
++/* only for button in services.html */
++#addnewservice input[type="submit"] {
++	margin-left:10px
+ }
+-/* only for save button lb/cccam control in config.html */
+-.configcontrol input[type=submit] {
+-	width:115px
++/* only for button in userconfig.html for addnewuser */
++.users input[type="submit"] {
++	margin-left:10px
+ }
+-/* only for button in readers.html/userconfig.html/services.html for addnew */
+-.users input[type=submit], .readers input[type=submit], #addnewservice input[type=submit] {
++/* only for button in readers.html for addnewreaders */
++.readers input[type="submit"] {
+ 	margin-left:10px
+ }
+-/* only for diasabled button in file.html*/
+-#filesubmit input[type=submit]:disabled {
+-	display:none
++/* settings for which is disabled - in files.html?file=oscam.version */
++input[type=submit]:disabled,
++input[type=submit]:disabled:hover {
++	cursor: pointer;
++	color: #656565;
++	border: 2px solid #CCC;
++	
++	/* GRADIENT */
++	/* Old browsers */
++	background:#E6E6E6;
++	/* Webkit (Chrome/Safari4+) */
++	background-image: -webkit-gradient(linear,left top,left bottom,color-stop(0, #FFFFFF),color-stop(1, #E6E6E6));
++	/* Opera */
++	background-image: -o-linear-gradient(bottom, #FFFFFF 0%, #E6E6E6 100%);
++	/* Firefox */
++	background-image: -moz-linear-gradient(bottom, #FFFFFF 0%, #E6E6E6 100%);
++	/* Webkit (Chrome10+/Safari5.1+) */
++	background-image: -webkit-linear-gradient(bottom, #FFFFFF 0%, #E6E6E6 100%);
++	/* IE10+ */
++	background-image: -ms-linear-gradient(bottom, #FFFFFF 0%, #E6E6E6 100%);
++	/* W3C Markup, IE10 Release Preview */
++	background-image: linear-gradient(to bottom, #FFFFFF 0%, #E6E6E6 100%);
++	
++	/* TEXT SHADOW */
++	text-shadow: 0 1px 1px rgba(255, 255, 255, 0.75)
++	
+ }
+ /* only save button in config.html/readerconfig.html/services.html */
+ td.configcolsave {
+@@ -705,41 +880,31 @@
+ /* settings for first option in select
+  * otherdropdown	- in script.html, menu.html
+  */
+-#otherdropdown {
+-	margin:5px
+-}
+ #otherdropdown option:first-child {
+ 	display:none
+ }
+-/* for extract in script.html and emm.html */
+-div.extract {
+-	width:750px;
+-	margin:10px auto;
+-	text-align:left
+-}
+-div.extract p {
+-	font-weight:700;
+-	margin:10px 6px 0 6px
+-}
+-div.extract p.emmhead {
+-	font-size:13px;
+-	text-align:center
+-}
+-div.extract p .emminfo {
+-	font-weight:normal
+-}
+-div.extract pre {
+-	overflow:auto;
+-	margin:5px 0;
+-	padding:5px;
+-	font-family:courier,monospace;
+-	border:1px dotted #AAA;
+-	white-space:pre
+-}
+-div.extract pre.script {
+-	min-height: 100px
++/* only for statusheadline button in status.html */
++td.subheadline input[type="button"] {
++	float:right;
++	font-size:10px;
++	margin:0 0 0 2px;
++	-webkit-appearance:none;
++	border-radius:3px;
++	border:1px solid #FFF;
++	text-align:center;
++	text-shadow:1px 1px 1px #0000;
++	color:#333;
++	background-color:#F8F8F8;
++	cursor:pointer;
+ }
+ 
++td.subheadline input[type="button"]:hover {
++	background:red;
++	color:#FFF;
++	-webkit-transition: all .01s ease-out; 
++	-moz-transition: all .01s linear; 
++	transition: all .01s linear
++}
+ /* **************** 13. IMAGE */
+ /* generaly settings for images */
+ img {
+@@ -747,11 +912,28 @@
+ }
+ /* for icons with following Action */
+ img.icon {
+-	border-radius:4px;
+-	width:22px;
+-	height:22px;
+-	max-height:22px;
+-	background-color:#A00
++	border-radius:3px;
++	border:1px solid #BD0000;
++	width:20px;
++	height:20px;
++	max-height:20px;
++	border-color:#BD0000;
++
++	/* GRADIENT */
++	/* Old browsers */
++	background:#BD0000;
++	/* Webkit (Chrome/Safari4+) */
++	background-image: -webkit-gradient(linear,left top,left bottom,color-stop(0, #FF0000),color-stop(1, #BD0000));
++	/* Opera */
++	background-image: -o-linear-gradient(bottom, #FF0000 0%, #BD0000 100%);
++	/* Firefox */
++	background-image: -moz-linear-gradient(bottom, #FF0000 0%, #BD0000 100%);
++	/* Webkit (Chrome10+/Safari5.1+) */
++	background-image: -webkit-linear-gradient(bottom, #FF0000 0%, #BD0000 100%);
++	/* IE10+ */
++	background-image: -ms-linear-gradient(bottom, #FF0000 0%, #BD0000 100%);
++	/* W3C Markup, IE10 Release Preview */
++	background-image: linear-gradient(to bottom, #FF0000 0%, #BD0000 100%);
+ }
+ /* statususericon	- in STATUS item
+  * protoicon		- in STATUS, READERS item
+@@ -760,42 +942,56 @@
+  */
+ img.statususericon, img.protoicon,
+ img.usericon, img.readericon {
+-	min-height:15px;
+-	height:auto;
+-	max-height:22px;
+-	max-width:150px
+-}
+-/* ECM Restarticon */
+-.statusecminfo img {
+-	vertical-align:middle
++	min-height:15px
+ }
+ /* logo IC_LOGO.tpL */
+ div.logo img {
+-	max-height:44px
+-}
+-div.logo svg.OSCam_logo {
+-	fill:#111111
++	max-height:44px;
++
++	/* ROTATE IMAGE */
++	 -webkit-transform: rotate(350deg);
++	-moz-transform: rotate(350deg)
+ }
+ 
+ td#out.centered img,
+ td#in.centered img {
+-	margin:0 10px -2px
++	margin-bottom:-2px;
++	margin-right:10px;
++	margin-left: 10px
+ }
+ 
+ /* **************** 14. SPAN */
+ /* module-webif.c and userconfig_notify.html */
+-span.span_notifier {
+-	margin-left:2px;
+-	padding:1px 3px;
+-	color:#FFF;
+-	background-color:#F00
++span.span_notifier{
++	background: radial-gradient( center -9px, circle closest-side, white 0, red 26px );
++	background: -moz-radial-gradient( center -9px, circle closest-side, white 0, red 26px );
++	background: -ms-radial-gradient( center -9px, circle closest-side, white 0, red 26px );
++	background: -o-radial-gradient( center -9px, circle closest-side, white 0, red 26px );
++	background: -webkit-radial-gradient( center -9px, circle, white 0, red 26px );
++	background-color: red;
++	border: 2px solid white;
++	border-radius: 50%; 
++	box-shadow: 1px 1px 1px black;
++	color: white;
++	font: bold 12px/10px Helvetica, Verdana, Tahoma;
++	height: 12px; /* height + padding-top must equal width */
++	padding-top: 0px; /* height + padding-top must equal width */
++	text-align: center;
++	width: 20px;
++	left: -3px;
++	margin-top: 0;
++	padding-left: 4px;
++	padding-right: 4px;
++	top: -8px;
++	margin-right: -10px;
++	position:relative;
+ }
+ /* module-webif.c value for STATUS item ( more info in Changeset 6668 by alno )
+  * Class for formating values in statusview column "Idle"
+  * In new WebIf column Idle is not used. Info about Idle is in title */
+ span.idlesec_normal, span.idlesec_alert {
+ 	font-size:9px;
+-	color:#F00
++	color:red
+ }
+ /* readerconfig_cccambit.html, user_edit_anticasc.html and user_edit_cccam.html */
+ span.global_conf {
+@@ -804,17 +1000,26 @@
+ 	padding:4px;
+ 	color:blue
+ }
++/* entitlements.html, readerconfig.html and user_edit.html */
++span.text_entitle {
++	display:inline-block;
++	font-weight:700
++}
+ /* cachex status */
+ span.e_expired {background-color:#FFF3E7}
++/* ?? */ 
+ .span, span {
+-	text-align:center
++	text-align:center;
++}
++span.e_valid {
++	background-color:#E6FEBF
+ }
+ 
+ /* **************** 15. GRAPH */
+ svg.graph {background-color:#F0F0F0;font-family:Arial;font-size:9px}
+ rect.graph_bg {fill:white}
+ rect.graph_button {fill:#A9D0F5}
+-text.graph_error {text-anchor:middle;fill:#F00}
++text.graph_error {text-anchor:middle;fill:red}
+ text.graph_top_txt {text-anchor:end}
+ text.graph_grid_txt {text-anchor:end;fill:gray}
+ path.graph_grid {stroke-opacity:0.5;stroke-width:0.7px;stroke:gray}
+@@ -825,111 +1030,103 @@
+ 	font-size:11px
+ }
+ .sortable {
+-	background-image: url(data:image/gif;base64,R0lGODlhBQAIAJEAAAAAAP///yMtMP///yH5BAEAAAMALAAAAAAFAAgAAAIL3GQnuJ2f2lLI1AIAOw==);
++	background-image: url(data:image/png;base64,R0lGODlhBQAIAJEAAAAAAP///4CAgP///yH5BAEAAAMALAAAAAAFAAgAAAIL3GQnuJ2f2lLI1AIAOw==);
+ 	background-repeat:no-repeat;
+ 	background-position:4px center;
+ 	cursor:pointer;
+ 	padding-left:12px;
+ 	padding-right:8px
+ }
+-.sorting-desc {
+-	background-image: url(data:image/gif;base64,R0lGODlhBQADAJEAAAAAAP///yMtMP///yH5BAEAAAMALAAAAAAFAAMAAAIFlD03K1sAOw==);
++.sorting-asc, .sorting-desc{
++	background-color:#999
++}
++.sorting-desc{
++	background-image: url(data:image/png;base64,R0lGODlhBQADAJEAAAAAAP///yMtMP///yH5BAEAAAMALAAAAAAFAAMAAAIFlD03K1sAOw==);
+ 	background-repeat:no-repeat;
+ 	background-position:4px center;
+ 	cursor:pointer;
+ 	padding-left:10px;
+ 	padding-right:8px
+ }
+-.sorting-asc {
+-	background-image: url(data:image/gif;base64,R0lGODlhBQADAJEAAAAAAP///yMtMP///yH5BAEAAAMALAAAAAAFAAMAAAIF3GQnuF0AOw==);
++.sorting-asc{
++	background-image: url(data:image/png;base64,R0lGODlhBQADAJEAAAAAAP///yMtMP///yH5BAEAAAMALAAAAAAFAAMAAAIF3GQnuF0AOw==);
+ 	background-repeat:no-repeat;
+ 	background-position:4px center;
+ 	cursor:pointer;
+ 	padding-left:10px;
+ 	padding-right:8px
+ }
+-.sorting-asc, .sorting-desc {background-color:#AAA}
+-.readers .td-sorting,
+-.readers tr.r_undefined .td-sorting {background-color: #EAEA95}
+-.readers tr.r_connected .td-sorting {background-color: #A6EA95}
+-.readers tr.enabledreader .td-sorting {background-color: #D9D9D9}
+-.readers tr.disabledreader .td-sorting {background-color: #D9D9D9}
+-.users tr.offline .td-sorting,
+-.users tr.disabled .td-sorting,
+-.statsbalance .td-sorting {background-color: #D9D9D9}
+-.users tr.connected .td-sorting {background-color: #EAEA95}
+-.users tr.online .td-sorting {background-color: #A6EA95}
+-.users tr.online td.usercol6.td-sorting {background-color:#C8C8C8}
+-.users tr.expired .td-sorting {background-color: #EAA69F}
+ 
+ /* **************** 17. POLLING */
+ /*  for UL in logpoll.html */
+ #livelog {
+ 	resize:vertical;
+-	height:574px;
++	height:580px;
+ 	max-width:1500px;
+ 	overflow-y:auto;
+-	margin:1px auto 15px;
+-	padding:0px 4px
++	list-style:none;
++	text-align:left;
++	margin:5px auto 15px;
++	border:1px dotted #AAA;
++	background-color:#FAFAFA;
++	color:#666;
++	font-family: "Andale Mono","Courier New",monospace;
++	font-weight: bold;
+ }
+ #livelogdata {
+-	white-space:pre
++	list-style:none;
+ }
+ li.regex, li.regexdata_nav, li.regexdata_save{
++	list-style-type:none;
+ 	white-space:nowrap
+ }
+ input.regexinput {
+ 	cursor:text;
+ 	padding:2px;
+-	margin:3px 15px 1px 3px;
+-	width:400px
++	margin: 3px 15px 1px 3px;
++	width:400px;
+ }
+ .regexdata_nav input {
+-	width:100px
++	width:100px;
++	margin-bottom:8px
+ }
+ .regexdata_save input {
+ 	width:90px;
+ 	margin-top:10px
+ }
+-.colorPicker_def_color {
+-	color:#DDD
+-}
+-.colorPicker_def_fcolor {
+-	color:#00F
+-}
+ div.colorPicker-picker {
+-	height:16px;
+-	width:16px;
+-	display:inline;
+-	margin:3px;
+-	padding:4px 8px;
+-	border:1px solid #CCC;
+-	cursor:pointer;
+-	line-height:16px;
++	height: 16px;
++	width: 16px;
++	display: inline;
++	margin: 3px;
++	padding: 4px 8px;
++	border: 1px solid #ccc;
++	cursor: pointer;
++	line-height: 16px;
+ 	font-size:0.75em;
+ 	font-weight:bold;
+-	text-align:center
++	text-align: center;
+ }
+ div.colorPicker-palette {
+-	width:110px;
+-	position:absolute;
+-	border:1px solid #598FEF;
+-	background-color:#EFEFEF;
+-	padding:2px;
+-	z-index:9999
+-}
+-div.colorPicker_hexWrap {width:100%;float:left}
+-div.colorPicker_hexWrap label {font-size:95%;color:#2F2F2F;margin:5px 2px;width:25%}
+-div.colorPicker_hexWrap input {margin:5px 2px;padding:0;font-size:95%;border:1px solid #000;width:65%}
++	width: 110px;
++	position: absolute;
++	border: 1px solid #598FEF;
++	background-color: #EFEFEF;
++	padding: 2px;
++	z-index: 9999;
++}
++div.colorPicker_hexWrap {width: 100%; float:left }
++div.colorPicker_hexWrap label {font-size: 95%; color: #2F2F2F; margin: 5px 2px; width: 25%}
++div.colorPicker_hexWrap input {margin: 5px 2px; padding: 0; font-size: 95%; border: 1px solid #000; width: 65%; }
+ 
+ div.colorPicker-swatch {
+-	height:12px;
+-	width:12px;
+-	border:1px solid #000;
+-	margin:2px;
+-	float:left;
+-	cursor:pointer;
+-	line-height:12px
++	height: 12px;
++	width: 12px;
++	border: 1px solid #000;
++	margin: 2px;
++	float: left;
++	cursor: pointer;
++	line-height: 12px;
+ }
+ /* User-Page polling */
+ #inc,#polling,#dec,.regexbutton {
+@@ -1005,32 +1202,32 @@
+ 	position:absolute;
+ 	width: 150px;
+ 	height: 90px;
+-	border: 1px dotted #F00;
++	border: 3px solid #BD0000;
+ 	background-color: #EAEAEA;
+ 	padding:3px;
+-	z-index:1000
++	z-index:1000;	
+ }
+ #charthead {
+ 	background-color:transparent;
+ 	width:100%;
+-	height:5px
++	height:5px;
+ }
+ #graph {
+ 	width:98%;
+ 	bottom:0;
+-	position:absolute
++	position:absolute;
+ }
+ .disabledtable {
+-	opacity:0.5
++    opacity: 0.5;
+ }
+ /* Statuspage Functions: Generate a Bar for Barchart */
+ div.bar {
+-	width:5px;
+-	margin:2px;
+-	display:inline-block;
+-	position:relative;
+-	background-color:#AEAEAE;
+-	vertical-align:baseline
++	width: 5px;
++	margin: 2px;
++	display: inline-block;
++	position: relative;
++	background-color: #aeaeae;
++	vertical-align: baseline;
+ }
+ 
+ /* **************** 19. FILE MENU */
+@@ -1051,58 +1248,664 @@
+ 	opacity:1;
+ 	filter:alpha(opacity=100)
+ }
++#nav ul.dropdown_nav {
++	padding:0;
++	margin:0
++}
+ #nav ul.dropdown_nav li {
++	list-style-type:none;
+ 	margin:0;
+ 	padding:1px 0;
+ 	width:100%
+ }
+ #nav li ul.dropdown_nav li a {
+ 	color:#000;
+-	padding:0 5px;
+-	display:block
++	padding:3px 5px;
++	display: block;
++	margin: 0;
++}
++#nav li {
++	position:relative
+ }
+ #nav li ul.dropdown_nav {
+ 	display:none;
+-	white-space:normal;
+ 	position:absolute;
+ 	text-align:left;
+ 	top:16px;
+ 	right:0;
+ 	width:auto;
+ 	background-color:#FFF;
+-	border:1px solid #DDD
++	border:1px solid #DDD;
+ }
+ #nav li:hover ul.dropdown_nav {
+ 	display:block
+ }
+-
++#nav li ul.dropdown_nav li a:hover {
++	color:#F00423;
++	background:none
++}
++#nav li ul.dropdown_nav li.configmenu:hover {
++	background-color:#DDD
++}
++#nav li ul.dropdown_nav li.configmenu_selected a {
++	color:#F00423
++}
++#nav li ul.dropdown_nav li.configmenu_selected:hover {
++	background-color:#DDD
++}
++#nav li.configmenu:last-child:hover a.drop {
++	background-color:#DDD
++}
+ /* **************** 20. OTHER SETTINGS */
+-/* iPhone */
+-@media
+-only screen and (min-device-width : 320px) and (max-device-width : 480px),
+-only screen and (min-device-width : 320px) and (max-device-width : 568px){
+-	div.footer {
+-		height:92px
++/* margin top from previous table */
++.margintop {
++	margin-top:30px
++}
++.smallmargintop {
++	margin-top:15px
++}
++
++/* ################################# RESPONSIVE DESIGN FOR DESKTOPS AND MOBILE DEVICE ################################# */
++/* ################ DESKTOPS ################ */
++/* For all monitors with resolution width=1024px and above */
++@media screen and (min-width: 1024px) {
++	 /* solution for align vertical checkbox with text */
++		input[type=checkbox] {
++			vertical-align:text-bottom;
++			_vertical-align:middle;
++			/* Hide the input, but have it still be clickable */
++		    opacity: 100;
++		    margin:0 0 0 3px;
++		}
++		input[type=checkbox] + label {
++		background-repeat: no-repeat;
++	}
++}
++
++
++/* Tested monitor with resolution:
++ * 1152 x 864, 1280 x 1024
++ * 1366 x 768 [ 15" Netbook ]
++ */
++@media screen and (min-width: 1024px) and (max-width: 1024px) {
++	div.groups {
++		text-overflow:ellipsis;
++		-o-text-overflow:ellipsis
+ 	}
+ }
+-/* iPhone Landscape */
+-@media
+-only screen and (min-device-width : 320px) and (max-device-width : 480px) and (orientation : landscape),
+-only screen and (min-device-width : 320px) and (max-device-width : 568px) and (orientation : landscape) {
++
++/* Tested monitor with resolution 
++ * 1024 x 768 [ 12" Netbook ]
++ * 1024 x 600 [ 10" Netbook ]
++ */
++@media screen and (max-width: 1024px) {
++
++/* NOTE: In userconfig.html is hidden columns for "CW Cycle" and "Idle Time / On Channel"  */
++
++	/* Settings for displaying groups in readers and users */
++		div.groups {
++			text-overflow:ellipsis;
++			-o-text-overflow:ellipsis
++		}
++	/* livelog in logpoll.htm */
+ 	#livelog {
+-		height:382px
++                font-size: 10px;
+ 	}
+-	textarea.editor {
+-		height:400px
++	/* change width for table config for readers and users*/
++        table.config,
++        table.configuser  {
++                width: 80%;
+ 	}
++
++	/* table in userconfig - hide whole columns CW Cycle */
++        table.users tbody td:nth-child(18) {display: none;} /* for TD in TBODY */
++        table.users thead th:nth-child(6) {display: none;} /* for TH in THEAD */
++        table.users thead #headline th:nth-child(6) {display: table-cell;} /* for TH in THEAD - special for TR #headline */
++        table.users thead #headline th:nth-child(18) {display: none;} /* for TH in THEAD - special for TR #headline */
++
++	/* table in userconfig - hide whole columns Idle Time / On Channel */
++        table.users tbody td:nth-child(6) {display: none;} /* for TD in TBODY */
++        table.users thead th:nth-child(2) {display: none;} /* for TH in THEAD */
++        table.users thead #headline th:nth-child(2) {display: table-cell;} /* for TH in THEAD - special for TR #headline */
++        table.users thead #headline th:nth-child(6) {display: none;} /* for TH in THEAD - special for TR #headline */ 
++
+ }
+-/* iPad Landscape */
+-@media only screen and (min-device-width : 768px) and (max-device-width : 1024px) and (orientation : landscape) {
+-	#livelog {
+-		height:494px
++
++/* ################ MOBILE PHONES ################ */
++/* Mobile Phones PORTRAIT:
++ * -----------------------
++ * Samsung Galaxy S4 mini - only screen and (-webkit-device-pixel-ratio: 1.5)
++ * Samsung Galaxy S3 - only screen and (-webkit-device-pixel-ratio: 2)
++ * Nexus 5 - only screen and (min-width: 360px) and (orientation: portrait) and (-webkit-min-device-pixel-ratio: 3.0)
++ * iPhone 4, 4S in portrait - only screen and (min-device-width: 320px) and (max-device-width: 480px) and (-webkit-device-pixel-ratio: 2) and (device-aspect-ratio: 2/3) and (orientation:portrait)
++ * Test in PC - (device-width: 360px) and (device-height: 640px)
++ */
++@media	
++/*only screen and (-webkit-device-pixel-ratio: 1.5),
++only screen and (-webkit-device-pixel-ratio: 2),
++only screen and (min-width: 360px) and (orientation: portrait) and (-webkit-min-device-pixel-ratio: 3.0),
++only screen and (min-device-width: 320px) and (max-device-width: 480px) and (-webkit-device-pixel-ratio: 2) and (device-aspect-ratio: 2/3) and (orientation:portrait),*/
++screen and (device-width: 360px) and (device-height: 640px) {
++
++/* **************** 1. BASIC DIVISION PAGES */
++	#content {
++		padding:100px 8px 300px
++	}
++
++/* **************** 2. BASIC SETTINGS - BODY,P,H4 */
++/* pre_shutdown.html */
++h4 {
++	line-height:20px;
++}
++
++/* **************** 3. MAIN MENU */
++	/* checkbox for show/hide main menu */
++		#toggle:checked ~ #mainmenu {display:block;opacity:1}
++	/* label for checkbox */
++		.toggle {
++			display:block;
++			position:relative;
++			cursor:pointer;
++			-webkit-touch-callout:none;
++			-webkit-user-select:none;
++			user-select:none
++		}
++		.toggle:after {
++			content:'Main menu';
++			display:block;
++			width:100%;
++			padding:13px 50px;
++			background-color:#1E1F21;
++			text-align:center;
++			font-size:1.5em;
++			font-weight:700;
++			color:#FFF;
++			-webkit-transition: all 0.5s linear;
++			-moz-transition: all 0.5s linear;
++			-o-transition: all 0.5s linear;
++			transition: all 0.5s linear;
++			-webkit-box-sizing: border-box;
++			-moz-box-sizing: border-box;
++			box-sizing: border-box;
++
++			/* BOX SHADOW */
++			-webkit-box-shadow: 0 8px 6px -6px  rgba(50, 50, 50, 0.32);
++			-moz-box-shadow:    0 8px 6px -6px  rgba(50, 50, 50, 0.32);
++			box-shadow:         0 8px 6px -6px  rgba(50, 50, 50, 0.32)
++		}
++		.toggle:hover:after{
++			background: #000
++		}
++		#toggle:checked + .toggle:after{
++			content:'Close Menu';
++			color: #F00;
++			text-shadow: 1px 1px 2px #000;
++		}
++
++	/* main menu */
++		#main {
++			height:46px
++		}
++		#mainmenu, #mainmenu > li, #mainmenu > li > a{ 
++			height: auto
++		}
++		#mainmenu { 
++			display:none;
++			opacity:0;
++			width:100%;
++			position:absolute;
++			right:0;
++			padding-top:0;
++			margin-top:0
++		}
++		#mainmenu > li {
++			display:block;
++			width:100%;
++			margin:0;
++			background:#666;
++			font-size:1.5em;
++			font-weight:400;
++			padding:10px
++		}
++		li.menu a {
++			color:#FFF;
++			text-shadow:1px 1px 2px rgba(0, 0, 0, 1)
++		}
++		li.menu_selected a {
++			color:#F00;
++			text-shadow:1px 1px 2px rgba(0, 0, 0, 1)
++		}
++		#mainmenu > li:last-child {
++			border-bottom:2px solid black;
++
++			/* BOX SHADOW */
++			-webkit-box-shadow: 0 8px 6px -6px  rgba(50, 50, 50, 0.32);
++			-moz-box-shadow:    0 8px 6px -6px  rgba(50, 50, 50, 0.32);
++			box-shadow:         0 8px 6px -6px  rgba(50, 50, 50, 0.32)
++		}
++		#mainmenu > li > a {
++			width:100%;
++			text-decoration:none;
++			-webkit-box-sizing:border-box;
++			-moz-box-sizing:border-box; 
++			box-sizing:border-box
++		}
++		span.span_notifier {
++			margin-left:5px;
++			font-weight:700
++		}
++
++/* **************** 4. SUBNAV */
++	/* checkbox for show/hide subnav */
++		#subtoggle:checked ~ #nav {display:block;opacity:1}
++	/* label for checkbox */
++		.subtoggle {
++			display:block;
++			position:relative;
++			cursor:pointer;
++			-webkit-touch-callout:none;
++			-webkit-user-select:none;
++			user-select:none
++		}
++		.subtoggle:after {
++			content:'SubMenu';
++			display:block;
++			width:100%;
++			padding:13px 50px;
++			background-color:#707070;
++			text-align:center;
++			font-size:1.5em;
++			font-weight:700;
++			color:#FFF;
++			-webkit-transition: all 0.5s linear;
++			-moz-transition: all 0.5s linear;
++			-o-transition: all 0.5s linear;
++			transition: all 0.5s linear;
++			-webkit-box-sizing: border-box;
++			-moz-box-sizing: border-box;
++			box-sizing: border-box;
++
++			/* BOX SHADOW */
++			-webkit-box-shadow: 0 8px 6px -6px  rgba(50, 50, 50, 0.32);
++			-moz-box-shadow:    0 8px 6px -6px  rgba(50, 50, 50, 0.32);
++			box-shadow:         0 8px 6px -6px  rgba(50, 50, 50, 0.32)
++		}
++		.subtoggle:hover:after{}
++		#subtoggle:checked + .subtoggle:after{
++			content:'Close SubMenu'
++	}
++
++	/* subnav */
++		#subnav {
++			top:45px;
++			padding:0;
++			border:none
++		}
++		#nav { 
++			display:none;
++			opacity:0;
++			width:100%;
++			position:absolute;
++			right:0;
++			padding-top:0;
++			margin-top:0
++		}
++		#nav > li {
++			display:block;
++			width:100%;
++			margin:0;
++			background:#EDEDED;
++			font-size:1.5em;
++			font-weight:400;
++			padding:10px
++		}
++		#nav > li:last-child {
++			border-bottom: 2px solid black;
++			border-top: 1px solid #CFCFCF;
++
++			/* BOX SHADOW */
++			-webkit-box-shadow: 0 8px 6px -6px  rgba(50, 50, 50, 0.32);
++			-moz-box-shadow:    0 8px 6px -6px  rgba(50, 50, 50, 0.32);
++			box-shadow:         0 8px 6px -6px  rgba(50, 50, 50, 0.32)
++		}
++
++	/* set pollsetting in repsonsive design */
++		#nav li.pollselect {
++			display:block;
++			list-style:none;
++			position:static;
++			right:0;
++			font-size:1.3em
++		}
++
++/* **************** 5. TABLE */
++
++/* ------- CACHEEX ------- */
++/* cacheex.html */
++table#cachexstats {
++	width:100%;
++}
++
++/* **************** 6. FOOTER */
++	div.footer ul ul li {
++		margin:5px
++	}
++	ul.textfooter ul li,ul.textfooter ul li:last-child {
++		display: list-item;
++		list-style-type: square
+ 	}
++	ul.textfooter ul {
++		text-align:left;
++		margin:auto;
++		width:60%
++	}
++	li.developed {
++		font-size:1.3em
++	}
++	li.styleauthor {
++		background-color: black;
++		padding:2px
++	}
++	li.styleauthor:after {
++		content:""
++	}
++
++/* **************** 7. TEXTAREA,SELECT,INPUT */
++	/* generaly settings for all input */
++		input[type="text"] {
++			padding:6px
++		}
++	/* texteditor in file.html */
+ 	textarea.editor {
+-		height:508px
++			width:90%
++		}
++
++/* **************** 8. TABLES */
++	/* TABLE - TEST IN readers.html */
++	/* Force table to not be like tables anymore */
++		table.readers,table.readers thead,table.readers tbody,table.readers th,table.readers td,table.readers tr { 
++			display: block; 
++		}
++	/* Hide table headers (but not display: none;, for accessibility) */
++		table.readers thead tr { 
++			position: absolute;
++			top: -9999px;
++			left: -9999px;
+  	}
++		
++		table.readers tr { border: 1px solid #ccc; }
++		
++		table.readers td { 
++			/* Behave  like a "row" */
++			border: none;
++			height:1.5em; 
++			position: relative;
++			padding-left: 50%;
++			background-color: #E7E7E7;
++		}
++		
++		table.readers td:before { 
++			/* Now like a table header */
++			position: absolute;
++			/* Top/left values mimic padding */
++			top: 6px;
++			left: 6px;
++			width: 45%; 
++			padding-right: 10px; 
++			white-space: nowrap;
++		}
++		/* For tr hover */
++		.readers tr:nth-child(odd):hover td {
++			background-color:#D3D3D3;
++			color:#333
++		}
++		.readers tr:nth-child(even):hover td {
++			background-color:#E7E7E7;
++			color:#333
++		}
++		.readers tr:nth-child(odd):hover a {
++			color:#050840
++		}
++		.readers tr:nth-child(even):hover a {
++			color:#050840
++		}
++		/* For each odd "row" */
++		table.readers tr:nth-child(odd) td {background-color: #D3D3D3}
++		/* Label the data for table in readers */
++		table.readers th:nth-child(1){height:30px;margin-bottom:5px}
++		table.readers td:nth-of-type(2):before { content: "Reader";font-weight:bold }   
++		table.readers td:nth-of-type(3):before { content: "Protocol";font-weight:bold }
++		table.readers td:nth-of-type(4):before { content: "Groups";font-weight:bold }
++		table.readers td:nth-of-type(5):before { content: "ECM OK";font-weight:bold }
++		table.readers td:nth-of-type(6):before { content: "ECM NOK";font-weight:bold }
++		
++		table.readers td:nth-child(1),table.readers td:nth-child(7),table.readers td:nth-child(8),
++		table.readers td:nth-child(9),table.readers td:nth-child(10),table.readers td:nth-child(11),
++		table.readers td:nth-child(12),table.readers td:nth-child(13),table.readers td:nth-child(14),
++		table.readers td:nth-child(15),table.readers td:nth-child(16),table.readers td:nth-child(17),
++		table.readers td:nth-child(18){ display:none }
++
++
++	/* TABLE - TEST IN userconfig.html */
++	/* Force table to not be like tables anymore */
++		table.users,table.users thead,table.users tbody,table.users th,table.users td,table.users tr { 
++			display: block; 
++		}
++	/* Hide table headers (but not display: none;, for accessibility) */
++		table.users thead tr { 
++			position: absolute;
++			top: -9999px;
++			left: -9999px;
++		}
++		
++		table.users tr { border: 1px solid #ccc; }
++		
++		table.users td { 
++			/* Behave  like a "row" */
++			border: none;
++			height:1.5em; 
++			position: relative;
++			padding-left: 50%;
++		}
++		
++		table.users td:before { 
++			/* Now like a table header */
++			position: absolute;
++			/* Top/left values mimic padding */
++			top: 6px;
++			left: 6px;
++			width: 45%; 
++			padding-right: 10px; 
++			white-space: nowrap;
++		}
++		/* For tr hover */
++		.users tr:nth-child(odd):hover td {
++			background-color:#E7E7E7;
++			color:#333
++		}
++		.users tr:nth-child(even):hover td {
++			background-color:#E7E7E7;
++			color:#333
++		}
++		.users tr:nth-child(odd):hover a {
++			color:#050840
++		}
++		.users tr:nth-child(even):hover a {
++			color:#050840
++		}
++		/* For each odd "row" */
++		table.users tr:nth-child(odd) td {}
++		/* Label the data for table in users */
++		table.users th:nth-child(1){height:30px;margin-bottom:5px}
++		table.users td:nth-of-type(2):before { content: "User";font-weight:bold }
++		table.users td:nth-child(3) { height:1.8em; } 
++		table.users td:nth-of-type(3):before { content: "Status";font-weight:bold }
++		table.users td:nth-of-type(4):before { content: "Protocol";font-weight:bold }
++		table.users td:nth-of-type(7):before { content: "Last Channel";font-weight:bold }
++		table.users td:nth-of-type(9):before { content: "ECM OK";font-weight:bold }
++		table.users td:nth-of-type(10):before { content: "ECM NOK";font-weight:bold }
++		table.users td:nth-of-type(13):before { content: "ECM CACHE";font-weight:bold }
++		
++		table.users td:nth-child(1),table.users td:nth-child(5),table.users td:nth-child(6),
++		table.users td:nth-child(8),table.users td:nth-child(11),
++		table.users td:nth-child(12),table.users td:nth-child(14),
++		table.users td:nth-child(15),table.users td:nth-child(16),table.users td:nth-child(17),
++		table.users td:nth-child(18),table.users td:nth-child(19),table.users td:nth-child(20),
++		table.users td:nth-child(21),table.users td:nth-child(22),table.users td:nth-child(23),
++		table.users td:nth-child(24), table.users td:nth-child(25), table.users td:nth-child(26){ display:none }
++
++/* **************** 9. DIV */
++/* pre_autoconf.html, pre_shutdown.html */
++div.warning {
++	font-size:1.1em
++}
++div.warning br {
++	display:none
++}
++/* **************** 10. OTHER SETTINGS */
++	/* Logo */
++		div.logo {
++			display:none
++		}	
++}
++
++/* hiding formatline for width of firstrow in config, readers and users / width in info */
++tr.configfirstrow, tr.configfirstrow td,
++tr.infocolswidth, tr.infocolswidth td, tr.infocolswidth th {
++	border:0;
++	height:0;
++	padding:0
++}
++
++.colorPicker_def_color {
++	color:#333333
++}
++.colorPicker_def_fcolor {
++	color:#FFFFFF
++}
++td.subservice, td.invisible{
++padding:0px;
++}
++
++div.extract {
++	width: 98%;
++	margin-left: auto;
++	margin-right: auto;
++	text-align: left
++}
++
++.sorting-asc, .sorting-desc {background-color:#aaa}
++.readers .td-sorting,
++.readers tr.r_undefined .td-sorting {background-color: #EAEA95}
++.readers tr.r_connected .td-sorting {background-color: #A6EA95}
++.readers tr.enabledreader .td-sorting {background-color: #D9D9D9}
++.readers tr.disabledreader .td-sorting {background-color: #D9D9D9}
++.users tr.offline .td-sorting,
++.users tr.disabled .td-sorting,
++.statsbalance .td-sorting {background-color: #d9d9d9}
++.users tr.connected .td-sorting {background-color: #eaea95}
++.users tr.online .td-sorting {background-color: #a6ea95}
++.users tr.online td.usercol6.td-sorting {background-color:#c8c8c8}
++.users tr.expired .td-sorting {background-color: #eaa69f}
++
++th.sortable,th,#chart,#main,div.footer,td.subheadline,.visible tbody tr th,td.subheadline input{background:#b5bdc8;background:url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/Pgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgdmlld0JveD0iMCAwIDEgMSIgcHJlc2VydmVBc3BlY3RSYXRpbz0ibm9uZSI+CiAgPGxpbmVhckdyYWRpZW50IGlkPSJncmFkLXVjZ2ctZ2VuZXJhdGVkIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIwJSIgeTI9IjEwMCUiPgogICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI2I1YmRjOCIgc3RvcC1vcGFjaXR5PSIxIi8+CiAgICA8c3RvcCBvZmZzZXQ9IjM0JSIgc3RvcC1jb2xvcj0iIzUzNTY1ZSIgc3RvcC1vcGFjaXR5PSIxIi8+CiAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMyODM0M2IiIHN0b3Atb3BhY2l0eT0iMSIvPgogIDwvbGluZWFyR3JhZGllbnQ+CiAgPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0idXJsKCNncmFkLXVjZ2ctZ2VuZXJhdGVkKSIgLz4KPC9zdmc+);background:-moz-linear-gradient(top,#b5bdc8 0%,#53565e 34%,#28343b 100%);background:-webkit-gradient(linear,left top,left bottom,color-stop(0%,#b5bdc8),color-stop(34%,#53565e),color-stop(100%,#28343b));background:-webkit-linear-gradient(top,#b5bdc8 0%,#53565e 34%,#28343b 100%);background:-o-linear-gradient(top,#b5bdc8 0%,#53565e 34%,#28343b 100%);background:-ms-linear-gradient(top,#b5bdc8 0%,#53565e 34%,#28343b 100%);background:linear-gradient(to bottom,#b5bdc8 0%,#53565e 34%,#28343b 100%);filter:progid:DXImageTransform.Microsoft.gradient(startColorstr="#b5bdc8",endColorstr="#28343b",GradientType=0);color:#fff}
++td.subheadline input[type="button"] {color: #FFFFFF;text-shadow: 1px 1px 1px #000000;}
++li.menu a{color:#fff;text-decoration:none}
++table {border-spacing: 0;}
++td.servicescol1,td.servicescol2,td.servicescol3,td{border-bottom: 1px solid #000000;border-right: 1px solid #000000;}
++td:first-child{border-left: 1px solid #000000;}
++th.sortable:last-child,tbody tr th:last-child{border-right: 1px solid #000000;}
++div.footer b {color: #FFFFFF;text-shadow: 1px 1px 1px #000;}
++div.footer li {color: #AAAAAA;text-shadow: 1px 1px 1px #000000;}
++tr#headline th,th.sortable,tbody tr th{border-right: 1px solid #FFFFFF;}
++tr#headline th:last-child,th.sortable:last-child,tbody tr th:last-child{border-right: 0px;}
++td.servicescol1,td.servicescol2,td.servicescol3{border-top: 1px solid #000000}
++div.footer .top_link { color:#FFFFFF; padding-left:12px; position:absolute; font-weight:bold; bottom:5px; left:7px; z-index:0; }
++div.footer .top_link a { color:#FFFFFF; }
++div.footer .top_link a:hover { color:red; }
++div.footer .top_link a:before { color:#FFFFFF; content:"\25b2"; font-weight:normal; position:absolute; left:1px;}
++#livelog, div.extract pre{padding:10px;border-radius:5px;text-shadow:2px 2px 2px #000000;background-color:#333333;color:#FFFFFF;overflow: auto;}
++table.invisible tbody tr td,td.invisible tr td{border:0;}
++textarea.bt{width: 480px;}
++table.config tbody tr td input,input.medium {width: 200px;}
++table.config tbody tr td input[type="checkbox"],td.invisible input[type="checkbox"],input#chb {width: 10px;}
++td.configcolsave input[type="submit"], input.withunit.short {width: 50px;}
++tr.configcontrol td.centered input[type="submit"] {width: 105px;}
++div#content form div.extract p.emmhead{margin-top: 10px;}
++div#content form div.extract pre{margin-top: 5px; margin-bottom: 10px;}
++textarea#singleemm{width: 100%;}
++a.tosingleemm{color:#FF0000;text-shadow: 2px 2px 2px #000000;}
++a.tosingleemm:hover{color:#FFFF00;text-shadow: 2px 2px 2px #000000;}
++ul#nav li div#regexdata ul li.regex{margin:10px;}
++select#scriptselect{height: 24px;}
++/* **************** 17. POLLING */
++/*  for UL in logpoll.html */
++#livelog {
++	resize:vertical;
++	height:574px;
++	max-width:1500px;
++	overflow-y:auto;
++	margin:1px auto 15px;
++	padding:0px 4px
++}
++#livelogdata {
++	white-space:pre
++}
++li.regex, li.regexdata_nav, li.regexdata_save{
++	white-space:nowrap
++}
++input.regexinput {
++	cursor:text;
++	padding:2px;
++	margin:3px 15px 1px 3px;
++	width:400px
++}
++.regexdata_nav input {
++	width:100px
++}
++.regexdata_save input {
++	width:90px;
++	margin-top:10px
++}
++.colorPicker_def_color {
++	color:#DDD
++}
++.colorPicker_def_fcolor {
++	color:#00F
++}
++div.colorPicker-picker {
++	height:16px;
++	width:16px;
++	display:inline;
++	margin:3px;
++	padding:4px 8px;
++	border:1px solid #CCC;
++	cursor:pointer;
++	line-height:16px;
++	font-size:0.75em;
++	font-weight:bold;
++	text-align:center
++}
++div.colorPicker-palette {
++	width:110px;
++	position:absolute;
++	border:1px solid #598FEF;
++	background-color:#EFEFEF;
++	padding:2px;
++	z-index:9999
+ }
++div.colorPicker_hexWrap {width:100%;float:left}
++div.colorPicker_hexWrap label {font-size:95%;color:#2F2F2F;margin:5px 2px;width:25%}
++div.colorPicker_hexWrap input {margin:5px 2px;padding:0;font-size:95%;border:1px solid #000;width:65%}
+ 
++div.colorPicker-swatch {
++	height:12px;
++	width:12px;
++	border:1px solid #000;
++	margin:2px;
++	float:left;
++	cursor:pointer;
++	line-height:12px
++}
++#regex{margin-bottom: 20px; padding-bottom: 10px; margin-top: -10px;}
++#logsizemenu{margin-top: -25px; margin-bottom: 5px;}
+\ Kein Zeilenumbruch am Dateiende.
+diff -Nur oscam-svn.diff/webif/logpage/logpage.html oscam-svn-pull/webif/logpage/logpage.html
+--- oscam-svn.diff/webif/logpage/logpage.html	2022-12-30 18:49:11.843538431 +0100
++++ oscam-svn-pull/webif/logpage/logpage.html	2022-12-30 18:19:50.069583999 +0100
+@@ -18,20 +18,26 @@
+ ##TPLBODY##
+ ##TPLMENU##
+ <DIV ID="subnav">
+-	<UL ID="nav"><LI></LI></UL>
++	<UL ID="nav">
++		<LI>
++			<a href="#" download="log.txt" id="savelog"><input type="submit" value="Save Log" title="Save Log"></a>
++			<input ID="showhidesettings" type="submit" value="Show Settings" title="Show/Hide Settings">
++			<input ID="stoplog" type="submit" value="Stop Log" title="Stop/Start Log">
++		</LI>
++	</UL>
+ </DIV>
+-##TPLMESSAGE##
+-	<DIV ID="livelog">
+-		<UL ID="livelogdata" title="Scroll stopped, because mouse stands over log-window !!!"></UL>
+-	</DIV>
+ 	<DIV ID="regex">
+-		<P class="regexdata_nav" id="save"><a href="#" download="log.txt" id="savelog"><input type="submit" value="Save Log" title="Save Log"></a><input ID="showhidesettings" type="submit" value="Show Settings" title="Show/Hide Settings"><input ID="stoplog" type="submit" value="Stop Log" title="Stop/Start Log"></P>
++		<P class="regexdata_nav"></P>
+ 		<DIV ID="regexdata" style="display:none;">
+ ##LOG_DEBUGMENU##
+-##LOG_SIZEMENU##
+ 			<UL ID="regexdatainput">
+ 				<LI class="regexdata_save"><input ID="regexreset" type="submit" value="Reset all" title="Reset all"><input ID="regexok" type="submit" value="Save" title="Save">&nbsp<button class="regexbutton" id="del1regex" title="Delete one row">&minus;</button><button class="regexbutton" id="add1regex" title="Add one row">+</button></LI>
+ 			</UL>
+ 		</DIV>
+ 	</DIV>
++##LOG_SIZEMENU##
++##TPLMESSAGE##
++	<DIV ID="livelog">
++		<UL ID="livelogdata" title="Scroll stopped, because mouse stands over log-window !!!"></UL>
++	</DIV>
+ ##TPLFOOTER##
+diff -Nur oscam-svn.diff/webif/status/status.html oscam-svn-pull/webif/status/status.html
+--- oscam-svn.diff/webif/status/status.html	2022-12-30 18:49:11.831538720 +0100
++++ oscam-svn-pull/webif/status/status.html	2022-12-30 18:44:33.314234246 +0100
+@@ -19,7 +19,7 @@
+ </div>
+ <DIV ID="subnav">
+ 	<UL ID="nav">
+-		<LI><B>##HTTPOSCAMLABEL## r##CS_SVN_VERSION##</B></LI>
++		<LI CLASS="configmenu"><A HREF="http://www.streamboard.tv/oscam-addons/timeline" TARGET="_blank"><B>Oscam Modern ##CS_SVN_VERSION##</B></LI>
+ 		<LI CLASS="configmenu"><A HREF="https://trac.streamboard.tv/oscam/timeline" TARGET="_blank">Timeline</A></LI>
+ 		<LI CLASS="configmenu"><A HREF="#statusfooter">Status</A></LI>
+ ##TPLPOLLINGSET##

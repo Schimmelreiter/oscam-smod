@@ -1,0 +1,287 @@
+diff -Nur oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam-cccam-cex1/globals.h oscam-smod/globals.h
+--- oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam-cccam-cex1/globals.h	2022-12-31 14:44:36.754411133 +0100
++++ oscam-smod/globals.h	2022-12-30 13:13:04.260444636 +0100
+@@ -1562,6 +1562,12 @@
+ #ifdef READER_CRYPTOWORKS
+ 	int8_t			needsglobalfirst;				// 0:Write one Global EMM for SHARED EMM disabled 1:Write one Global EMM for SHARED EMM enabled
+ #endif
++#if defined(READER_NAGRA_MERLIN) || defined(READER_NAGRA)
++	uint8_t			nuid[4];
++	uint8_t			nuid_length;
++	uint8_t			cwekey[16];
++	uint8_t			cwekey_length;
++#endif
+ #ifdef READER_NAGRA_MERLIN
+ 	uint8_t			mod1[112];
+ 	uint8_t			mod1_length;
+@@ -1630,6 +1636,7 @@
+ 	uint8_t			result[104];
+ 	uint8_t			stillencrypted[0x50];
+ 	uint8_t			resultrsa[0x50];
++	uint32_t		cak7_restart;
+ 	uint32_t		cak7_seq;
+ 	uint32_t		needrestart;
+ 	uint8_t			otpcsc[2];
+@@ -1641,11 +1648,11 @@
+ 	uint8_t			cak7_camstate;
+ 	uint8_t			cak7_aes_key[32];
+ 	uint8_t			cak7_aes_iv[16];
++	struct timeb	last_refresh;
+ 	int8_t			forcecwswap;
+ 	int8_t			evensa;
+ 	int8_t			forceemmg;
+ 	int8_t                  cwpkota;
+-
+ #endif
+ #ifdef CS_CACHEEX
+ 	CECSP			cacheex;						// CacheEx Settings
+@@ -1674,8 +1681,6 @@
+ 	uint8_t			cak7type;
+ 	uint8_t			cwpkcaid[2];
+ 	uint8_t			cwpkcaid_length;
+-	uint8_t			nuid[4];
+-	uint8_t			nuid_length;
+ 	int8_t			nagra_read;						// read nagra ncmed records: 0 Disabled (default), 1 read all records, 2 read valid records only
+ 	int8_t			detect_seca_nagra_tunneled_card;
+ 	int8_t			force_irdeto;
+diff -Nur oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam-cccam-cex1/reader-nagra.c oscam-smod/reader-nagra.c
+--- oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam-cccam-cex1/reader-nagra.c	2022-12-31 12:28:54.538659174 +0100
++++ oscam-smod/reader-nagra.c	2022-12-30 13:02:33.691662546 +0100
+@@ -2,6 +2,7 @@
+ #ifdef READER_NAGRA
+ #include "cscrypt/bn.h"
+ #include "cscrypt/idea.h"
++#include "cscrypt/des.h"
+ #include "oscam-time.h"
+ #include "reader-common.h"
+ #include "reader-nagra-common.h"
+@@ -23,6 +24,7 @@
+ 	uint8_t IdeaCamKey[16];
+ 	uint8_t sessi[16];
+ 	uint8_t signature[8];
++	uint8_t ird_info;
+ 	uint8_t cam_state[3];
+ };
+ 
+@@ -30,6 +32,8 @@
+ #define HAS_CW()      ((csystem_data->cam_state[2]&6)==6)
+ #define RENEW_SESSIONKEY() ((csystem_data->cam_state[0]&128)==128 || (csystem_data->cam_state[0]&64)==64 || (csystem_data->cam_state[0]&32)==32 || (csystem_data->cam_state[2]&8)==8)
+ #define SENDDATETIME() (csystem_data->cam_state[0]&8)
++// IRD Info
++#define CW_NEEDS_3DES()	((csystem_data->ird_info&0x18)==0x18)
+ // Datatypes
+ #define DT01    0x01
+ #define IRDINFO 0x00
+@@ -196,6 +200,8 @@
+ 
+ 	if(do_cmd(reader, 0xC0, 0x02, 0xB0, 0x06, NULL, cta_res, &cta_lr))
+ 	{
++		csystem_data->ird_info = cta_res[2];
++		rdr_log_dbg(reader, D_READER, "Irdinfo: %02X", csystem_data->ird_info);
+ 		memcpy(csystem_data->cam_state, cta_res + 3, 3);
+ 		rdr_log_dbg(reader, D_READER, "Camstate: %s", cs_hexdump(1, csystem_data->cam_state, 3, tmp_dbg, sizeof(tmp_dbg)));
+ 	}
+@@ -373,6 +379,16 @@
+ 		0x01, 0x02, 0x03, 0x04, //IRD nr
+ 		0x00 };//keynr
+ 
++	uint8_t cmd2a[] = {
++		0x00,
++		0xA5, 0xFB, 0x02, 0x76,	//NUID
++		0x00, 0x08,		//OTP-CSC
++		0x00, 0x00,		//OTA-CSC
++		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
++		0x00,
++		0x22, 0x11 }; //Provider ID
++
+ 	uint8_t tmp[64];
+ 	uint8_t idea1[16];
+ 	uint8_t idea2[16];
+@@ -408,10 +424,28 @@
+ 
+ 	if(!csystem_data->is_n3_na)
+ 	{
+-		if(!do_cmd(reader, 0x2a, 0x02, 0xaa, 0x42, NULL, cta_res, &cta_lr))
++		if (reader->nuid_length == 4) //nuid is set
+ 		{
+-			rdr_log_dbg(reader, D_READER, "CMD$2A failed");
+-			return ERROR;
++			// inject provid
++			cmd2a[26] = reader->prid[0][2];
++			cmd2a[27] = reader->prid[0][3];
++
++			memcpy(&cmd2a[1], reader->nuid, 4); // inject NUID
++
++			if (!do_cmd(reader, 0x2a,0x1E,0xAA,0x42, cmd2a, cta_res, &cta_lr))
++			{
++				rdr_log_dbg(reader, D_READER, "CMD$2A failed");
++				return ERROR;
++			}
++		}
++		else
++		{
++			if(!do_cmd(reader, 0x2a, 0x02, 0xaa, 0x42, NULL, cta_res, &cta_lr))
++			{
++				rdr_log_dbg(reader, D_READER, "CMD$2A failed");
++				return ERROR;
++			}
++
+ 		}
+ 	}
+ 	else if(!do_cmd(reader, 0x26, 0x07, 0xa6, 0x42, tmp, cta_res, &cta_lr))
+@@ -624,7 +658,7 @@
+ static int32_t ParseDataType(struct s_reader *reader, uint8_t dt, uint8_t *cta_res, uint16_t cta_lr)
+ {
+ 	struct nagra_data *csystem_data = reader->csystem_data;
+-	char ds[20], de[16];
++	char ds[36], de[36];
+ 	uint16_t chid;
+ 
+ 	switch(dt)
+@@ -1335,18 +1369,76 @@
+ 		{
+ 			uint8_t v[8];
+ 			memset(v, 0, sizeof(v));
+-			idea_cbc_encrypt(&cta_res[30], ea->cw, 8, &csystem_data->ksSession, v, IDEA_DECRYPT);
+-			memset(v, 0, sizeof(v));
+-			idea_cbc_encrypt(&cta_res[4], ea->cw + 8, 8, &csystem_data->ksSession, v, IDEA_DECRYPT);
++			uint8_t _cwe0[8];
++			uint8_t _cwe1[8];
++			char tmp_dbg[25];
+ 
+ 			if(csystem_data->swapCW == 1)
+ 			{
+ 				rdr_log_dbg(reader, D_READER, "swap cws");
+-				uint8_t tt[8];
+-				memcpy(&tt[0], &ea->cw[0], 8);
+-				memcpy(&ea->cw[0], &ea->cw[8], 8);
+-				memcpy(&ea->cw[8], &tt[0], 8);
++				idea_cbc_encrypt(&cta_res[30], &_cwe1[0], 8, &csystem_data->ksSession, v, IDEA_DECRYPT);
++				memset(v, 0, sizeof(v));
++				idea_cbc_encrypt(&cta_res[4], &_cwe0[0], 8, &csystem_data->ksSession, v, IDEA_DECRYPT);
++			}
++			else
++			{
++				idea_cbc_encrypt(&cta_res[30], &_cwe0[0], 8, &csystem_data->ksSession, v, IDEA_DECRYPT);
++				memset(v, 0, sizeof(v));
++				idea_cbc_encrypt(&cta_res[4], &_cwe1[0], 8, &csystem_data->ksSession, v, IDEA_DECRYPT);
++			}
++			rdr_log_dbg(reader, D_READER, "CW0 after IDEA decrypt: %s", cs_hexdump(1, _cwe0, 8, tmp_dbg, sizeof(tmp_dbg)));
++			rdr_log_dbg(reader, D_READER, "CW1 after IDEA decrypt: %s", cs_hexdump(1, _cwe1, 8, tmp_dbg, sizeof(tmp_dbg)));
++
++			if(CW_NEEDS_3DES())
++			{
++				rdr_log_dbg(reader, D_READER, "3DES encryption of CWs detected. Using CWPK index:%02X", (csystem_data->ird_info & 7));
++
++				if(reader->cwekey_length != 16)
++				{
++					rdr_log_dbg(reader, D_READER, "ERROR: Invalid CWPK, can not decrypt CW");
++					return ERROR;
++				}
++
++				des_ecb3_decrypt(_cwe0, reader->cwekey);
++				des_ecb3_decrypt(_cwe1, reader->cwekey);
++				rdr_log_dbg(reader, D_READER, "CW0 after 3DES decrypt: %s", cs_hexdump(1, _cwe0, 8, tmp_dbg, sizeof(tmp_dbg)));
++				rdr_log_dbg(reader, D_READER, "CW1 after 3DES decrypt: %s", cs_hexdump(1, _cwe1, 8, tmp_dbg, sizeof(tmp_dbg)));
++
++				int chkok = 1;
++				if(((_cwe0[0] + _cwe0[1] + _cwe0[2]) & 0xFF) != _cwe0[3])
++				{
++					chkok = 0;
++					rdr_log_dbg(reader, D_READER, "CW0 checksum error [0]");
++				}
++
++				if(((_cwe0[4] + _cwe0[5] + _cwe0[6]) & 0xFF) != _cwe0[7])
++				{
++					chkok = 0;
++					rdr_log_dbg(reader, D_READER, "CW0 checksum error [1]");
++				}
++
++				if(((_cwe1[0] + _cwe1[1] + _cwe1[2]) & 0xFF) != _cwe1[3])
++				{
++					chkok = 0;
++					rdr_log_dbg(reader, D_READER, "CW1 checksum error [0]");
++				}
++
++				if(((_cwe1[4] + _cwe1[5] + _cwe1[6]) & 0xFF) != _cwe1[7])
++				{
++					chkok = 0;
++					rdr_log_dbg(reader, D_READER, "CW1 checksum error [1]");
++				}
++
++				if(chkok == 0)
++				{
++					rdr_log_dbg(reader, D_READER, "CW Decrypt failed");
++					return ERROR;
++				}
+ 			}
++
++			memcpy(ea->cw, _cwe0, 0x08);
++			memcpy(ea->cw + 8, _cwe1, 0x08);
++
+ 			return OK;
+ 		}
+ 	}
+diff -Nur oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam-cccam-cex1/reader-nagracak7.c oscam-smod/reader-nagracak7.c
+--- oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam-cccam-cex1/reader-nagracak7.c	2022-12-31 12:28:54.586658008 +0100
++++ oscam-smod/reader-nagracak7.c	2022-12-30 13:44:51.466535446 +0100
+@@ -1502,6 +1502,10 @@
+ 		rdr_log(reader, "Prv.ID: %s", cs_hexdump(1, reader->prid[i], 4, tmp, sizeof(tmp)));
+ 	}
+ 
++	struct timeb now;
++	cs_ftime(&now);
++	reader->last_refresh=now;
++
+ 	if(reader->cak7type != 3)
+ 	{
+ 		rdr_log(reader, "-----------------------------------------");
+@@ -1845,6 +1849,16 @@
+ 				}
+ 			}
+ 		}
++
++		struct timeb now;
++		cs_ftime(&now);
++		int64_t gone_now = comp_timeb(&now, &reader->emm_last);
++		int64_t gone_refresh = comp_timeb(&reader->emm_last, &reader->last_refresh);
++		if((gone_now > 3600*1000) || (gone_refresh > 12*3600*1000))
++		{
++			add_job(reader->client, ACTION_READER_CARDINFO, NULL, 0); // refresh entitlement since it might have been changed!
++		}
++
+ 	}
+ 	return OK;
+ }
+diff -Nur oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam-cccam-cex1/reader-nagracak7.h oscam-smod/reader-nagracak7.h
+--- oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam-cccam-cex1/reader-nagracak7.h	2022-12-30 18:36:58.669108722 +0100
++++ oscam-smod/reader-nagracak7.h	1970-01-01 01:00:00.000000000 +0100
+@@ -1,6 +0,0 @@
+-#ifndef READER_NAGRACAK7_H_
+-#define READER_NAGRACAK7_H_
+-
+-void CAK7_getCamKey(struct s_reader *reader);
+-
+-#endif
+diff -Nur oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam-cccam-cex1/webif/readerconfig/readerconfig_hwreader_nagracak7.html oscam-smod/webif/readerconfig/readerconfig_hwreader_nagracak7.html
+--- oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam-cccam-cex1/webif/readerconfig/readerconfig_hwreader_nagracak7.html	2022-12-31 12:28:54.642656649 +0100
++++ oscam-smod/webif/readerconfig/readerconfig_hwreader_nagracak7.html	2022-12-30 13:41:20.671525837 +0100
+@@ -4,6 +4,8 @@
+ 				<TR><TD><A>Force Even SA:</A></TD><TD><input name="evensa" type="hidden" value="0"><input name="evensa" type="checkbox" value="1" ##EVENSACHECKED##><label></label></TD></TR>
+ 				<TR><TD><A>Force EMMs 0x82:</A></TD><TD><input name="forceemmg" type="hidden" value="0"><input name="forceemmg" type="checkbox" value="1" ##FORCEEMMGCHECKED##><label></label></TD></TR>
+ 				<TR><TD><A>mod1:</A></TD><TD><textarea name="mod1" rows="5" class="bt" maxlength="224">##MOD1##</textarea></TD></TR>
++				<TR><TD><A>Nuid:</A></TD><TD><input name="nuid" class="medium" type="text" maxlength="8" value="##NUID##"></TD></TR>
++				<TR><TD><A>CWPK:</A></TD><TD><input name="cwekey" class="longer" type="text" maxlength="32" value="##CWEKEY##"></TD></TR>
+ 				<TR><TD><A>mod2:</A></TD><TD><textarea name="mod2" rows="5" class="bt" maxlength="224">##MOD2##</textarea></TD></TR>
+ 				<TR><TD><A>key3588:</A></TD><TD><textarea name="key3588" rows="6" class="bt" maxlength="272">##KEY3588##</textarea></TD></TR>
+ 				<TR><TD><A>key3460:</A></TD><TD><textarea name="key3460" rows="4" class="bt" maxlength="192">##KEY3460##</textarea></TD></TR>
+diff -Nur oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam-cccam-cex1/webif/readerconfig/readerconfig_hwreader_nagra.html oscam-smod/webif/readerconfig/readerconfig_hwreader_nagra.html
+--- oscam-svn-modern-zeroconf-emu-icam-sogno-cak7-smod-ncam-cccam-cex1/webif/readerconfig/readerconfig_hwreader_nagra.html	2022-12-31 12:28:54.642656649 +0100
++++ oscam-smod/webif/readerconfig/readerconfig_hwreader_nagra.html	2022-12-30 13:02:33.551665961 +0100
+@@ -9,3 +9,5 @@
+ 					</TD>
+ 				</TR>
+ 				<TR><TD><A>Detect tunneled Seca cards:</A></TD><TD><input name="detect_seca_nagra_tunneled_card" type="hidden" value="0"><input name="detect_seca_nagra_tunneled_card" type="checkbox" value="1" ##NAGRADETECTSECACARDCHECKED##><label></label></TD></TR>
++				<TR><TD><A>Nuid:</A></TD><TD><input name="nuid" class="medium" type="text" maxlength="8" value="##NUID##"></TD></TR>
++				<TR><TD><A>CWPK:</A></TD><TD><input name="cwekey" class="longer" type="text" maxlength="32" value="##CWEKEY##"></TD></TR>
