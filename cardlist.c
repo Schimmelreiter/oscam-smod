@@ -507,7 +507,9 @@ void findatr(struct s_reader *reader) {
 			snprintf(buf, 66, "3F FF %i 25 03 10 80 54 B0 01 69 FF 4A 50 70 00 00 4B 57 01 00 00", i);
 			if (strncmp(current.atr, buf, 65) == 0) {
 				strcpy(current.providername, "Sky/Unitymedia V23");
-				reader->boxid = 0x12345678;
+				if (!strlen((char*)reader->ins7E)) {
+					reader->boxid = 0x12345678;
+				}
 				reader->blockemm = (12 | reader->blockemm);
 				current.found = 1;
 				break;
