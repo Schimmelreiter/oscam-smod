@@ -19,6 +19,7 @@ enum actions
 	// Client actions
 	ACTION_CLIENT_UDP          = 22,    // wc22
 	ACTION_CLIENT_TCP          = 23,    // wc23
+	ACTION_READER_SENDCMD      = 15,    // wr15
 	ACTION_CLIENT_KILL         = 24,    // wc24
 	ACTION_CLIENT_INIT         = 25,    // wc25
 	ACTION_CLIENT_IDLE         = 26,    // wc26
